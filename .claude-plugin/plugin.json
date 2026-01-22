@@ -1,0 +1,13 @@
+{
+  "name": "systematic-dev-kit",
+  "description": "A systematic methodology for building full-stack applications - opinionated skills covering infrastructure, database, backend, and frontend development",
+  "version": "0.1.0",
+  "author": {
+    "name": "Daniel Koenawan"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dkoenawan/systematic-dev-kit"
+  },
+  "license": "MIT"
+}
