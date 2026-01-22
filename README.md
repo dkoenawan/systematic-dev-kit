@@ -17,7 +17,7 @@ claude --plugin-dir /path/to/systematic-dev-kit
 ### Option 2: Clone and Configure
 
 ```bash
-git clone https://github.com/yourusername/systematic-dev-kit.git
+git clone https://github.com/dkoenawan/systematic-dev-kit.git
 cd systematic-dev-kit
 claude --plugin-dir .
 ```
@@ -29,22 +29,58 @@ This plugin follows the Claude Code plugin architecture:
 ```
 systematic-dev-kit/
 ├── .claude-plugin/
-│   └── plugin.json          # Plugin manifest
-├── skills/                  # Agent-based skills
-│   ├── infrastructure/      # Infrastructure setup skills
-│   ├── database/           # Database design and setup
-│   ├── backend/            # Backend development
-│   └── frontend/           # Frontend development
-├── commands/               # Quick command skills
-├── hooks/                  # Development workflow hooks
-├── README.md              # This file
-└── CLAUDE.md             # Guidance for Claude Code instances
+│   └── plugin.json                    # Plugin manifest
+├── skills/                            # Agent-based skills
+│   └── bootstrap-new-project/         # Full-stack project bootstrap
+│       └── SKILL.md
+├── commands/                          # Quick command skills (future)
+├── hooks/                             # Development workflow hooks (future)
+├── README.md                          # This file
+└── CLAUDE.md                          # Guidance for Claude Code instances
 
 ```
 
 ## Skills Included
 
-*Skills will be added as the plugin develops. This section will be updated to reflect available skills.*
+### Project Bootstrap
+
+#### `/systematic-dev-kit:bootstrap-new-project`
+
+Bootstrap a complete full-stack project with systematic structure and best practices.
+
+**What it creates:**
+
+- **Infrastructure**: Docker setup with docker-compose.yml orchestration
+- **Backend**: Node.js + TypeScript with Clean Architecture
+  - Domain, Usecases, Interface, Infrastructure layers
+  - CQRS pattern (commands and queries separated)
+  - Express.js server with health endpoint
+  - Swagger API documentation
+  - OpenAPI specification
+- **Frontend**: React + TypeScript + Vite + Material-UI
+  - Atomic design structure (atoms, molecules, organisms, templates, pages)
+  - MUI theme configuration
+  - Landing page component
+  - Routing setup
+- **Database**: Placeholder directory for future implementation
+- **Agent**: Placeholder directory for agentic AI workflows
+
+**Usage:**
+```bash
+/systematic-dev-kit:bootstrap-new-project
+```
+
+**Interactive prompts:**
+- Project name
+- Target directory
+- Initialize git repository?
+- Install dependencies?
+
+**After bootstrap:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:4000
+- API Docs: http://localhost:4000/api-docs
+- Health Check: http://localhost:4000/health
 
 ## Development
 
