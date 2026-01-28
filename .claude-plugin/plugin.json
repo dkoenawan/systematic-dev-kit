@@ -5,9 +5,6 @@
   "author": {
     "name": "Daniel Koenawan"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dkoenawan/systematic-dev-kit"
-  },
+  "repository": "https://github.com/dkoenawan/systematic-dev-kit",
   "license": "MIT"
 }
