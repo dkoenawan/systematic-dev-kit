@@ -1,9 +1,18 @@
 ---
 name: bootstrap-new-project
-description: Bootstrap a new full-stack project with systematic infrastructure, backend (Node.js + Clean Architecture + CQRS), frontend (React + TypeScript + Vite + MUI), and agent placeholders
+description: "[DEPRECATED] Bootstrap a new full-stack project - use /systematic-dev-kit:init instead"
 ---
 
 # Bootstrap New Project Skill
+
+> **DEPRECATED**: This skill is deprecated in favor of `/systematic-dev-kit:init`.
+>
+> The new `init` skill is more token-efficient (clones a template instead of generating files)
+> and offers simple opt-out component selection.
+>
+> **Migration**: Use `/systematic-dev-kit:init` instead of this skill.
+
+---
 
 This skill creates a complete full-stack project structure following systematic development best practices.
 

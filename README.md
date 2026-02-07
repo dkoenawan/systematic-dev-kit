@@ -31,7 +31,9 @@ systematic-dev-kit/
 ├── .claude-plugin/
 │   └── plugin.json                    # Plugin manifest
 ├── skills/                            # Agent-based skills
-│   └── bootstrap-new-project/         # Full-stack project bootstrap
+│   ├── init/                          # Project initialization (recommended)
+│   │   └── SKILL.md
+│   └── bootstrap-new-project/         # Full-stack project bootstrap (deprecated)
 │       └── SKILL.md
 ├── commands/                          # Quick command skills (future)
 ├── hooks/                             # Development workflow hooks (future)
@@ -42,9 +44,49 @@ systematic-dev-kit/
 
 ## Skills Included
 
-### Project Bootstrap
+### Project Initialization
 
-#### `/systematic-dev-kit:bootstrap-new-project`
+#### `/systematic-dev-kit:init` (Recommended)
+
+Initialize a new full-stack project from a template repository with opt-out component selection.
+
+**Default Stack (Opinionated):**
+
+| Component | Technology |
+|-----------|------------|
+| Frontend | React + Vite + TypeScript |
+| Backend | Node.js + TypeScript + Prisma |
+| Database | PostgreSQL |
+| Infrastructure | Docker with docker-compose |
+
+**Usage:**
+```bash
+/systematic-dev-kit:init
+```
+
+**How it works:**
+1. Clones the [dev-kit-scaffolding](https://github.com/dkoenawan/dev-kit-scaffolding) template
+2. Asks which components to EXCLUDE (opt-out approach)
+3. Removes unwanted components and updates configs
+4. Optionally initializes git and installs dependencies
+
+**Interactive prompts:**
+- Project name (default: "my-project")
+- Target directory (default: ./{project-name})
+- Components to exclude (multi-select, default: none)
+- Initialize git? (default: yes)
+- Install dependencies? (default: no)
+
+**After init:**
+- Frontend: http://localhost:3000
+- Backend: http://localhost:4000
+- Database: PostgreSQL on localhost:5432
+
+---
+
+#### `/systematic-dev-kit:bootstrap-new-project` (Deprecated)
+
+> **Deprecated**: Use `/systematic-dev-kit:init` instead. This skill generates files directly which is less token-efficient.
 
 Bootstrap a complete full-stack project with systematic structure and best practices.
 
