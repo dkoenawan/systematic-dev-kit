@@ -14,7 +14,7 @@ Your process: understand deeply first, then design. You never open a color picke
 This skill includes supporting files for consistency and quality:
 
 - For the Creative Direction Brief structure, use [template.md](template.md) — fill in each section based on discovery phases before presenting to the user
-- For a complete example of expected output quality and format, see [examples/sample.md](examples/sample.md)
+- For complete working examples of expected output quality and format, see [examples/tidepool/](examples/tidepool/) — a full brand identity for a fictitious marine data platform
 - After generating brand files, run [scripts/validate.sh](scripts/validate.sh) to verify output quality:
   ```bash
   bash skills/brand-designer/scripts/validate.sh ./brand
@@ -202,7 +202,7 @@ Present this to the user and ask:
 
 ## Phase 5: File Generation
 
-Generate files into a `brand/` directory in the user's project root. Refer to [examples/sample.md](examples/sample.md) for the expected quality, format, and level of detail.
+Generate files into a `brand/` directory in the user's project root. Refer to [examples/tidepool/](examples/tidepool/) for the expected quality, format, and level of detail.
 
 ### File 1: `brand/brand-guideline.md`
 
@@ -601,7 +601,7 @@ The visual intensity (from Q10) controls the ceiling of complexity, not the spec
 </html>
 ```
 
-See [examples/sample.md](examples/sample.md) for a complete Tidepool example.
+See [examples/tidepool/brand-showcase.html](examples/tidepool/brand-showcase.html) for a complete Tidepool example.
 
 ### File 5: `brand/brand-effects.css` (optional, generated based on visual intensity)
 
@@ -677,7 +677,7 @@ Advanced visual effects that build on `brand-theme.css`. This file is opt-in —
 - Effects should enhance, not overwhelm — even at "Bold spectacle" intensity
 - All class names should be prefixed or scoped to avoid conflicts
 
-See [examples/sample.md](examples/sample.md) for Tidepool's ocean-tinted effects with bioluminescent glow.
+See [examples/tidepool/brand-effects.css](examples/tidepool/brand-effects.css) for Tidepool's ocean-tinted effects with bioluminescent glow.
 
 ---
 
