@@ -19,7 +19,7 @@ This skill includes supporting files for consistency and quality:
   ```bash
   bash skills/brand-designer/scripts/validate.sh ./brand
   ```
-  This checks for: missing files, leftover placeholders, valid HSL, type scale consistency, Google Font availability, WCAG contrast, and Tailwind syntax.
+  This checks for: missing files, leftover placeholders, valid HSL, type scale consistency, Google Font availability, WCAG contrast, Tailwind syntax, showcase HTML structure, brand effects validity, and showcase self-containment.
 
 ## How This Skill Works
 
@@ -149,6 +149,19 @@ Use AskUserQuestion:
   - **"CSS only"** — description: "Generate CSS custom properties only — no framework dependency"
   - **"Both"** — description: "Generate CSS custom properties and Tailwind config separately"
 
+### Q10 — Visual Intensity (AskUserQuestion)
+
+Use AskUserQuestion:
+
+- **Header**: "Visual expression"
+- **Question**: "How visually expressive should the brand's digital presence be?"
+- **multiSelect**: false
+- **Options**:
+  - **"Restrained elegance"** — description: "Typography and space do the work. Minimal effects. The Aesop approach."
+  - **"Subtle motion"** — description: "Understated animations, gentle transitions. Things breathe but don't shout."
+  - **"Confident expression"** — description: "Gradient meshes, layered shadows, animated accents. Distinctive without excess."
+  - **"Bold spectacle"** — description: "Procedural visuals, particle fields, dramatic transitions. Unmistakably unique."
+
 ---
 
 ## Phase 4: Creative Direction Synthesis
@@ -170,6 +183,8 @@ The brief should cover:
 5. **Spatial Philosophy** — How the brand breathes. Dense and information-rich, or generous and contemplative? How does spacing reinforce the brand emotion?
 
 6. **Component Character** — What UI elements should feel like. Sharp or soft corners? Heavy or subtle shadows? Fast or deliberate animations?
+
+7. **Visual Expression Strategy** — Based on Q10 (Visual Intensity) and the brand's emotional core, describe the creative vision for the brand showcase page. This is NOT about picking techniques from a menu — it's about inventing a signature visual concept that embodies the brand. For example: "bioluminescent data — points of light emerging from deep ocean darkness" or "architectural precision — grid lines that breathe" or "organic growth — ink spreading through water." Explain how this concept connects to the brand emotions, what the hero moment looks like, whether it's dark-first or light-first and why, and the overall page rhythm.
 
 Present this to the user and ask:
 
@@ -327,6 +342,12 @@ CSS custom properties in HSL format with a genuinely designed dark mode (not jus
   --color-error: hsl({h} {s}% {l}%);
   --color-info: hsl({h} {s}% {l}%);
 
+  /* Advanced Color Utilities */
+  --gradient-brand: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --gradient-accent: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  --glass-bg: hsla(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.1);
+  --glass-blur: 12px;
+
   /* --- Typography --- */
   --font-heading: '{Font}', {fallback-stack};
   --font-body: '{Font}', {fallback-stack};
@@ -483,6 +504,181 @@ module.exports = {
 };
 ```
 
+### File 4: `brand/brand-showcase.html`
+
+A fully self-contained HTML file that brings the brand to life visually. This is the creative proof that the brand works — not a template with colors swapped in, but a one-off design that feels distinctive and surprising.
+
+**Structure:**
+1. **Hero** — Brand name + tagline + signature visual element
+2. **Typography specimen** — Full type scale rendered live with actual fonts
+3. **Color palette** — Visual swatches with interaction (not markdown tables)
+4. **Component gallery** — Buttons, cards, inputs styled with brand tokens
+5. **Dark/light toggle** — Demonstrates both modes live
+6. **Brand essence** — Brand philosophy styled as page content
+
+**Technical requirements:**
+- Fully self-contained — all CSS/JS inlined, only external dependency is Google Fonts CDN
+- Opens in any browser without build step
+- Includes both light and dark mode support (via `data-theme` attribute or media query)
+- Uses brand tokens from brand-theme.css throughout
+- Imports Google Fonts optimally (preconnect + display=swap)
+
+**Creative guidance — CRITICAL:**
+
+The showcase page is the creative proof that this brand works visually. It is NOT a template with brand colors swapped in. Every showcase you create should feel like a one-off design — the layout, animation, visual techniques, and page rhythm should be invented fresh from the creative direction brief.
+
+Think like a designer building a portfolio piece: What visual technique would make someone stop scrolling? What would make a designer say "I wish I'd thought of that"? The technique might be pure CSS, it might use canvas, it might use SVG — the medium doesn't matter. What matters is that it's distinctive, surprising, and emotionally connected to the brand.
+
+**Anti-patterns to avoid:**
+- Centered text over a generic gradient hero
+- The same layout regardless of brand personality
+- Using all effects at maximum — restraint IS a creative choice
+- Generic Lorem Ipsum instead of actual brand language
+- Showcase pages that all look like the same SaaS landing page template
+
+**What "creative" means here:**
+
+The hero visual concept from the Visual Expression Strategy (Phase 4) is your north star. Make it real. Examples of creative translation:
+
+- A **financial brand** might use precise grid lines that subtly animate — mathematical, controlled, almost architectural
+- A **wellness brand** might use organic SVG blob morphing with breath-like rhythm
+- A **developer tools brand** might render its own syntax-highlighted code as visual art
+- A **food brand** might use rich photography-style CSS gradients that feel warm and textural
+- A **rebel brand** might break the grid intentionally, overlap elements, use harsh contrasts
+- A **data brand** might use bioluminescent points of light emerging from darkness (like Tidepool example)
+- A **luxury brand** might use generous negative space with a single animated serif letterform
+- A **playful brand** might use CSS-animated shapes that bounce and morph
+
+The visual intensity (from Q10) controls the ceiling of complexity, not the specific techniques:
+
+| Intensity | Creative Approach |
+|-----------|------------------|
+| **Restrained elegance** | Typography IS the art. Large scale type, precise spacing, subtle fade-ins, geometric marks. Let negative space breathe. |
+| **Subtle motion** | Background elements breathe. CSS animated gradients, gentle parallax, SVG morphs that take 3-4 seconds to complete. |
+| **Confident expression** | Foreground draws attention. Mesh gradients, glassmorphism, canvas textures, scroll-triggered reveals, layered brand-tinted shadows. |
+| **Bold spectacle** | Hero commands the room. Procedural canvas art, WebGL effects, particle systems, dramatic transitions, break-the-grid layouts. |
+
+**Implementation notes:**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{Brand Name} Brand Showcase</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="{google-fonts-url}" rel="stylesheet">
+
+  <style>
+    /* Inline all brand tokens and page styles here */
+    /* Use the signature visual concept throughout */
+    /* Ensure dark mode is genuinely designed, not inverted */
+  </style>
+</head>
+<body data-theme="dark"> <!-- or "light" depending on dark/light priority from Phase 4 -->
+
+  <!-- Theme toggle button -->
+  <button onclick="toggleTheme()">Toggle Theme</button>
+
+  <!-- Hero with signature visual concept -->
+  <section class="hero">
+    <!-- Implement the visual concept here -->
+  </section>
+
+  <!-- Typography specimen, color palette, components, brand essence -->
+
+  <script>
+    function toggleTheme() {
+      const theme = document.body.getAttribute('data-theme');
+      document.body.setAttribute('data-theme', theme === 'dark' ? 'light' : 'dark');
+    }
+  </script>
+</body>
+</html>
+```
+
+See [examples/sample.md](examples/sample.md) for a complete Tidepool example.
+
+### File 5: `brand/brand-effects.css` (optional, generated based on visual intensity)
+
+Advanced visual effects that build on `brand-theme.css`. This file is opt-in — designers can import it alongside the theme file for enhanced visuals.
+
+**Always included (all intensity levels):**
+- Custom focus ring using brand colors
+- Layered, brand-tinted shadow system (sm/md/lg variants)
+- At least one brand gradient recipe
+
+**Scaled by visual intensity from Q10:**
+
+**Restrained elegance:**
+- Simple fade-up entrance animation
+- Subtle hover states (opacity or slight scale)
+
+**Subtle motion:**
+- Above, plus:
+- Animated background gradients (slow, 8-10s)
+- Hover lift effect (2-4px translateY)
+- Slide-up keyframes for content entrance
+
+**Confident expression:**
+- Above, plus:
+- CSS mesh gradients (multi-layer radial-gradient compositions)
+- Glassmorphism effects (backdrop-filter blur + semi-transparent backgrounds)
+- Glow effects for interactive elements
+- Noise texture overlay (optional)
+
+**Bold spectacle:**
+- Above, plus:
+- Film grain effect
+- Scroll-driven animations (if appropriate)
+- Creative keyframes unique to the brand (e.g., "tidal" for ocean brand, "pulse" for health brand)
+- Advanced blend modes and compositing
+
+**CRITICAL: The specific effects should be invented based on the brand, not picked from a fixed menu.** The intensity level controls how many effects are appropriate, not which specific ones to use.
+
+**Implementation structure:**
+
+```css
+/* {Brand Name} — Brand Effects
+   Generated by systematic-dev-kit:brand-designer
+
+   Advanced visual effects that build on brand-theme.css.
+   Import alongside brand-theme.css for enhanced visuals. */
+
+/* --- Custom Focus Ring --- */
+*:focus-visible {
+  outline: 2px solid hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Layered Brand-Tinted Shadows --- */
+.shadow-{brand-name}-sm { box-shadow: {brand-tinted-values}; }
+.shadow-{brand-name}-md { box-shadow: {layered-brand-tinted}; }
+.shadow-{brand-name}-lg { box-shadow: {multi-layer-brand-tinted}; }
+
+/* --- Brand Gradients --- */
+.gradient-{concept-name} {
+  background: {creative-gradient-implementation};
+}
+
+/* --- Additional effects based on intensity --- */
+/* ... custom animations, glassmorphism, glow, etc ... */
+```
+
+**Quality requirements:**
+- All effects use CSS custom properties, never hardcoded colors
+- Shadow colors are tinted with the brand's primary color hue
+- Animations use brand-appropriate easing (from component character)
+- Effects should enhance, not overwhelm — even at "Bold spectacle" intensity
+- All class names should be prefixed or scoped to avoid conflicts
+
+See [examples/sample.md](examples/sample.md) for Tidepool's ocean-tinted effects with bioluminescent glow.
+
 ---
 
 ## Phase 6: Handoff Summary
@@ -497,14 +693,32 @@ If validation reports errors, fix them before proceeding. Warnings should be rev
 
 Then present a clear handoff:
 
-1. **Files created** — list each file with a one-line description
+1. **Files created** — list each file with a one-line description:
+   - `brand/brand-guideline.md` — Complete brand identity guidelines
+   - `brand/brand-theme.css` — CSS custom properties with designed dark mode
+   - `brand/tailwind.brand.js` — Tailwind config (if applicable)
+   - `brand/brand-showcase.html` — Live brand showcase page (NEW)
+   - `brand/brand-effects.css` — Advanced visual effects (NEW, optional)
+
 2. **Validation results** — confirm all checks passed (or note any warnings)
+
 3. **Google Fonts snippet** — ready-to-paste `<link>` tag for the chosen fonts
+
 4. **Import instructions** — how to use the generated files:
-   - CSS: `@import './brand/brand-theme.css';` or `<link>` tag
+   - CSS: `@import './brand/brand-theme.css';` and optionally `@import './brand/brand-effects.css';`
    - Tailwind (if generated): how to extend `tailwind.config.js`
-5. **Key design decisions recap** — the 3-4 most important choices and why they were made
-6. **Suggested next steps** — what to build first with the new brand (e.g., "Start with a landing page hero section to pressure-test the color palette and typography at large scale")
+   - Showcase: "Open `brand/brand-showcase.html` in any browser to see your brand live"
+
+5. **Key design decisions recap** — the 3-5 most important choices and why they were made, including:
+   - The signature visual concept and how it embodies the brand
+   - Color palette reasoning
+   - Typography choices
+   - Component character
+   - Visual intensity approach
+
+6. **Showcase verification** — "Open `brand-showcase.html` — does the hero feel like YOUR brand? Does the dark/light toggle maintain personality in both modes? The showcase should feel distinctive — not like a generic template with your colors swapped in."
+
+7. **Suggested next steps** — what to build first with the new brand (e.g., "Start with a landing page hero section to pressure-test the color palette and typography at large scale")
 
 ---
 
@@ -554,6 +768,19 @@ Then present a clear handoff:
 | Friendly / Approachable | 8-12px | Soft, diffused | Normal (200-300ms) | Gentle, forgiving |
 | Playful / Organic | 12-20px or full | Colorful or none | Bouncy (300-500ms) | Springy, delightful |
 | Luxurious / Premium | 2-4px | Deep, multi-layer | Slow (300-500ms) | Deliberate, weighted |
+
+### Visual Intensity → Creative Scope
+
+**Do not show this table to the user.** Use it to calibrate the creative ambition of brand-showcase.html and brand-effects.css.
+
+| Intensity | Visual Ceiling | Page Energy | Appropriate Techniques |
+|-----------|---------------|-------------|----------------------|
+| Restrained elegance | Typography IS the art | Contemplative, spacious | Large type, tracking, subtle fade, geometric marks, negative space |
+| Subtle motion | Background breathes | Calm but alive | CSS animated gradients, parallax hints, gentle SVG morphs |
+| Confident expression | Foreground draws attention | Assured, polished | Mesh gradients, glass, canvas textures, scroll reveals, layered shadows |
+| Bold spectacle | Hero commands the room | Dramatic, memorable | Procedural canvas, WebGL, particle systems, shader effects, break-the-grid layout |
+
+**Key principle:** The intensity level sets the *ceiling* of visual complexity, not the specific techniques. Every showcase should invent its own visual approach based on the brand's Visual Expression Strategy. The techniques listed are examples, not prescriptions.
 
 ---
 

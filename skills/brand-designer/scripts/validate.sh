@@ -312,6 +312,115 @@ else
   echo "  SKIP: tailwind.brand.js not present"
 fi
 
+# --- Check 8: Brand showcase HTML ---
+
+bold ""
+bold "Check 8: Brand showcase HTML (if present)"
+
+if [ -f "$BRAND_DIR/brand-showcase.html" ]; then
+  HTML_FILE="$BRAND_DIR/brand-showcase.html"
+
+  # Check for <html> tag
+  if grep -q '<html' "$HTML_FILE"; then
+    pass "brand-showcase.html contains <html> tag"
+  else
+    fail "brand-showcase.html missing <html> tag — not a valid HTML file"
+  fi
+
+  # Check for both theme support (data-theme attribute or prefers-color-scheme)
+  if grep -q 'data-theme' "$HTML_FILE" || grep -q 'prefers-color-scheme' "$HTML_FILE"; then
+    pass "Theme switching support found"
+  else
+    warn "No dark/light theme switching detected in showcase"
+  fi
+
+  # Check for Google Fonts import
+  if grep -q 'fonts.googleapis.com' "$HTML_FILE"; then
+    pass "Google Fonts import detected"
+  else
+    warn "No Google Fonts import found — fonts may not render correctly"
+  fi
+
+  # Check file is self-contained (no external CSS/JS except Google Fonts)
+  EXTERNAL_DEPS=$(grep -E '<link[^>]*href=|<script[^>]*src=' "$HTML_FILE" | grep -v 'fonts.googleapis.com' | grep -v 'fonts.gstatic.com' || true)
+  if [ -z "$EXTERNAL_DEPS" ]; then
+    pass "Showcase is self-contained (only Google Fonts external)"
+  else
+    warn "External dependencies detected (should be self-contained):"
+    echo "$EXTERNAL_DEPS"
+  fi
+else
+  echo "  SKIP: brand-showcase.html not present"
+fi
+
+# --- Check 9: Brand effects CSS ---
+
+bold ""
+bold "Check 9: Brand effects CSS (if present)"
+
+if [ -f "$BRAND_DIR/brand-effects.css" ]; then
+  EFFECTS_FILE="$BRAND_DIR/brand-effects.css"
+
+  # Check for empty rules
+  EMPTY_RULES=$(grep -Pn '^\s*\.[a-z-]+\s*\{\s*\}' "$EFFECTS_FILE" || true)
+  if [ -n "$EMPTY_RULES" ]; then
+    fail "Empty CSS rules found in brand-effects.css:"
+    echo "$EMPTY_RULES"
+  else
+    pass "No empty CSS rules"
+  fi
+
+  # Check that effects use custom properties, not hardcoded colors
+  HARDCODED_COLORS=$(grep -Pn '#[0-9a-fA-F]{3,6}' "$EFFECTS_FILE" | grep -v '/\*' || true)
+  if [ -n "$HARDCODED_COLORS" ]; then
+    warn "Hardcoded hex colors found (should use CSS custom properties):"
+    echo "$HARDCODED_COLORS" | head -5
+  else
+    pass "Effects use CSS custom properties (no hardcoded colors)"
+  fi
+
+  # Check for at least one keyframe or animation
+  if grep -q '@keyframes' "$EFFECTS_FILE" || grep -q 'animation:' "$EFFECTS_FILE"; then
+    pass "Animations/keyframes detected"
+  else
+    warn "No animations detected — brand-effects.css may be incomplete"
+  fi
+else
+  echo "  SKIP: brand-effects.css not present (optional file)"
+fi
+
+# --- Check 10: Showcase self-containment verification ---
+
+bold ""
+bold "Check 10: Showcase self-containment"
+
+if [ -f "$BRAND_DIR/brand-showcase.html" ]; then
+  HTML_FILE="$BRAND_DIR/brand-showcase.html"
+
+  # Check that CSS is inlined (has <style> tag)
+  if grep -q '<style>' "$HTML_FILE"; then
+    pass "CSS is inlined in showcase"
+  else
+    fail "No <style> tag found — CSS should be inlined for self-containment"
+  fi
+
+  # Check that JS is inlined (has <script> without src)
+  if grep -E '<script[^>]*>' "$HTML_FILE" | grep -v 'src=' | grep -q '<script'; then
+    pass "JavaScript is inlined in showcase"
+  else
+    warn "No inline JavaScript detected — may be missing theme toggle"
+  fi
+
+  # Verify no references to external brand files
+  if grep -q 'brand-theme.css\|brand-effects.css\|tailwind.brand.js' "$HTML_FILE"; then
+    fail "Showcase references external brand files — should be fully self-contained"
+  else
+    pass "No references to external brand files"
+  fi
+else
+  echo "  SKIP: brand-showcase.html not present"
+fi
+
 # --- Summary ---
 
 bold ""

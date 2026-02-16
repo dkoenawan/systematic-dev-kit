@@ -63,6 +63,16 @@ The three core emotions the user identified are: **{emotion 1}**, **{emotion 2}*
 | Animation speed | {Fast / Normal / Deliberate / Slow} | {Why this matches the brand} |
 | Interaction feel | {Snappy / Smooth / Gentle / Springy / Weighted} | {Why this matches the brand} |
 
+## Visual Expression Strategy
+
+{Describe the creative vision for the brand showcase page. This is where the brand comes alive visually.}
+
+- **Signature visual concept**: {Not a technique name, but a creative metaphor — e.g., "light refracting through water", "ink spreading on wet paper", "crystalline precision". What's the hero visual idea?}
+- **Connection to brand emotions**: {How does this visual concept embody the three core emotions? Be specific about the relationship.}
+- **Hero moment**: {Paint a picture in words — what does someone see when they first open the showcase? What makes them stop and look?}
+- **Dark/light mode priority**: {Dark-mode-first or light-mode-first? Why does this choice match the brand personality? (Sophisticated/premium/rebel → dark-first; warm/caregiver/playful → light-first)}
+- **Page rhythm and energy**: {What's the overall feeling as someone scrolls through the showcase? Calm and spacious? Dense and information-rich? Rhythmic and musical? Dramatic and cinematic?}
+
 ---
 
 > **Present to user:** "This is the creative direction I'd propose. Before I generate any files, I want to make sure this feels right."
