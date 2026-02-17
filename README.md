@@ -33,6 +33,8 @@ systematic-dev-kit/
 ├── skills/                            # Agent-based skills
 │   ├── init/                          # Project initialization (recommended)
 │   │   └── SKILL.md
+│   ├── brand-designer/                # Brand identity design through discovery
+│   │   └── SKILL.md
 │   └── bootstrap-new-project/         # Full-stack project bootstrap (deprecated)
 │       └── SKILL.md
 ├── commands/                          # Quick command skills (future)
@@ -81,6 +83,38 @@ Initialize a new full-stack project from a template repository with opt-out comp
 - Frontend: http://localhost:3000
 - Backend: http://localhost:4000
 - Database: PostgreSQL on localhost:5432
+
+---
+
+### Brand Design
+
+#### `/systematic-dev-kit:brand-designer`
+
+Design a distinctive brand identity through systematic emotional discovery — generates brand guidelines, CSS custom properties, and optional Tailwind config.
+
+**What it produces:**
+
+| File | Description |
+|------|-------------|
+| `brand/brand-guideline.md` | Comprehensive brand identity doc (colors, typography, spacing, component tokens, voice & tone) |
+| `brand/brand-theme.css` | CSS custom properties in HSL format with intentionally designed dark mode |
+| `brand/tailwind.brand.js` | Tailwind theme config (only if selected) |
+
+**Usage:**
+```bash
+/systematic-dev-kit:brand-designer
+```
+
+**How it works (6 phases):**
+
+1. **Brand Soul Discovery** — Understand the brand's story, future vision, and personality archetype
+2. **Emotional Mapping** — Define the three core emotions, sensory environment, and anti-inspiration
+3. **Visual Direction** — Gather references, assess existing assets, confirm technical context
+4. **Creative Direction Synthesis** — AI presents a narrative creative brief for approval before generating anything
+5. **File Generation** — Produces brand guidelines, CSS theme, and optional Tailwind config
+6. **Handoff Summary** — Google Fonts snippet, import instructions, and next steps
+
+**Key principle:** Colors are derived from emotions, not picked from palettes. The skill spends most of its time understanding the brand through discovery before generating any design artifacts.
 
 ---
 
