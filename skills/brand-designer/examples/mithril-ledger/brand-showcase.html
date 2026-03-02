@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MithrilLedger — Brand Showcase</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* === Inline Brand Tokens === */
+    :root {
+      --color-primary-h: 230;
+      --color-primary-s: 15%;
+      --color-primary-l: 19%;
+      --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+
+      --color-secondary-h: 220;
+      --color-secondary-s: 30%;
+      --color-secondary-l: 65%;
+      --color-secondary: hsl(var(--color-secondary-h) var(--color-secondary-s) var(--color-secondary-l));
+
+      --color-accent-h: 40;
+      --color-accent-s: 54%;
+      --color-accent-l: 50%;
+      --color-accent: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
+
+      --color-bg: hsl(230 12% 14%);
+      --color-surface: hsl(230 13% 18%);
+      --color-border: hsl(230 16% 28%);
+      --color-text: hsl(30 8% 90%);
+      --color-text-secondary: hsl(30 5% 65%);
+      --color-text-muted: hsl(30 2% 41%);
+
+      --color-success: hsl(148 36% 46%);
+      --color-warning: hsl(34 62% 53%);
+      --color-error: hsl(0 48% 54%);
+      --color-info: hsl(214 42% 57%);
+
+      --font-heading: 'Cinzel', 'Georgia', serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --text-display: 3.052rem;
+      --text-h1: 2.441rem;
+      --text-h2: 1.953rem;
+      --text-h3: 1.563rem;
+      --text-h4: 1.25rem;
+      --text-body-lg: 1.125rem;
+      --text-body: 1rem;
+      --text-body-sm: 0.875rem;
+      --text-caption: 0.75rem;
+
+      --weight-normal: 400;
+      --weight-medium: 500;
+      --weight-semibold: 600;
+      --weight-bold: 700;
+
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+      --space-2xl: 3rem;
+      --space-3xl: 4rem;
+
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --radius-lg: 6px;
+
+      --shadow-sm: 0 1px 3px hsla(230, 15%, 5%, 0.2);
+      --shadow-md: 0 4px 12px hsla(230, 15%, 5%, 0.3);
+      --shadow-lg: 0 8px 28px hsla(230, 15%, 5%, 0.4);
+
+      --transition-fast: 150ms ease;
+      --transition-normal: 280ms ease;
+      --transition-slow: 450ms ease;
+      --transition-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    [data-theme="light"] {
+      --color-bg: hsl(30 10% 95%);
+      --color-surface: hsl(30 8% 98%);
+      --color-border: hsl(30 6% 82%);
+      --color-text: hsl(230 15% 15%);
+      --color-text-secondary: hsl(230 10% 38%);
+      --color-text-muted: hsl(230 6% 58%);
+      --shadow-sm: 0 1px 3px hsla(30, 10%, 20%, 0.08);
+      --shadow-md: 0 4px 12px hsla(30, 10%, 20%, 0.12);
+      --shadow-lg: 0 8px 28px hsla(30, 10%, 20%, 0.16);
+    }
+
+    /* === Base Reset === */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.5;
+      transition: background 0.4s var(--transition-easing), color 0.4s var(--transition-easing);
+      overflow-x: hidden;
+    }
+
+    /* === Theme Toggle === */
+    .theme-toggle {
+      position: fixed;
+      top: var(--space-xl);
+      right: var(--space-xl);
+      padding: 0.6rem 1.2rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-body-sm);
+      color: var(--color-text-secondary);
+      transition: all var(--transition-normal);
+      z-index: 100;
+      letter-spacing: 0.02em;
+    }
+
+    .theme-toggle:hover {
+      background: var(--color-accent);
+      color: hsl(230 12% 14%);
+      border-color: var(--color-accent);
+    }
+
+    /* === Hero Section — The Forge Glow === */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-3xl) var(--space-xl);
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 30% 40%, hsla(40, 54%, 50%, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 60%, hsla(40, 45%, 40%, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, hsla(220, 30%, 65%, 0.03) 0%, transparent 50%),
+        linear-gradient(180deg, hsl(230, 12%, 14%) 0%, hsl(230, 14%, 10%) 100%);
+    }
+
+    [data-theme="light"] .hero {
+      background:
+        radial-gradient(ellipse at 30% 40%, hsla(40, 54%, 50%, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 60%, hsla(40, 45%, 40%, 0.06) 0%, transparent 50%),
+        linear-gradient(180deg, hsl(30, 10%, 95%) 0%, hsl(30, 8%, 90%) 100%);
+    }
+
+    /* Runic channel lines — geometric, angular, SVG-based */
+    .runic-channels {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .runic-channels svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .runic-line {
+      stroke: hsla(40, 54%, 50%, 0.12);
+      stroke-width: 1;
+      fill: none;
+      stroke-dasharray: 8 12;
+    }
+
+    .runic-glow {
+      stroke: hsla(40, 54%, 50%, 0.4);
+      stroke-width: 2;
+      fill: none;
+      filter: blur(3px);
+      opacity: 0;
+      animation: channelGlow 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+
+    .runic-glow:nth-child(2) { animation-delay: 2s; }
+    .runic-glow:nth-child(3) { animation-delay: 4s; }
+
+    @keyframes channelGlow {
+      0%, 100% { opacity: 0; stroke-dashoffset: 0; }
+      30% { opacity: 0.6; }
+      70% { opacity: 0.6; }
+      100% { opacity: 0; stroke-dashoffset: -200; }
+    }
+
+    /* Forge ember particles */
+    .ember {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: hsl(40, 54%, 55%);
+      border-radius: 50%;
+      box-shadow: 0 0 8px hsla(40, 54%, 50%, 0.6), 0 0 16px hsla(40, 54%, 50%, 0.3);
+      animation: emberFloat 8s ease-in-out infinite;
+    }
+
+    .ember:nth-child(1) { top: 65%; left: 20%; animation-delay: 0s; animation-duration: 7s; }
+    .ember:nth-child(2) { top: 70%; left: 50%; animation-delay: 2s; animation-duration: 9s; }
+    .ember:nth-child(3) { top: 60%; left: 75%; animation-delay: 4s; animation-duration: 6s; }
+    .ember:nth-child(4) { top: 75%; left: 35%; animation-delay: 1s; animation-duration: 8s; }
+    .ember:nth-child(5) { top: 55%; left: 60%; animation-delay: 3s; animation-duration: 10s; }
+    .ember:nth-child(6) { top: 80%; left: 45%; animation-delay: 5s; animation-duration: 7s; }
+
+    @keyframes emberFloat {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+      25% { opacity: 0.7; }
+      50% { transform: translateY(-30px) scale(0.8); opacity: 0.5; }
+      75% { opacity: 0.6; }
+    }
+
+    .hero-content {
+      max-width: 800px;
+      text-align: center;
+      z-index: 1;
+      animation: fadeUp 1s var(--transition-easing) forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-size: var(--text-display);
+      font-weight: var(--weight-bold);
+      color: var(--color-text);
+      margin-bottom: var(--space-sm);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hero .tagline {
+      font-family: var(--font-body);
+      font-size: var(--text-body-lg);
+      color: var(--color-text-secondary);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    .hero .sigil {
+      display: inline-block;
+      width: 48px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+      margin: var(--space-lg) 0;
+      opacity: 0.6;
+    }
+
+    /* === Sections === */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: var(--space-3xl) var(--space-xl);
+    }
+
+    .section-label {
+      font-family: var(--font-heading);
+      font-size: var(--text-caption);
+      font-weight: var(--weight-semibold);
+      color: var(--color-accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-sm);
+    }
+
+    .section h2 {
+      font-family: var(--font-heading);
+      font-size: var(--text-h2);
+      font-weight: var(--weight-semibold);
+      margin-bottom: var(--space-xl);
+      color: var(--color-text);
+      letter-spacing: 0.02em;
+    }
+
+    /* Divider between sections */
+    .section-divider {
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-border), hsla(40, 54%, 50%, 0.2), var(--color-border), transparent);
+    }
+
+    /* === Typography Specimen === */
+    .type-scale {
+      display: grid;
+      gap: var(--space-lg);
+    }
+
+    .type-example {
+      padding: var(--space-lg);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border-left: 2px solid var(--color-accent);
+      transition: border-color var(--transition-normal);
+    }
+
+    .type-example:hover {
+      border-left-color: var(--color-secondary);
+    }
+
+    .type-example .label {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-md);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .type-display { font-family: var(--font-heading); font-size: var(--text-display); font-weight: var(--weight-bold); line-height: 1.1; letter-spacing: 0.04em; }
+    .type-h1 { font-family: var(--font-heading); font-size: var(--text-h1); font-weight: var(--weight-bold); line-height: 1.15; letter-spacing: 0.02em; }
+    .type-h2 { font-family: var(--font-heading); font-size: var(--text-h2); font-weight: var(--weight-semibold); line-height: 1.2; }
+    .type-h3 { font-family: var(--font-heading); font-size: var(--text-h3); font-weight: var(--weight-semibold); line-height: 1.25; }
+    .type-body-lg { font-size: var(--text-body-lg); line-height: 1.65; }
+    .type-body { font-size: var(--text-body); line-height: 1.5; }
+    .type-mono { font-family: var(--font-mono); font-size: var(--text-body); line-height: 1.5; color: var(--color-accent); }
+
+    /* === Color Palette === */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .color-swatch {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+      cursor: default;
+    }
+
+    .color-swatch:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .color-swatch .color-block {
+      height: 100px;
+      width: 100%;
+    }
+
+    .color-swatch .color-info {
+      padding: var(--space-md);
+      background: var(--color-surface);
+    }
+
+    .color-swatch .color-name {
+      font-family: var(--font-heading);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-body-sm);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.01em;
+    }
+
+    .color-swatch .color-hex {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      color: var(--color-text-muted);
+    }
+
+    /* === Component Gallery === */
+    .component-grid {
+      display: grid;
+      gap: var(--space-xl);
+    }
+
+    .component-demo {
+      padding: var(--space-xl);
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+    }
+
+    .component-demo h3 {
+      font-family: var(--font-heading);
+      font-size: var(--text-h4);
+      font-weight: var(--weight-semibold);
+      margin-bottom: var(--space-lg);
+      letter-spacing: 0.02em;
+    }
+
+    .button-group {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-body-sm);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: var(--color-accent);
+      color: hsl(230 12% 10%);
+    }
+
+    .btn-primary:hover {
+      background: hsl(40 58% 45%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px hsla(40, 54%, 50%, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--color-secondary);
+      color: hsl(230 12% 10%);
+    }
+
+    .btn-secondary:hover {
+      background: hsl(220 30% 58%);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-secondary);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    /* Data Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+
+    .data-card {
+      background: var(--color-bg);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      border: 1px solid var(--color-border);
+      border-top: 2px solid var(--color-accent);
+      transition: border-color var(--transition-normal), transform var(--transition-normal);
+    }
+
+    .data-card:hover {
+      border-top-color: var(--color-secondary);
+      transform: translateY(-2px);
+    }
+
+    .data-card .metric {
+      font-family: var(--font-mono);
+      font-size: var(--text-h2);
+      font-weight: var(--weight-bold);
+      color: var(--color-accent);
+      margin-bottom: var(--space-sm);
+    }
+
+    .data-card .metric-label {
+      font-size: var(--text-body-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .data-card .metric-change {
+      font-family: var(--font-mono);
+      font-size: var(--text-caption);
+      margin-top: var(--space-sm);
+    }
+
+    .metric-change.positive { color: var(--color-success); }
+    .metric-change.negative { color: var(--color-error); }
+
+    /* Input field */
+    .input-demo {
+      margin-top: var(--space-lg);
+    }
+
+    .input-field {
+      width: 100%;
+      max-width: 360px;
+      padding: 0.65rem 1rem;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: var(--text-body);
+      transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+      outline: none;
+    }
+
+    .input-field::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .input-field:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px hsla(40, 54%, 50%, 0.15);
+    }
+
+    /* === Brand Essence === */
+    .brand-essence {
+      max-width: 650px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .brand-essence .essence-mark {
+      display: inline-block;
+      width: 32px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+      margin-bottom: var(--space-xl);
+      opacity: 0.5;
+    }
+
+    .brand-essence p {
+      font-size: var(--text-body-lg);
+      line-height: 1.75;
+      color: var(--color-text-secondary);
+    }
+
+    .brand-essence p + p {
+      margin-top: var(--space-lg);
+    }
+
+    .brand-essence .closing-mark {
+      font-family: var(--font-heading);
+      font-size: var(--text-h3);
+      color: var(--color-accent);
+      margin-top: var(--space-xl);
+      letter-spacing: 0.08em;
+      opacity: 0.6;
+    }
+
+    /* === Semantic Colors Demo === */
+    .semantic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .semantic-chip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-md);
+      font-size: var(--text-body-sm);
+      font-weight: var(--weight-medium);
+    }
+
+    .semantic-chip .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .semantic-chip.success { background: hsla(148, 36%, 46%, 0.12); color: var(--color-success); }
+    .semantic-chip.success .dot { background: var(--color-success); }
+    .semantic-chip.warning { background: hsla(34, 62%, 53%, 0.12); color: var(--color-warning); }
+    .semantic-chip.warning .dot { background: var(--color-warning); }
+    .semantic-chip.error { background: hsla(0, 48%, 54%, 0.12); color: var(--color-error); }
+    .semantic-chip.error .dot { background: var(--color-error); }
+    .semantic-chip.info { background: hsla(214, 42%, 57%, 0.12); color: var(--color-info); }
+    .semantic-chip.info .dot { background: var(--color-info); }
+
+    /* === Responsive === */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .type-display { font-size: 2rem; }
+      .type-h1 { font-size: 1.75rem; }
+      .section { padding: var(--space-2xl) var(--space-md); }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span id="theme-label">Mountain Terrace</span>
+  </button>
+
+  <!-- ===== HERO — The Forge Glow ===== -->
+  <section class="hero">
+    <!-- Runic channel lines -->
+    <div class="runic-channels">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+        <!-- Geometric angular patterns — dwarven channels -->
+        <polyline class="runic-line" points="0,400 200,400 250,350 400,350 450,400 600,400" />
+        <polyline class="runic-line" points="600,400 750,400 800,350 950,350 1000,400 1200,400" />
+        <polyline class="runic-line" points="100,500 300,500 350,450 500,450 550,500 700,500" />
+        <polyline class="runic-line" points="500,600 650,600 700,550 850,550 900,600 1100,600" />
+        <!-- Vertical connectors -->
+        <polyline class="runic-line" points="400,250 400,350" />
+        <polyline class="runic-line" points="800,250 800,350" />
+        <polyline class="runic-line" points="350,450 350,550" />
+        <polyline class="runic-line" points="700,500 700,550" />
+        <!-- Glowing paths (animated) -->
+        <polyline class="runic-glow" points="200,400 250,350 400,350 450,400 600,400" />
+        <polyline class="runic-glow" points="300,500 350,450 500,450 550,500" />
+        <polyline class="runic-glow" points="650,600 700,550 850,550 900,600" />
+      </svg>
+    </div>
+
+    <!-- Forge embers -->
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+
+    <div class="hero-content">
+      <h1>MithrilLedger</h1>
+      <div class="sigil"></div>
+      <p class="tagline">Master your finances with the precision of dwarven craft. Every transaction tracked, every coin accounted for, every vault in order.</p>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ===== TYPOGRAPHY ===== -->
+  <section class="section">
+    <div class="section-label">Typography</div>
+    <h2>The Inscriptions</h2>
+    <div class="type-scale">
+      <div class="type-example">
+        <div class="label">Display · Cinzel Bold · 3.052rem</div>
+        <div class="type-display">The Great Ledger</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Heading 1 · Cinzel Bold · 2.441rem</div>
+        <div class="type-h1">Know Exactly Where You Stand</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Heading 2 · Cinzel Semibold · 1.953rem</div>
+        <div class="type-h2">Monthly Spending Overview</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Heading 3 · Cinzel Semibold · 1.563rem</div>
+        <div class="type-h3">Transaction Categories & Allocations</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Body Large · Inter Regular · 1.125rem</div>
+        <div class="type-body-lg">MithrilLedger transforms the chaos of bank statements and scattered receipts into a clear, unified view of your financial life. No more guessing, no more dread.</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Body · Inter Regular · 1rem</div>
+        <div class="type-body">Every transaction is categorized, every month is reconciled, every pattern surfaces. Your finances become legible — a story you can read and understand, not a pile of numbers to avoid.</div>
+      </div>
+      <div class="type-example">
+        <div class="label">Monospace · JetBrains Mono · 1rem</div>
+        <div class="type-mono">$4,827.50 — Monthly Total · 142 transactions</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ===== COLOR PALETTE ===== -->
+  <section class="section">
+    <div class="section-label">Color System</div>
+    <h2>Materials of the Hold</h2>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(230 15% 19%);"></div>
+        <div class="color-info">
+          <div class="color-name">Deep Slate</div>
+          <div class="color-hex">#2A2D3A · Primary</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(220 30% 65%);"></div>
+        <div class="color-info">
+          <div class="color-name">Mithril Silver</div>
+          <div class="color-hex">#8B9DC3 · Secondary</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(40 54% 50%);"></div>
+        <div class="color-info">
+          <div class="color-name">Forge Gold</div>
+          <div class="color-hex">#C4973B · Accent</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(230 12% 14%);"></div>
+        <div class="color-info">
+          <div class="color-name">Mountain Dark</div>
+          <div class="color-hex">#1E2028 · Background</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(230 13% 18%);"></div>
+        <div class="color-info">
+          <div class="color-name">Stone Chamber</div>
+          <div class="color-hex">#282B36 · Surface</div>
+        </div>
+      </div>
+      <div class="color-swatch">
+        <div class="color-block" style="background: hsl(30 8% 90%);"></div>
+        <div class="color-info">
+          <div class="color-name">Pale Granite</div>
+          <div class="color-hex">#E8E6E3 · Text</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Semantic colors -->
+    <div class="semantic-grid">
+      <div class="semantic-chip success"><div class="dot"></div> Income Received</div>
+      <div class="semantic-chip warning"><div class="dot"></div> Budget Warning</div>
+      <div class="semantic-chip error"><div class="dot"></div> Overspend Alert</div>
+      <div class="semantic-chip info"><div class="dot"></div> Reconciliation Note</div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ===== COMPONENTS ===== -->
+  <section class="section">
+    <div class="section-label">Components</div>
+    <h2>Forged Elements</h2>
+    <div class="component-grid">
+      <div class="component-demo">
+        <h3>Buttons</h3>
+        <div class="button-group">
+          <button class="btn btn-primary">View Your Ledger</button>
+          <button class="btn btn-secondary">Track This Month</button>
+          <button class="btn btn-outline">Export Report</button>
+        </div>
+      </div>
+
+      <div class="component-demo">
+        <h3>Data Cards</h3>
+        <div class="card-grid">
+          <div class="data-card">
+            <div class="metric">$4,827</div>
+            <div class="metric-label">Monthly Spending</div>
+            <div class="metric-change negative">+12.3% vs last month</div>
+          </div>
+          <div class="data-card">
+            <div class="metric">$6,450</div>
+            <div class="metric-label">Monthly Income</div>
+            <div class="metric-change positive">Steady</div>
+          </div>
+          <div class="data-card">
+            <div class="metric">142</div>
+            <div class="metric-label">Transactions</div>
+            <div class="metric-change positive">All categorized</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-demo">
+        <h3>Input</h3>
+        <div class="input-demo">
+          <input class="input-field" type="text" placeholder="Search transactions..." />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ===== BRAND ESSENCE ===== -->
+  <section class="section">
+    <div class="brand-essence">
+      <div class="essence-mark"></div>
+      <p>MithrilLedger turns financial anxiety into financial mastery. Named for the legendary dwarven metal — impossibly light yet indestructible — it holds the same paradox: a tool that carries the weight of personal finance while making it feel effortless.</p>
+      <p>Where most finance tools either talk down to you or drown you in spreadsheets, MithrilLedger treats you like the master of your own hold. Every corridor purposeful, every vault accounted for. Built by hand, shared with the fellowship.</p>
+      <div class="closing-mark">⚒</div>
+    </div>
+  </section>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const current = body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      body.setAttribute('data-theme', next);
+      document.getElementById('theme-label').textContent =
+        next === 'dark' ? 'Mountain Terrace' : 'The Deep Hold';
+    }
+  </script>
+</body>
+</html>

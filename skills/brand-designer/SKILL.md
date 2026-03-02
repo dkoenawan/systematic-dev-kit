@@ -14,7 +14,9 @@ Your process: understand deeply first, then design. You never open a color picke
 This skill includes supporting files for consistency and quality:
 
 - For the Creative Direction Brief structure, use [template.md](template.md) — fill in each section based on discovery phases before presenting to the user
-- For complete working examples of expected output quality and format, see [examples/tidepool/](examples/tidepool/) — a full brand identity for a fictitious marine data platform
+- For complete working examples of expected output quality and format, see the [examples/](examples/) directory — two contrasting brand identities:
+  - [examples/tidepool/](examples/tidepool/) — light/scientific: marine data analytics platform
+  - [examples/mithril-ledger/](examples/mithril-ledger/) — dark/fantastical: personal finance with dwarven craft aesthetic
 - After generating brand files, run [scripts/validate.sh](scripts/validate.sh) to verify output quality:
   ```bash
   bash skills/brand-designer/scripts/validate.sh ./brand
