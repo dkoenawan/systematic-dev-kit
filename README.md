@@ -35,6 +35,8 @@ systematic-dev-kit/
 │   │   └── SKILL.md
 │   ├── brand-designer/                # Brand identity design through discovery
 │   │   └── SKILL.md
+│   ├── explore/                        # Token-efficient codebase investigation
+│   │   └── SKILL.md
 │   ├── plan/                          # Feature planning and spec generation
 │   │   ├── SKILL.md
 │   │   ├── template.md
@@ -121,6 +123,35 @@ Design a distinctive brand identity through systematic emotional discovery — g
 6. **Handoff Summary** — Google Fonts snippet, import instructions, and next steps
 
 **Key principle:** Colors are derived from emotions, not picked from palettes. The skill spends most of its time understanding the brand through discovery before generating any design artifacts.
+
+---
+
+### Codebase Investigation
+
+#### `/systematic-dev-kit:explore`
+
+Token-efficient codebase investigation — reads docs before code, stops when context is sufficient.
+
+**What it produces:**
+
+A structured Investigation Report covering tech stack, data models, backend structure, frontend structure, key architectural patterns, and relevance to the investigation focus.
+
+**Usage:**
+```bash
+/systematic-dev-kit:explore
+```
+
+**How it works (3 tiers, stops early):**
+
+1. **Tier 1 — Docs First** (always): README → docs/ → CLAUDE.md. Stops here if tech stack, structure, and focus context are clear.
+2. **Tier 2 — Structure** (only if needed): package.json → Prisma schema → directory listings. Stops here if focus is answered.
+3. **Tier 3 — Targeted Code** (only if needed): ≤5 files, no import chain following, no broad scanning.
+
+**Key principle:** Thoroughness is not a virtue; precision is. The skill gathers exactly enough context to answer the investigation focus, then stops. Runs on Haiku to minimize token cost.
+
+**Invocation modes:**
+- **Standalone**: Invoke directly and provide an investigation focus (e.g., "auth system", "order management", "overall architecture")
+- **Via plan**: Automatically invoked by the plan skill when a feature extends existing code — no manual invocation needed
 
 ---
 

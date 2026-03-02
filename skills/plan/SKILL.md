@@ -52,12 +52,16 @@ If the user selects "Extends existing" or "Not sure", ask a follow-up text promp
 
 > Which existing feature or area does this relate to?
 
-Then scan the codebase for relevant context:
-- `prisma/schema.prisma` — existing data models
-- `backend/src/usecases/` — existing commands and queries
-- `frontend/src/components/pages/` — existing pages
+Then invoke the explore skill to investigate the codebase:
 
-Summarize what you find to the user before proceeding.
+> Use the `/systematic-dev-kit:explore` skill with the feature area as the investigation focus. The explore skill will traverse docs first, then project structure, then source code — stopping as soon as sufficient context is gathered. It runs on Haiku to preserve tokens.
+
+Once explore returns its investigation report, present a brief summary to the user:
+- Relevant existing data models
+- Relevant existing usecases/commands
+- Relevant existing pages/routes
+
+Then continue to Q3.
 
 ### Q3 — Complexity Signals (AskUserQuestion, multiSelect)
 
