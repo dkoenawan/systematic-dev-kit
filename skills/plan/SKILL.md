@@ -56,12 +56,22 @@ Then invoke the explore skill to investigate the codebase:
 
 > Use the `/systematic-dev-kit:explore` skill with the feature area as the investigation focus. The explore skill will traverse docs first, then project structure, then source code — stopping as soon as sufficient context is gathered. It runs on Haiku to preserve tokens.
 
-Once explore returns its investigation report, present a brief summary to the user:
-- Relevant existing data models
-- Relevant existing usecases/commands
-- Relevant existing pages/routes
+Once explore returns its investigation report, you are at a **MANDATORY CONTINUATION POINT**. Do not stop. Do not wait for the user to prompt you again. The return of the explore skill is NOT a conversation end — it is an internal workflow step.
 
-Then continue to Q3.
+In the **same response**, do both of the following:
+
+**Action 1 — Present context summary** (3 bullet points max):
+- Relevant existing data models found
+- Relevant existing usecases/commands found
+- Relevant existing pages/routes found
+
+**Action 2 — Ask Q3 immediately** (in the same response, directly after the summary):
+
+> Now let's size the complexity so I know how deep to go.
+
+Then proceed to the Q3 AskUserQuestion below.
+
+> **CRITICAL**: If you are about to end your response after presenting the explore summary without asking Q3, stop — you are making an error. Ask Q3 in this same response before closing.
 
 ### Q3 — Complexity Signals (AskUserQuestion, multiSelect)
 
@@ -341,3 +351,14 @@ If the user's answers conflict (e.g., "simple CRUD" but selected 5 complexity si
 > I'm noticing a tension — you mentioned {X} but also selected {Y}, which usually pull in opposite directions. Let me clarify: {specific question to resolve the conflict}.
 
 Resolve before continuing to synthesis.
+
+---
+
+> **SKILL COMPLETION GATE** — Do not consider this skill complete until ALL of the following are true:
+>
+> - [ ] The spec file exists at `specs/{feature-name}.md` on disk (created with Write tool)
+> - [ ] The file contains all sections from `template.md`, filled with real content (no placeholder text)
+> - [ ] The implementation order section lists concrete numbered steps: DB → Backend → Frontend
+> - [ ] The handoff message with the full file path has been presented to the user
+>
+> If any item is unchecked, you are not done. Generate the missing output before closing.
