@@ -35,6 +35,14 @@ systematic-dev-kit/
 │   │   └── SKILL.md
 │   ├── brand-designer/                # Brand identity design through discovery
 │   │   └── SKILL.md
+│   ├── explore/                        # Token-efficient codebase investigation
+│   │   └── SKILL.md
+│   ├── plan/                          # Feature planning and spec generation
+│   │   ├── SKILL.md
+│   │   ├── template.md
+│   │   └── examples/
+│   │       └── user-management/
+│   │           └── feature-spec.md
 │   └── bootstrap-new-project/         # Full-stack project bootstrap (deprecated)
 │       └── SKILL.md
 ├── commands/                          # Quick command skills (future)
@@ -115,6 +123,66 @@ Design a distinctive brand identity through systematic emotional discovery — g
 6. **Handoff Summary** — Google Fonts snippet, import instructions, and next steps
 
 **Key principle:** Colors are derived from emotions, not picked from palettes. The skill spends most of its time understanding the brand through discovery before generating any design artifacts.
+
+---
+
+### Codebase Investigation
+
+#### `/systematic-dev-kit:explore`
+
+Token-efficient codebase investigation — reads docs before code, stops when context is sufficient.
+
+**What it produces:**
+
+A structured Investigation Report covering tech stack, data models, backend structure, frontend structure, key architectural patterns, and relevance to the investigation focus.
+
+**Usage:**
+```bash
+/systematic-dev-kit:explore
+```
+
+**How it works (3 tiers, stops early):**
+
+1. **Tier 1 — Docs First** (always): README → docs/ → CLAUDE.md. Stops here if tech stack, structure, and focus context are clear.
+2. **Tier 2 — Structure** (only if needed): package.json → Prisma schema → directory listings. Stops here if focus is answered.
+3. **Tier 3 — Targeted Code** (only if needed): ≤5 files, no import chain following, no broad scanning.
+
+**Key principle:** Thoroughness is not a virtue; precision is. The skill gathers exactly enough context to answer the investigation focus, then stops. Runs on Haiku to minimize token cost.
+
+**Invocation modes:**
+- **Standalone**: Invoke directly and provide an investigation focus (e.g., "auth system", "order management", "overall architecture")
+- **Via plan**: Automatically invoked by the plan skill when a feature extends existing code — no manual invocation needed
+
+---
+
+### Feature Planning
+
+#### `/systematic-dev-kit:plan`
+
+Systematic feature planning through structured discovery — generates detailed specs (DB → Backend → Frontend) that eliminate re-scanning and token waste in future implementation prompts.
+
+**What it produces:**
+
+| File | Description |
+|------|-------------|
+| `specs/{feature-name}.md` | Complete feature spec with Prisma models, CQRS commands/queries, API shapes, routes, and implementation order |
+
+**Usage:**
+```bash
+/systematic-dev-kit:plan
+```
+
+**How it works (5 phases):**
+
+1. **Feature Intent** — Understand what the user wants to build, whether it's new or extends existing code, and assess complexity signals
+2. **Layer-by-Layer Design** — Walk through Database → Backend → Frontend with adaptive depth (simple features get fewer questions, complex features get the full set plus tradeoff surfacing)
+3. **Spec Synthesis** — Synthesize all answers into a complete spec with Prisma models, CQRS operations, TypeScript interfaces, routes, and component hierarchy
+4. **Approval Gate** — Present full spec for user approval with option to adjust or rethink
+5. **File Generation & Handoff** — Generate spec file and explain how to reference it for implementation
+
+**Key principle:** Plan once, implement by referencing the spec. Each section of the generated spec is detailed enough to implement a full layer (DB, Backend, or Frontend) without re-scanning the codebase or re-explaining context.
+
+**Adaptive depth:** The skill adjusts question count based on feature complexity — a simple CRUD feature gets 3 core questions per layer, while a feature with auth, real-time updates, and file uploads gets the full question set plus inline tradeoff surfacing.
 
 ---
 
