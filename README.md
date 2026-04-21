@@ -186,6 +186,50 @@ Systematic feature planning through structured discovery — generates detailed 
 
 ---
 
+### Documentation Maintenance
+
+#### `/systematic-dev-kit:doc-maintainer`
+
+Initialise, maintain, and refresh a codebase's `docs/` tree on a dedicated `docs` branch. Runs interactively or headless via a systemd daily timer.
+
+**What it produces:**
+
+| File | Description |
+|------|-------------|
+| `docs/index.md` | Overview paragraph + table of all domains with links |
+| `docs/<domain>/overview.md` | Per-domain doc: purpose, key files, public interface, dependencies, gotchas, changelog |
+
+**Usage:**
+```bash
+/systematic-dev-kit:doc-maintainer          # auto-detect: init if docs/ absent, else maintain
+/systematic-dev-kit:doc-maintainer init     # seed fresh docs for every domain
+/systematic-dev-kit:doc-maintainer maintain # incremental update of stalest domain(s)
+/systematic-dev-kit:doc-maintainer refresh  # full rewrite of all domains
+/systematic-dev-kit:doc-maintainer refresh <dir>  # full rewrite of one named domain
+```
+
+**How it works (4 phases):**
+
+1. **Phase 0 — Git safety** — Checks for dirty working tree (abort unless `--force`), stashes current branch, fetches, and checks out (or creates) the `docs` branch from the current HEAD.
+2. **Phase 1 — Init** — Discovers top-level domain dirs under `src/` (or repo root), spawns an Explore subagent per domain, seeds `docs/<domain>/overview.md` from `template.md`, and writes `docs/index.md`.
+3. **Phase 2 — Maintain** — Runs `scripts/find-stale-domains.sh` to find domains with `last_updated` >30 days old, picks the N stalest (configurable via `DOC_MAINTAIN_BATCH`), and incrementally patches each doc rather than rewriting it. Exits cleanly with "no stale docs" when nothing needs updating — the expected daily no-op.
+4. **Phase 3 — Refresh** — Full re-investigation and rewrite of all domains (or one named domain), carrying existing Changelog entries forward.
+
+After every mode: commits to the `docs` branch with a conventional message (`docs: init`, `docs: daily maintenance YYYY-MM-DD`, etc.) and restores the original branch. Never pushes.
+
+**Scheduling (unattended daily runs):**
+```bash
+# Install a systemd user timer for a target repo
+bash skills/doc-maintainer/scripts/install-schedule.sh /path/to/repo --time 09:00
+
+# Uninstall
+bash skills/doc-maintainer/scripts/uninstall-schedule.sh /path/to/repo
+```
+
+**Key principle:** Docs live on a separate `docs` branch so they never pollute source history. The daily timer runs `maintain` mode, which does zero LLM work on days when nothing is stale — cheap and reliable.
+
+---
+
 #### `/systematic-dev-kit:bootstrap-new-project` (Deprecated)
 
 > **Deprecated**: Use `/systematic-dev-kit:init` instead. This skill generates files directly which is less token-efficient.
