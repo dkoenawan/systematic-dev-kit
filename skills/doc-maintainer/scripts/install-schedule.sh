@@ -51,7 +51,7 @@ EOF
 # --- Argument parsing ---
 
 TARGET_REPO=""
-RUN_TIME="09:00"
+RUN_TIME="13:00"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -129,6 +129,9 @@ echo "[$SCRIPT_NAME] Systemd instance name: $ESCAPED_INSTANCE"
 UNIT_NAME="doc-maintainer@${ESCAPED_INSTANCE}"
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 
+# Resolve the plugin root: this script lives at <plugin-root>/skills/doc-maintainer/scripts/
+PLUGIN_DIR="$(cd "$(dirname "$(realpath "$0")")/../../.." && pwd)"
+
 # --- Write template unit files ---
 
 mkdir -p "$SYSTEMD_USER_DIR"
@@ -137,23 +140,24 @@ SERVICE_UNIT_FILE="$SYSTEMD_USER_DIR/doc-maintainer@.service"
 TIMER_UNIT_FILE="$SYSTEMD_USER_DIR/doc-maintainer@.timer"
 
 # Write the service template unit
-# %i expands to the unescaped instance name (the repo path) at runtime.
-cat > "$SERVICE_UNIT_FILE" <<'UNIT'
+# %I expands to the unescaped instance name (the repo path) at runtime.
+# Note: heredoc is unquoted so $PLUGIN_DIR is substituted at install time.
+cat > "$SERVICE_UNIT_FILE" <<UNIT
 [Unit]
 Description=doc-maintainer: daily documentation maintenance for %i
 After=network.target
 
 [Service]
 Type=oneshot
-# %i is the unescaped instance name — the absolute path to the target repo.
-# We cd into it so that git and claude operate in the right directory.
+# %I is the unescaped instance name — the absolute path to the target repo.
+# %i is the escaped form; %I is the decoded path suitable for WorkingDirectory=.
 #
 # NOTE: --dangerously-skip-permissions is required for unattended headless
 # execution. Claude cannot prompt for approval when invoked via -p (non-interactive).
 # If you prefer to handle approval prompts manually, remove that flag and run
 # the timer interactively, or pre-approve all required tools in your Claude config.
-WorkingDirectory=%i
-ExecStart=/bin/bash -c 'cd "%i" && claude -p "/systematic-dev-kit:doc-maintainer maintain" --dangerously-skip-permissions'
+WorkingDirectory=%I
+ExecStart=/bin/bash -lc 'claude --plugin-dir ${PLUGIN_DIR} -p "/systematic-dev-kit:doc-maintainer maintain" --dangerously-skip-permissions'
 StandardOutput=journal
 StandardError=journal
 

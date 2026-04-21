@@ -9,6 +9,51 @@ You are a precise, conservative documentation maintainer. Your job is to keep a 
 
 This skill runs in three modes: **init** (seed fresh docs), **maintain** (incremental daily updates to stale domains), and **refresh** (full rewrite of all or one domain). All modes share the same Phase 0 git safety routine.
 
+## Scheduling (Automated Daily Runs)
+
+The skill ships with a systemd user timer that runs `maintain` mode headlessly once per day.
+
+### Installation
+
+```bash
+# The server runs UTC. Specify the time in UTC (e.g. 13:00 UTC = 01:00 NZST).
+XDG_RUNTIME_DIR=/run/user/$(id -u) \
+  bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/install-schedule.sh \
+  /absolute/path/to/your-repo --time 13:00
+```
+
+`XDG_RUNTIME_DIR` must be set explicitly — it is often absent in non-login shells (e.g. SSH sessions, VS Code terminals). Without it, `systemctl --user` cannot reach the D-Bus socket and exits with `Failed to connect to bus: No medium found`.
+
+### Uninstall
+
+```bash
+XDG_RUNTIME_DIR=/run/user/$(id -u) \
+  bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/uninstall-schedule.sh \
+  /absolute/path/to/your-repo
+```
+
+### Checking status / logs
+
+```bash
+# Timer next-fire time
+XDG_RUNTIME_DIR=/run/user/$(id -u) systemctl --user list-timers "doc-maintainer*"
+
+# Last run logs
+XDG_RUNTIME_DIR=/run/user/$(id -u) journalctl --user \
+  -u "doc-maintainer@$(systemd-escape /absolute/path/to/your-repo).service" \
+  -n 50 --no-pager
+```
+
+### Known issues
+
+**`WorkingDirectory=%i` vs `%I`**  
+systemd template units use `%i` for the *escaped* instance name and `%I` for the *unescaped* (decoded) path. `WorkingDirectory=` requires an absolute path, so it must use `%I`. Earlier versions of the service template incorrectly used `%i`, causing the unit to refuse to start with `path is not absolute`. The install script generates `WorkingDirectory=%I` — if you have a service file from before this fix, re-run `install-schedule.sh` to regenerate it.
+
+**`claude` not on PATH under systemd**  
+systemd does not source the user's shell profile, so `~/.local/bin` (where `claude` lives) is not on `PATH`. The service uses `/bin/bash -lc` (login shell) to load the profile and resolve `claude`. If `claude` is installed somewhere non-standard, update the `ExecStart` line in `~/.config/systemd/user/doc-maintainer@.service`.
+
+---
+
 ## Supporting Files
 
 - [template.md](template.md) — the per-domain `overview.md` skeleton. Fill every field when generating a new doc page.
