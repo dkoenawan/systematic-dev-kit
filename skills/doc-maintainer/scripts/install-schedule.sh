@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # install-schedule.sh
-# Sets up a systemd user timer to run doc-maintainer maintain mode daily
-# for a target git repository.
+# Installs a cron job to run doc-maintainer maintain mode daily for a target repo.
+# The cron job calls maintain.sh, which handles logging and claude invocation.
 #
 # Usage:
 #   install-schedule.sh <absolute-path-to-target-repo> [--time HH:MM]
 #
 # Options:
-#   --time HH:MM    Time of day to run the daily timer (default: 09:00)
+#   --time HH:MM    Time of day to run (UTC, 24-hour format, default: 09:00)
 #   -h, --help      Show this help message
 
 set -euo pipefail
@@ -18,15 +18,16 @@ usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME <absolute-path-to-target-repo> [--time HH:MM]
 
-Sets up a systemd user timer to run:
-  claude -p "/systematic-dev-kit:doc-maintainer maintain" --dangerously-skip-permissions
-inside the target repository once per day at the specified time.
+Installs a daily cron job that runs:
+  maintain.sh <target-repo>
+at the specified time (UTC). Output is logged to:
+  <target-repo>/logs/doc-maintainer/YYYY-MM-DD.log
 
 Arguments:
   <absolute-path-to-target-repo>   Absolute path to the git repository to document.
 
 Options:
-  --time HH:MM   Time of day for the daily run (24-hour format, default: 09:00)
+  --time HH:MM   Time of day for the daily run (UTC, 24-hour format, default: 09:00)
   -h, --help     Show this help message
 
 Examples:
@@ -34,24 +35,16 @@ Examples:
   $SCRIPT_NAME /home/user/myproject --time 08:30
 
 Note:
-  This script uses systemd template units (doc-maintainer@.service and
-  doc-maintainer@.timer). A single set of template unit files supports
-  multiple repos — each repo is a separate instance identified by its
-  escaped path. The template files are written to:
-    ~/.config/systemd/user/doc-maintainer@.service
-    ~/.config/systemd/user/doc-maintainer@.timer
-
-  IMPORTANT: The service runs claude with --dangerously-skip-permissions,
-  which is required for unattended headless execution. If you prefer to
-  handle approval prompts manually, remove that flag from the ExecStart
-  line in the service unit file after installation.
+  The cron entry uses the full path to maintain.sh so it works without requiring
+  the plugin directory to be on PATH. Times are interpreted as UTC by cron on most
+  Linux systems. Adjust for your timezone if your cron daemon uses local time.
 EOF
 }
 
 # --- Argument parsing ---
 
 TARGET_REPO=""
-RUN_TIME="13:00"
+RUN_TIME="09:00"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -117,104 +110,62 @@ if [[ ! -d "$TARGET_REPO/.git" ]]; then
   exit 1
 fi
 
+# --- Resolve script paths ---
+
+# This script lives at <plugin-root>/skills/doc-maintainer/scripts/
+SCRIPTS_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
+MAINTAIN_SH="$SCRIPTS_DIR/maintain.sh"
+
+if [[ ! -f "$MAINTAIN_SH" ]]; then
+  echo "[$SCRIPT_NAME] Error: maintain.sh not found at '$MAINTAIN_SH'." >&2
+  exit 1
+fi
+
+# --- Build cron entry ---
+
+# Format: <minute> <hour> * * * /bin/bash <maintain.sh> <target-repo>
+# The marker comment allows uninstall-schedule.sh to identify this entry.
+CRON_MARKER="# doc-maintainer: $TARGET_REPO"
+CRON_ENTRY="$RUN_MINUTE $RUN_HOUR * * * /bin/bash $MAINTAIN_SH $TARGET_REPO $CRON_MARKER"
+
 echo "[$SCRIPT_NAME] Target repo: $TARGET_REPO"
-echo "[$SCRIPT_NAME] Scheduled time: $RUN_TIME daily"
+echo "[$SCRIPT_NAME] Schedule:    daily at $RUN_TIME UTC"
+echo "[$SCRIPT_NAME] Cron entry:  $CRON_ENTRY"
 
-# --- Compute escaped instance name ---
-# systemd-escape converts the repo path to a safe string usable as @<instance>
+# --- Check for duplicate ---
 
-ESCAPED_INSTANCE=$(systemd-escape "$TARGET_REPO")
-echo "[$SCRIPT_NAME] Systemd instance name: $ESCAPED_INSTANCE"
+EXISTING_CRON=$(crontab -l 2>/dev/null || true)
 
-UNIT_NAME="doc-maintainer@${ESCAPED_INSTANCE}"
-SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
+if echo "$EXISTING_CRON" | grep -qF "doc-maintainer: $TARGET_REPO"; then
+  echo "[$SCRIPT_NAME] A cron entry for this repo already exists. Removing old entry first."
+  EXISTING_CRON=$(echo "$EXISTING_CRON" | grep -vF "doc-maintainer: $TARGET_REPO")
+fi
 
-# Resolve the plugin root: this script lives at <plugin-root>/skills/doc-maintainer/scripts/
-PLUGIN_DIR="$(cd "$(dirname "$(realpath "$0")")/../../.." && pwd)"
+# --- Install cron entry ---
 
-# --- Write template unit files ---
+printf '%s\n%s\n' "$EXISTING_CRON" "$CRON_ENTRY" | crontab -
 
-mkdir -p "$SYSTEMD_USER_DIR"
-
-SERVICE_UNIT_FILE="$SYSTEMD_USER_DIR/doc-maintainer@.service"
-TIMER_UNIT_FILE="$SYSTEMD_USER_DIR/doc-maintainer@.timer"
-
-# Write the service template unit
-# %I expands to the unescaped instance name (the repo path) at runtime.
-# Note: heredoc is unquoted so $PLUGIN_DIR is substituted at install time.
-cat > "$SERVICE_UNIT_FILE" <<UNIT
-[Unit]
-Description=doc-maintainer: daily documentation maintenance for %i
-After=network.target
-
-[Service]
-Type=oneshot
-# %I is the unescaped instance name — the absolute path to the target repo.
-# %i is the escaped form; %I is the decoded path suitable for WorkingDirectory=.
-#
-# NOTE: --dangerously-skip-permissions is required for unattended headless
-# execution. Claude cannot prompt for approval when invoked via -p (non-interactive).
-# If you prefer to handle approval prompts manually, remove that flag and run
-# the timer interactively, or pre-approve all required tools in your Claude config.
-WorkingDirectory=%I
-ExecStart=/bin/bash -lc 'claude --plugin-dir ${PLUGIN_DIR} -p "/systematic-dev-kit:doc-maintainer maintain" --dangerously-skip-permissions'
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=default.target
-UNIT
-
-echo "[$SCRIPT_NAME] Wrote service template: $SERVICE_UNIT_FILE"
-
-# Write the timer template unit
-# OnCalendar uses a specific HH:MM time, filled in by this script.
-# Persistent=true means if the system was off at the scheduled time,
-# the timer fires once at next boot to catch up.
-cat > "$TIMER_UNIT_FILE" <<UNIT
-[Unit]
-Description=doc-maintainer: daily timer for %i
-
-[Timer]
-OnCalendar=*-*-* ${RUN_HOUR}:${RUN_MINUTE}:00
-Persistent=true
-Unit=doc-maintainer@%i.service
-
-[Install]
-WantedBy=timers.target
-UNIT
-
-echo "[$SCRIPT_NAME] Wrote timer template: $TIMER_UNIT_FILE"
-
-# --- Reload systemd and enable the timer instance ---
-
-echo "[$SCRIPT_NAME] Reloading systemd user daemon..."
-systemctl --user daemon-reload
-
-echo "[$SCRIPT_NAME] Enabling and starting timer: ${UNIT_NAME}.timer"
-systemctl --user enable --now "${UNIT_NAME}.timer"
+echo "[$SCRIPT_NAME] Cron entry installed."
 
 # --- Summary ---
 
 echo ""
 echo "============================================================"
-echo " doc-maintainer timer installed successfully"
+echo " doc-maintainer cron job installed"
 echo "============================================================"
 echo ""
-echo " Instance:  ${UNIT_NAME}.timer"
-echo " Repo:      $TARGET_REPO"
-echo " Schedule:  daily at $RUN_TIME (Persistent=true)"
+echo " Repo:     $TARGET_REPO"
+echo " Schedule: daily at $RUN_TIME UTC (cron: $RUN_MINUTE $RUN_HOUR * * *)"
+echo " Script:   $MAINTAIN_SH"
+echo " Logs:     $TARGET_REPO/logs/doc-maintainer/YYYY-MM-DD.log"
 echo ""
-echo " Check timer status:"
-echo "   systemctl --user status ${UNIT_NAME}.timer"
+echo " Verify the entry:"
+echo "   crontab -l | grep doc-maintainer"
 echo ""
-echo " Check service logs:"
-echo "   journalctl --user -u ${UNIT_NAME}.service -n 50 --no-pager"
-echo ""
-echo " Run manually (test without waiting for timer):"
-echo "   systemctl --user start ${UNIT_NAME}.service"
+echo " Run manually (without waiting for cron):"
+echo "   /bin/bash $MAINTAIN_SH $TARGET_REPO"
 echo ""
 echo " Uninstall:"
-echo "   bash $(dirname "$(realpath "$0")")/uninstall-schedule.sh $TARGET_REPO"
+echo "   bash $SCRIPTS_DIR/uninstall-schedule.sh $TARGET_REPO"
 echo ""
 echo "============================================================"

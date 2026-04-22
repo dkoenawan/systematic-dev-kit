@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # uninstall-schedule.sh
-# Disables and stops the systemd user timer for a target git repository.
-# Does NOT remove the template unit files (doc-maintainer@.service and
-# doc-maintainer@.timer) — other repo instances may still use them.
+# Removes the daily cron job for doc-maintainer on a target repository.
 #
 # Usage:
 #   uninstall-schedule.sh <absolute-path-to-target-repo>
@@ -18,21 +16,11 @@ usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME <absolute-path-to-target-repo>
 
-Disables and stops the daily doc-maintainer timer for the specified repository.
+Removes the doc-maintainer daily cron entry for the specified repository.
 
 Arguments:
   <absolute-path-to-target-repo>   Absolute path to the git repository whose
-                                   timer should be removed.
-
-Note:
-  This command disables the specific timer instance for this repo. The shared
-  template unit files (~/.config/systemd/user/doc-maintainer@.service and
-  doc-maintainer@.timer) are NOT removed, because other repositories may still
-  have timers using them. To remove the template files entirely, delete them
-  manually after all instances have been uninstalled:
-    rm ~/.config/systemd/user/doc-maintainer@.service
-    rm ~/.config/systemd/user/doc-maintainer@.timer
-    systemctl --user daemon-reload
+                                   cron job should be removed.
 
 Examples:
   $SCRIPT_NAME /home/user/myproject
@@ -72,58 +60,44 @@ if [[ -z "$TARGET_REPO" ]]; then
   exit 1
 fi
 
-# --- Validate target repo exists ---
+echo "[$SCRIPT_NAME] Target repo: $TARGET_REPO"
 
-if [[ ! -d "$TARGET_REPO" ]]; then
-  echo "[$SCRIPT_NAME] Warning: '$TARGET_REPO' does not exist on disk." >&2
-  echo "[$SCRIPT_NAME] Proceeding with uninstall anyway (the timer may still be registered)." >&2
+# --- Remove matching cron entries ---
+
+EXISTING_CRON=$(crontab -l 2>/dev/null || true)
+MARKER="doc-maintainer: $TARGET_REPO"
+
+if ! echo "$EXISTING_CRON" | grep -qF "$MARKER"; then
+  echo "[$SCRIPT_NAME] No cron entry found for '$TARGET_REPO'. Nothing to remove."
+  exit 0
 fi
 
-# --- Compute escaped instance name ---
+# Remove every line that contains the marker (handles duplicates from partial installs)
+NEW_CRON=$(echo "$EXISTING_CRON" | grep -vF "$MARKER")
 
-ESCAPED_INSTANCE=$(systemd-escape "$TARGET_REPO")
-UNIT_NAME="doc-maintainer@${ESCAPED_INSTANCE}"
+echo "$NEW_CRON" | crontab -
 
-echo "[$SCRIPT_NAME] Target repo:   $TARGET_REPO"
-echo "[$SCRIPT_NAME] Unit instance: ${UNIT_NAME}.timer"
+echo "[$SCRIPT_NAME] Cron entry removed."
 
-# --- Disable and stop the timer instance ---
+# --- Verify removal ---
 
-# Check if the timer unit is known to systemd before trying to disable it.
-if systemctl --user list-unit-files "${UNIT_NAME}.timer" &>/dev/null && \
-   systemctl --user list-unit-files "${UNIT_NAME}.timer" | grep -q "doc-maintainer"; then
-  echo "[$SCRIPT_NAME] Disabling and stopping ${UNIT_NAME}.timer..."
-  systemctl --user disable --now "${UNIT_NAME}.timer" || {
-    echo "[$SCRIPT_NAME] Warning: 'systemctl --user disable --now' returned non-zero." >&2
-    echo "[$SCRIPT_NAME] The timer may already have been stopped or was never started." >&2
-  }
-else
-  echo "[$SCRIPT_NAME] Timer ${UNIT_NAME}.timer not found in systemd — nothing to disable."
+REMAINING=$(crontab -l 2>/dev/null | grep -F "$MARKER" || true)
+if [[ -n "$REMAINING" ]]; then
+  echo "[$SCRIPT_NAME] Warning: entry still present after removal — manual cleanup may be needed:" >&2
+  echo "$REMAINING" >&2
+  exit 1
 fi
-
-# --- Reload daemon ---
-
-echo "[$SCRIPT_NAME] Reloading systemd user daemon..."
-systemctl --user daemon-reload
 
 # --- Summary ---
 
 echo ""
 echo "============================================================"
-echo " doc-maintainer timer uninstalled"
+echo " doc-maintainer cron job removed"
 echo "============================================================"
 echo ""
-echo " Removed instance: ${UNIT_NAME}.timer"
-echo " Repo:             $TARGET_REPO"
+echo " Removed entry for: $TARGET_REPO"
 echo ""
-echo " Template unit files were NOT removed."
-echo " Other repos using doc-maintainer timers are unaffected."
+echo " Verify:"
+echo "   crontab -l | grep doc-maintainer"
 echo ""
-echo " To verify no timers remain:"
-echo "   systemctl --user list-timers | grep doc-maintainer"
-echo ""
-echo " To remove template files entirely (only if no other instances remain):"
-echo "   rm ~/.config/systemd/user/doc-maintainer@.service"
-echo "   rm ~/.config/systemd/user/doc-maintainer@.timer"
-echo "   systemctl --user daemon-reload"
 echo "============================================================"
