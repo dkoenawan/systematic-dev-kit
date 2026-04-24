@@ -4,7 +4,11 @@
 # Handles path resolution, logging, and error capture.
 #
 # Usage:
-#   maintain.sh <absolute-path-to-target-repo>
+#   maintain.sh <absolute-path-to-target-repo> [--days N]
+#
+# Options:
+#   --days N   Staleness threshold in days passed to the skill (default: 30).
+#              Exposed as DOC_STALE_THRESHOLD_DAYS in the environment.
 #
 # Logs to: <target-repo>/logs/doc-maintainer/YYYY-MM-DD.log
 #
@@ -17,18 +21,49 @@ SCRIPT_NAME="maintain.sh"
 
 # --- Resolve plugin root ---
 # This script lives at <plugin-root>/skills/doc-maintainer/scripts/maintain.sh
-# Three levels up from this file's directory is the plugin root.
 PLUGIN_DIR="$(cd "$(dirname "$(realpath "$0")")/../../.." && pwd)"
 
-# --- Validate argument ---
+# --- Argument parsing ---
 
-if [[ $# -lt 1 ]]; then
+TARGET_REPO=""
+STALE_DAYS=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --days)
+      if [[ -z "${2:-}" ]]; then
+        echo "[$SCRIPT_NAME] Error: --days requires a numeric argument." >&2
+        exit 1
+      fi
+      if ! echo "$2" | grep -qE '^[0-9]+$'; then
+        echo "[$SCRIPT_NAME] Error: --days value '$2' is not a positive integer." >&2
+        exit 1
+      fi
+      STALE_DAYS="$2"
+      shift 2
+      ;;
+    -*)
+      echo "[$SCRIPT_NAME] Error: Unknown option '$1'." >&2
+      exit 1
+      ;;
+    *)
+      if [[ -n "$TARGET_REPO" ]]; then
+        echo "[$SCRIPT_NAME] Error: Unexpected argument '$1'. Only one repo path is accepted." >&2
+        exit 1
+      fi
+      TARGET_REPO="$1"
+      shift
+      ;;
+  esac
+done
+
+# --- Validate repo argument ---
+
+if [[ -z "$TARGET_REPO" ]]; then
   echo "[$SCRIPT_NAME] Error: No target repo path provided." >&2
-  echo "[$SCRIPT_NAME] Usage: $SCRIPT_NAME <absolute-path-to-target-repo>" >&2
+  echo "[$SCRIPT_NAME] Usage: $SCRIPT_NAME <absolute-path-to-target-repo> [--days N]" >&2
   exit 1
 fi
-
-TARGET_REPO="$1"
 
 if [[ ! -d "$TARGET_REPO" ]]; then
   echo "[$SCRIPT_NAME] Error: '$TARGET_REPO' does not exist or is not a directory." >&2
@@ -55,13 +90,20 @@ if ! command -v claude &>/dev/null; then
   exit 1
 fi
 
+# --- Export staleness threshold if provided ---
+
+if [[ -n "$STALE_DAYS" ]]; then
+  export DOC_STALE_THRESHOLD_DAYS="$STALE_DAYS"
+fi
+
 # --- Run ---
 
 {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] ===== doc-maintainer maintain started ====="
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Repo:       $TARGET_REPO"
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Plugin dir: $PLUGIN_DIR"
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log file:   $LOG_FILE"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Repo:        $TARGET_REPO"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Plugin dir:  $PLUGIN_DIR"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Stale days:  ${STALE_DAYS:-30 (default)}"
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log file:    $LOG_FILE"
 } >> "$LOG_FILE"
 
 cd "$TARGET_REPO"

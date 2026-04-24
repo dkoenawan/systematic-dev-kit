@@ -2,11 +2,15 @@
 # find-stale-domains.sh
 # Walks docs/*/overview.md in the current directory.
 # For each file, reads last_updated from YAML frontmatter (falls back to mtime).
-# Prints paths whose age exceeds 30 days to stdout, sorted oldest-first.
+# Prints paths whose age exceeds the threshold to stdout, sorted oldest-first.
 # Exits 0 always — no stale docs is not an error.
 #
 # Usage:
-#   find-stale-domains.sh [-h|--help]
+#   find-stale-domains.sh [--days N] [-h|--help]
+#
+# Options:
+#   --days N   Staleness threshold in days (default: 30). Overrides the
+#              DOC_STALE_THRESHOLD_DAYS environment variable.
 #
 # Output:
 #   One path per line (e.g. docs/auth/overview.md), sorted oldest-first.
@@ -17,23 +21,56 @@
 set -euo pipefail
 
 SCRIPT_NAME="find-stale-domains.sh"
-STALE_THRESHOLD_DAYS=30
 
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+# Default threshold: env var, then hardcoded fallback.
+STALE_THRESHOLD_DAYS="${DOC_STALE_THRESHOLD_DAYS:-30}"
+
+usage() {
   cat <<EOF
-Usage: $SCRIPT_NAME
+Usage: $SCRIPT_NAME [--days N]
 
 Walks docs/*/overview.md in the current working directory.
 Prints the path of any overview.md whose last_updated date (from YAML
-frontmatter) is more than $STALE_THRESHOLD_DAYS days ago.
+frontmatter) is more than N days ago (default: $STALE_THRESHOLD_DAYS).
 
 Falls back to file mtime if no last_updated field is found in frontmatter.
+
+Options:
+  --days N   Override the staleness threshold (days). Also settable via
+             the DOC_STALE_THRESHOLD_DAYS environment variable.
+  -h, --help Show this help message.
 
 Output is sorted oldest-first (one path per line).
 Exits 0 always.
 EOF
-  exit 0
-fi
+}
+
+# --- Argument parsing ---
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --days)
+      if [[ -z "${2:-}" ]]; then
+        echo "[$SCRIPT_NAME] Error: --days requires a numeric argument." >&2
+        exit 1
+      fi
+      if ! echo "$2" | grep -qE '^[0-9]+$'; then
+        echo "[$SCRIPT_NAME] Error: --days value '$2' is not a positive integer." >&2
+        exit 1
+      fi
+      STALE_THRESHOLD_DAYS="$2"
+      shift 2
+      ;;
+    *)
+      echo "[$SCRIPT_NAME] Error: Unknown argument '$1'. Run with --help for usage." >&2
+      exit 1
+      ;;
+  esac
+done
 
 # --- Helpers ---
 
@@ -46,24 +83,20 @@ extract_last_updated() {
   local found_open=0
 
   while IFS= read -r line; do
-    # First line must be ---
     if [[ $found_open -eq 0 ]]; then
       if [[ "$line" == "---" ]]; then
         found_open=1
         in_frontmatter=1
         continue
       else
-        # No frontmatter block at all
         break
       fi
     fi
 
-    # Closing --- ends the frontmatter
     if [[ $in_frontmatter -eq 1 && "$line" == "---" ]]; then
       break
     fi
 
-    # Look for last_updated: YYYY-MM-DD
     if [[ $in_frontmatter -eq 1 ]]; then
       if echo "$line" | grep -qE '^last_updated:[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}'; then
         echo "$line" | sed -E 's/^last_updated:[[:space:]]*//'
@@ -72,7 +105,6 @@ extract_last_updated() {
     fi
   done < "$file"
 
-  # Not found
   echo ""
 }
 
@@ -87,26 +119,20 @@ date_to_epoch() {
 NOW_EPOCH=$(date +%s)
 THRESHOLD_SECONDS=$(( STALE_THRESHOLD_DAYS * 86400 ))
 
-# Collect results as "epoch path" pairs so we can sort numerically.
 declare -a RESULTS=()
 
-# Walk docs/*/overview.md — glob only, no find, no subshells.
 for overview_file in docs/*/overview.md; do
-  # Skip if the glob matched nothing (bash expands to literal string).
   [[ -e "$overview_file" ]] || continue
 
-  # Attempt to read last_updated from frontmatter.
   last_updated=$(extract_last_updated "$overview_file")
 
   if [[ -n "$last_updated" ]]; then
     file_epoch=$(date_to_epoch "$last_updated")
     if [[ -z "$file_epoch" ]]; then
-      # date -d failed (malformed date) — fall back to mtime.
       echo "[$SCRIPT_NAME] Warning: could not parse last_updated='$last_updated' in $overview_file — using mtime." >&2
       file_epoch=$(stat -c %Y "$overview_file" 2>/dev/null || echo "$NOW_EPOCH")
     fi
   else
-    # No frontmatter date found — use mtime.
     file_epoch=$(stat -c %Y "$overview_file" 2>/dev/null || echo "$NOW_EPOCH")
   fi
 
@@ -117,7 +143,6 @@ for overview_file in docs/*/overview.md; do
   fi
 done
 
-# Sort by epoch ascending (oldest first) and print only the path.
 if [[ ${#RESULTS[@]} -gt 0 ]]; then
   printf '%s\n' "${RESULTS[@]}" | sort -n | awk '{print $2}'
 fi

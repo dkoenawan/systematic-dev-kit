@@ -23,11 +23,28 @@ The skill ships with a cron-based scheduler. A wrapper script (`maintain.sh`) is
 ### Installation
 
 ```bash
+# Run every day at 01:00 UTC
 bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/install-schedule.sh \
-  /absolute/path/to/your-repo --time 09:00
+  /absolute/path/to/your-repo --time 01:00
+
+# Run Monday, Wednesday, Friday at 08:30 UTC
+bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/install-schedule.sh \
+  /absolute/path/to/your-repo --time 08:30 --days mon,wed,fri
+
+# Run every weekday, treat docs as stale after 14 days
+bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/install-schedule.sh \
+  /absolute/path/to/your-repo --days mon-fri --stale-days 14
 ```
 
-Times are interpreted as UTC by cron on most Linux systems. For example, `09:00` UTC = `21:00 NZST` (UTC+12). Adjust for your timezone as needed.
+**Options:**
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--time HH:MM` | `09:00` | Time of day to run (UTC, 24-hour format) |
+| `--days <days>` | `*` (every day) | Days of the week. Accepts names (`mon,wed,fri`), numbers (`1,3,5`), ranges (`mon-fri`), or `*` |
+| `--stale-days N` | `30` | Docs older than N days are updated on the next run |
+
+Times are interpreted as UTC by cron on most Linux systems. For example, `01:00` UTC = `13:00 NZST` (UTC+12). Adjust for your timezone as needed.
 
 ### Uninstall
 
@@ -369,6 +386,30 @@ Capture stdout. Each line is a path to a stale `overview.md` file (e.g., `docs/a
 
 Read the environment variable `DOC_MAINTAIN_BATCH` (default: `1`). Take the first `N` entries from the stale list as `STALE_DOMAINS`.
 
+### Step 2.1a — Detect undocumented domains
+
+Discover the current domain directories using the same rules as Phase 1 Step 1.2 (check `src/` first, then repo root; apply the same exclusion list).
+
+For each discovered domain directory, check whether `docs/<domain>/overview.md` exists.
+
+Collect any domain that has **no** corresponding `overview.md` as `NEW_DOMAINS`.
+
+If `NEW_DOMAINS` is non-empty, print:
+
+```
+[doc-maintainer] Found <N> undocumented domain(s): <names>. Creating overviews.
+```
+
+For each domain in `NEW_DOMAINS`:
+
+1. Classify it as Business or Auxiliary using the rules in the Domain Classification Reference.
+
+2. Spawn a per-domain **Explore subagent** using the same prompt as Phase 1 Step 1.3.
+
+3. Write `docs/<domain>/overview.md` using [template.md](template.md), following the same section guidance as Phase 1 Step 1.5.
+
+4. Set `SOLUTION_DESIGN_STALE=true` — the domain tables in `docs/solution-design.md` must be updated to include the new domain.
+
 ### Step 2.2 — Check solution-design.md staleness
 
 Read `docs/solution-design.md` frontmatter to get `last_updated`. If the date is more than 30 days ago, set `SOLUTION_DESIGN_STALE=true`. Otherwise `SOLUTION_DESIGN_STALE=false`.
@@ -377,7 +418,7 @@ Additionally, compare the current list of domain directories against the domains
 
 ### Step 2.3 — No-op check
 
-If `STALE_DOMAINS` is empty AND `SOLUTION_DESIGN_STALE` is false, print:
+If `STALE_DOMAINS` is empty AND `NEW_DOMAINS` is empty AND `SOLUTION_DESIGN_STALE` is false, print:
 
 ```
 [doc-maintainer] No stale docs found. Nothing to do.
