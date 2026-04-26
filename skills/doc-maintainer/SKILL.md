@@ -1,18 +1,23 @@
 ---
 name: doc-maintainer
-description: Initialise, maintain, and refresh a codebase's docs/ tree on a dedicated `chore/claude-maintain` branch. Produces a solution design document plus object-oriented per-domain overviews. Runs interactively or headless via cron.
+description: Initialise, maintain, and refresh a codebase's docs/ tree on a dedicated `chore/claude-maintain` branch. Produces a C4-layered documentation tree that grows incrementally — one file per run. Runs interactively or headless via cron.
 ---
 
 # Doc Maintainer Skill
 
-You are a precise, conservative documentation maintainer. Your job is to produce and keep accurate two levels of documentation:
+You are a precise, conservative documentation maintainer. Your job is to produce and maintain a **C4-layered documentation tree** that grows incrementally — one file per run.
 
-1. **`docs/solution-design.md`** — a single high-level architecture document covering project purpose, solution architecture, and a classified domain map.
-2. **`docs/<domain>/overview.md`** — one per domain, written object-first: what is this domain, how does it work end-to-end, which code touches it.
+The doc tree has three levels:
+
+- **L1 `docs/solution-design.md`** — system context: what the system is, who uses it, what external systems it touches. The entry point. Always short (<100 lines).
+- **L2 `docs/containers.md`** — container architecture: deployable units, data flows, deployment model. Read when you need infrastructure context.
+- **L3 `docs/<domain>/overview.md`** — one per domain: what it is, how it works end-to-end, which code touches it. Read when you need to work in a specific domain.
+
+**The key principle:** an agent can read L1 to orient, then drill into only the specific L2 or L3 file it needs. Token cost scales with task scope. Never read more than you need.
 
 You work on a dedicated `chore/claude-maintain` git branch (branched from `main`), leave no dirty working tree, and always restore the user's original branch when done.
 
-This skill runs in three modes: **init** (seed fresh docs), **maintain** (incremental daily updates to stale domains), and **refresh** (full rewrite of all or one domain). All modes share the same Phase 0 git safety routine.
+This skill runs in three modes: **init** (seed L1 only), **maintain** (add one missing file or improve one existing file per run), and **refresh** (full rewrite of all or one document). All modes share the same Phase 0 git safety routine.
 
 ---
 
@@ -42,7 +47,7 @@ bash /path/to/systematic-dev-kit/skills/doc-maintainer/scripts/install-schedule.
 | --- | --- | --- |
 | `--time HH:MM` | `09:00` | Time of day to run (UTC, 24-hour format) |
 | `--days <days>` | `*` (every day) | Days of the week. Accepts names (`mon,wed,fri`), numbers (`1,3,5`), ranges (`mon-fri`), or `*` |
-| `--stale-days N` | `30` | Docs older than N days are updated on the next run |
+| `--stale-days N` | `30` | Docs older than N days are treated as stale for accuracy patching |
 
 Times are interpreted as UTC by cron on most Linux systems. For example, `01:00` UTC = `13:00 NZST` (UTC+12). Adjust for your timezone as needed.
 
@@ -75,10 +80,12 @@ cron does not source the user's shell profile, so `~/.local/bin` (where `claude`
 
 ## Supporting Files
 
-- [template.md](template.md) — the per-domain `overview.md` skeleton (7 sections, object-oriented)
-- [template-solution-design.md](template-solution-design.md) — the `docs/solution-design.md` skeleton (5 sections)
-- [examples/solution-design.md](examples/solution-design.md) — realistic example of a generated solution design document
-- [examples/domain-overview.md](examples/domain-overview.md) — realistic example of an object-oriented per-domain overview
+- [template-solution-design.md](template-solution-design.md) — L1 system context skeleton
+- [template-containers.md](template-containers.md) — L2 container architecture skeleton
+- [template.md](template.md) — L3 per-domain `overview.md` skeleton (object-oriented, 7 sections)
+- [examples/solution-design.md](examples/solution-design.md) — realistic L1 example
+- [examples/containers.md](examples/containers.md) — realistic L2 example
+- [examples/domain-overview.md](examples/domain-overview.md) — realistic L3 example
 - [scripts/find-stale-domains.sh](scripts/find-stale-domains.sh) — prints `docs/*/overview.md` paths whose `last_updated` is >30 days old
 - [scripts/maintain.sh](scripts/maintain.sh) — wrapper called by cron; handles logging and claude invocation
 - [scripts/install-schedule.sh](scripts/install-schedule.sh) — installs a daily cron job for a target repo
@@ -93,9 +100,9 @@ Dispatch on the first word of the skill's argument string:
 | Invocation | Mode | Behaviour |
 | --- | --- | --- |
 | `/systematic-dev-kit:doc-maintainer` (no arg) | auto-detect | If `docs/solution-design.md` is absent on `chore/claude-maintain`: run init. Otherwise: run maintain. |
-| `/systematic-dev-kit:doc-maintainer init` | init | Full exploration → write `docs/solution-design.md` + `docs/<domain>/overview.md` for all domains. |
-| `/systematic-dev-kit:doc-maintainer maintain` | maintain | Find stale per-domain docs and check solution-design.md staleness; update incrementally. |
-| `/systematic-dev-kit:doc-maintainer refresh` | refresh | Full re-exploration and rewrite of `docs/solution-design.md` and all per-domain overviews. |
+| `/systematic-dev-kit:doc-maintainer init` | init | Whole-system exploration → write L1 `docs/solution-design.md` only. |
+| `/systematic-dev-kit:doc-maintainer maintain` | maintain | Priority-queue dispatch: generate next missing L2/L3, patch stale docs, or run clarity review — one file per run. |
+| `/systematic-dev-kit:doc-maintainer refresh` | refresh | Full re-exploration and rewrite of all docs. |
 | `/systematic-dev-kit:doc-maintainer refresh <domain>` | refresh-one | Full rewrite of one named domain's `docs/<domain>/overview.md` only. |
 
 **Flag:** `--force` may be appended to any invocation to bypass the dirty-tree guard. Do not use it yourself unless the user explicitly passed it.
@@ -205,13 +212,15 @@ Run `git rev-parse --abbrev-ref HEAD` and confirm it equals `chore/claude-mainta
 
 ---
 
-After Phase 0 completes, proceed to the phase for the selected mode. All phases end with the Commit and Restore sequence at the end of this document.
+After Phase 0 completes, proceed to the phase for the selected mode. All phases end with the Post-Write Size Check, then the Commit and Restore sequence at the end of this document.
 
 ---
 
 ## Phase 1 — Init Mode
 
 Use this phase when the mode is `init`, or when auto-detect determines that `docs/solution-design.md` does not exist on `chore/claude-maintain`.
+
+**Init generates L1 only.** Domain deep-dives and container architecture are generated incrementally by subsequent maintain runs.
 
 ### Step 1.1 — Whole-System Exploration
 
@@ -241,7 +250,7 @@ F. List of domain directories with one-sentence guess at each domain's purpose.
 G. Key architectural patterns evident from the structure (REST vs GraphQL, event-driven, CQRS, etc.).
 
 Read at most 10 files total. Write "Not determined" for any point you cannot confidently answer.
-Do not fabricate. Stop when you have enough for all 8 points above.
+Do not fabricate. Stop when you have enough for all points above.
 ```
 
 Store the result as `SYSTEM_SUMMARY`.
@@ -273,7 +282,7 @@ Also exclude any entry that is not a directory.
    - Technical infrastructure → **Auxiliary**
    - If uncertain, read 2–3 key files in the directory to determine which dominates.
 
-3. When uncertain between Business and Auxiliary, default to **Auxiliary** — it is better to under-claim business domain count than to list infrastructure as product features.
+3. When uncertain between Business and Auxiliary, default to **Auxiliary**.
 
 Store the classified list as `DOMAINS` (each entry: `{name, path, type: "business"|"auxiliary", purpose_guess}`).
 
@@ -285,9 +294,131 @@ If `DOMAINS` is empty, print:
 
 Restore the original branch and exit cleanly.
 
-### Step 1.3 — Per-Domain Exploration
+### Step 1.3 — Write `docs/solution-design.md` (L1 only)
 
-For each directory in `DOMAINS`, spawn one **Explore subagent** with this prompt:
+Create `docs/solution-design.md` using [template-solution-design.md](template-solution-design.md). Fill every section using `SYSTEM_SUMMARY`:
+
+- **Section 1 (System Context)**:
+  - What It Does: from `SYSTEM_SUMMARY.A`. 2–3 sentences.
+  - Who It's For: from `SYSTEM_SUMMARY.A`. 1–2 sentences.
+  - External Systems: table from `SYSTEM_SUMMARY.E`. Write "None identified." if empty.
+  - System Context Diagram: ASCII diagram — your system as a labelled box in the centre, surrounded by named users and external systems. Keep it minimal (boundary only, no internal detail).
+
+- **Section 2 (Domain Map)**: table from `DOMAINS`. Every domain starts with status ⬜. Include a row for containers.md status (⬜).
+
+- **Section 3 (Key Architectural Decisions)**: 3–5 decisions from `SYSTEM_SUMMARY.G` and the classified domain list.
+
+- **Section 4 (Changelog)**: `- <today>: L1 system context generated by doc-maintainer.`
+
+- Set `last_updated` in frontmatter to today's date.
+
+**Do not write `docs/containers.md` or any `docs/<domain>/overview.md` during init.** Those are generated by subsequent maintain runs.
+
+Print on completion:
+
+```
+[doc-maintainer] Init complete. L1 written to docs/solution-design.md.
+Next: run 'maintain' daily — each run generates or improves one document.
+Domains queued: <comma-separated domain names>
+```
+
+---
+
+After Phase 1 completes, run the Post-Write Size Check on `docs/solution-design.md`, then Commit and Restore.
+
+---
+
+## Phase 2 — Maintain Mode
+
+Use this phase when the mode is `maintain`, or when auto-detect determines that `docs/solution-design.md` already exists on `chore/claude-maintain`.
+
+**Each maintain run does exactly one unit of work**, chosen from a priority queue. This keeps runs fast, predictable, and token-efficient.
+
+### Step 2.1 — Read `docs/solution-design.md`
+
+Read the current `docs/solution-design.md` to extract:
+- The domain map table (domain names, types, statuses)
+- `last_updated` frontmatter date
+
+Store the domain list as `ALL_DOMAINS` (each entry: `{name, type, status: "generated"|"pending"}`).
+
+### Step 2.2 — Priority Queue Dispatch
+
+Evaluate the following checks **in order**. Execute the first that applies, then proceed directly to the Post-Write Size Check and Commit and Restore. Do not evaluate further checks after one is triggered.
+
+**Priority 1 — Generate L2 (containers.md)**
+
+Check: does `docs/containers.md` exist? (Also accept `docs/containers/index.md` if it was previously split.)
+
+If NO → run **Step 2.L2**, then done.
+
+**Priority 2 — Generate next missing L3 domain overview**
+
+Check: is there any domain in `ALL_DOMAINS` with status ⬜ (no `docs/<domain>/overview.md`)?
+
+If YES → run **Step 2.L3** for the first ⬜ domain (top of table order), then done.
+
+**Priority 3 — Accuracy patch for stale docs**
+
+Run the stale-detection script:
+
+```bash
+bash <plugin-root>/skills/doc-maintainer/scripts/find-stale-domains.sh
+```
+
+Read the environment variable `DOC_MAINTAIN_BATCH` (default: `1`). Take the first N entries from the stale list.
+
+If any stale docs found → run **Step 2.4** for those docs, then done.
+
+**Priority 4 — Clarity review**
+
+Always reached when Priorities 1–3 do not apply. Run **Step 2.6**.
+
+There is no "nothing to do" exit path. Maintain mode always produces exactly one improvement per run.
+
+---
+
+### Step 2.L2 — Generate `docs/containers.md`
+
+Spawn a focused **Explore subagent**:
+
+```
+Investigate this repository to describe its runtime topology.
+
+1. If docker-compose.yml exists, read it in full — it is the most complete picture of services.
+2. If Dockerfile(s) exist, read them — reveals build context and entry points.
+3. If infra-as-code exists (Terraform, k8s manifests), scan it — reveals cloud resources.
+4. Read package.json / pyproject.toml / go.mod — confirm tech stack and major runtime dependencies.
+5. List what processes run (web server, background worker, DB, queue, cache, etc.).
+6. Describe how they communicate (HTTP, message queue, shared DB, TCP, etc.).
+7. Describe the deployment model — "Not determined" if not visible.
+
+Read at most 6 files. Be concrete — name actual service and process names.
+```
+
+Write `docs/containers.md` using [template-containers.md](template-containers.md):
+- ASCII container diagram (deployable units + labelled connections)
+- Services table: name | type | tech | purpose
+- Primary data flows (2–4 flows, one or two sentences each)
+- Deployment model
+- Links back to `docs/solution-design.md` and forward to each generated domain overview
+- Changelog: `- <today>: L2 container architecture generated by doc-maintainer.`
+
+Update `docs/solution-design.md` Section 2 (Domain Map): change the containers.md status row from ⬜ to 📄 and make the link active.
+
+Print:
+
+```
+[doc-maintainer] Generated docs/containers.md (L2 container architecture).
+```
+
+---
+
+### Step 2.L3 — Generate next missing domain overview
+
+Select the first domain from `ALL_DOMAINS` where status is ⬜.
+
+Spawn a per-domain **Explore subagent** with this prompt:
 
 ```
 Investigate the directory '<domain-path>' to produce an object-oriented domain summary.
@@ -326,115 +457,34 @@ Read at most 8 files. Do not read test files. Do not follow imports outside this
 Be concrete: name actual file paths and class/function names when relevant.
 ```
 
-Collect the summaries. Each maps to one domain.
+Write `docs/<domain>/overview.md` using [template.md](template.md). Follow the section guidance below:
 
-### Step 1.4 — Write `docs/solution-design.md`
-
-Create `docs/solution-design.md` using [template-solution-design.md](template-solution-design.md) as the structure. Fill every section using `SYSTEM_SUMMARY`:
-
-- **Section 1 (Project Purpose)**: from `SYSTEM_SUMMARY.A`. Write "Not determined" only if genuinely not visible in the codebase.
-- **Section 2 (Solution Architecture)**:
-  - System Overview: synthesise `SYSTEM_SUMMARY.C` and `SYSTEM_SUMMARY.B` into a 3–5 sentence narrative.
-  - Architecture Diagram: always produce an ASCII diagram, even a simple one. Base it on `SYSTEM_SUMMARY.C`.
-  - Component Map: table built from `SYSTEM_SUMMARY.B`.
-  - Data Flow: derive the 2–4 primary end-to-end flows from the tech stack and domain list.
-  - External Integrations: from `SYSTEM_SUMMARY.E`. Write "None identified" if empty.
-  - Infrastructure & Deployment: from `SYSTEM_SUMMARY.D`. Omit section if "Not determined".
-- **Section 3 (Domain Architecture)**: two tables — Business Domains and Auxiliary Domains — from `DOMAINS`. Each row links to `docs/<domain>/overview.md`.
-- **Section 4 (Key Architectural Decisions)**: derive 3–7 decisions from patterns observed in `SYSTEM_SUMMARY.G` and the per-domain summaries.
-- **Section 5 (Changelog)**: `- <today>: Initial solution design generated by doc-maintainer.`
-- Set `last_updated` in frontmatter to today's date.
-
-### Step 1.5 — Write `docs/<domain>/overview.md` for each domain
-
-For each domain in `DOMAINS`, create `docs/<domain>/overview.md` using [template.md](template.md). Fill every section using the subagent summary from Step 1.3.
-
-**Frontmatter fields:**
-- `domain`: the directory name
-- `last_updated`: today's date in `YYYY-MM-DD` format
-- `source_path`: the path relative to repo root (e.g., `src/auth` or `auth`)
-
-**Section guidance:**
-- **What Is <Domain Name>?**: 2–4 sentences. Name the primary object. Frame it from the product perspective, not the code perspective.
-- **How It Works**: an end-to-end narrative of the lifecycle. Must read as a story, not a list. Minimum 3 sentences.
-- **Core Objects / Entities**: a markdown table. At least one row per primary entity.
-- **Code Map — Which Code Touches This**: 4–5 bullets, one per concern (Models, Business Logic, API, Persistence, External callers). Use real file paths from the subagent summary.
-- **Internal Architecture**: patterns found in the domain. Omit the section entirely if there are no noteworthy patterns.
+- **What Is <Domain Name>?**: 2–4 sentences. Name the primary object. Frame from product perspective.
+- **How It Works**: end-to-end narrative of the lifecycle. Minimum 3 sentences. Must read as a story.
+- **Core Objects / Entities**: markdown table. At least one row per primary entity.
+- **Code Map**: 4–5 bullets, one per concern (Models, Business Logic, API, Persistence, External callers). Use real file paths.
+- **Internal Architecture**: patterns found. Omit section entirely if no noteworthy patterns.
 - **Dependencies**: internal and external separated. Write "None" if a category is empty.
-- **Gotchas**: at least one bullet. Write "None identified at time of writing." if none were found.
-- **Changelog**: one entry: `- <today>: Initial documentation generated by doc-maintainer.`
+- **Gotchas**: at least one bullet. Write "None identified at time of writing." if none found.
+- **Changelog**: `- <today>: Initial documentation generated by doc-maintainer.`
 
-Do not leave any required section empty. Every section except "Internal Architecture" must be filled.
+Update `docs/solution-design.md` Section 2 (Domain Map): change the domain's status from ⬜ to 📄 and make the link active.
+
+Print:
+
+```
+[doc-maintainer] Generated docs/<domain>/overview.md (L3 domain overview).
+```
 
 ---
 
-## Phase 2 — Maintain Mode
+### Step 2.4 — Accuracy patch for stale docs
 
-Use this phase when the mode is `maintain`, or when auto-detect determines that `docs/solution-design.md` already exists on `chore/claude-maintain`.
-
-Maintain mode does the minimum work necessary: it updates stale per-domain docs and checks whether `solution-design.md` needs refreshing. On days when nothing is stale, it exits with a no-op message — this is correct behaviour.
-
-### Step 2.1 — Find stale per-domain docs
-
-Run the stale-detection script from the repo root:
-
-```bash
-bash <plugin-root>/skills/doc-maintainer/scripts/find-stale-domains.sh
-```
-
-Capture stdout. Each line is a path to a stale `overview.md` file (e.g., `docs/auth/overview.md`), sorted oldest-first.
-
-Read the environment variable `DOC_MAINTAIN_BATCH` (default: `1`). Take the first `N` entries from the stale list as `STALE_DOMAINS`.
-
-### Step 2.1a — Detect undocumented domains
-
-Discover the current domain directories using the same rules as Phase 1 Step 1.2 (check `src/` first, then repo root; apply the same exclusion list).
-
-For each discovered domain directory, check whether `docs/<domain>/overview.md` exists.
-
-Collect any domain that has **no** corresponding `overview.md` as `NEW_DOMAINS`.
-
-If `NEW_DOMAINS` is non-empty, print:
-
-```
-[doc-maintainer] Found <N> undocumented domain(s): <names>. Creating overviews.
-```
-
-For each domain in `NEW_DOMAINS`:
-
-1. Classify it as Business or Auxiliary using the rules in the Domain Classification Reference.
-
-2. Spawn a per-domain **Explore subagent** using the same prompt as Phase 1 Step 1.3.
-
-3. Write `docs/<domain>/overview.md` using [template.md](template.md), following the same section guidance as Phase 1 Step 1.5.
-
-4. Set `SOLUTION_DESIGN_STALE=true` — the domain tables in `docs/solution-design.md` must be updated to include the new domain.
-
-### Step 2.2 — Check solution-design.md staleness
-
-Read `docs/solution-design.md` frontmatter to get `last_updated`. If the date is more than 30 days ago, set `SOLUTION_DESIGN_STALE=true`. Otherwise `SOLUTION_DESIGN_STALE=false`.
-
-Additionally, compare the current list of domain directories against the domains listed in Section 3 of `docs/solution-design.md`. If any domains were added or removed, set `SOLUTION_DESIGN_STALE=true`.
-
-### Step 2.3 — No-op check
-
-If `STALE_DOMAINS` is empty AND `NEW_DOMAINS` is empty AND `SOLUTION_DESIGN_STALE` is false, print:
-
-```
-[doc-maintainer] No stale docs found. Nothing to do.
-```
-
-Restore original branch and exit 0. This is the normal no-op path for the daily cron run.
-
-### Step 2.4 — Update stale per-domain docs
-
-For each domain path in `STALE_DOMAINS`:
+For each stale doc path (from Priority 3 check):
 
 1. Read the current `docs/<domain>/overview.md` to understand its existing content, frontmatter, and `last_updated` date.
-
 2. Identify the `source_path` from the frontmatter.
-
-3. Spawn an **Explore subagent** with this prompt:
+3. Spawn an **Explore subagent**:
 
    ```
    The documentation for '<domain>' was last updated on <last_updated>.
@@ -449,44 +499,51 @@ For each domain path in `STALE_DOMAINS`:
    Read at most 6 files, focusing on files modified since <last_updated> if determinable.
    ```
 
-4. **Patch** the existing doc using the subagent's change summary:
+4. Patch the existing doc using the subagent's change summary:
    - Update only the sections that have changed. Preserve prose that remains accurate.
-   - Append a new Changelog entry: `- <today>: <brief summary of changes, 1 sentence>.`
+   - Append a Changelog entry: `- <today>: <brief summary of changes, 1 sentence>.`
    - Bump `last_updated` in frontmatter to today's date.
-
-   The goal is a minimal, targeted patch — not a full rewrite.
 
 Print:
 
 ```
-[doc-maintainer] Updated <N> domain(s): <domain names>
+[doc-maintainer] Accuracy patch: updated docs/<domain>/overview.md
 ```
 
-### Step 2.5 — Update solution-design.md if stale
+---
 
-If `SOLUTION_DESIGN_STALE` is true:
+### Step 2.6 — Clarity review
 
-1. Run `git log --oneline --since=<last_updated> -- .` to capture recent commits as `RECENT_COMMITS`.
+One file per run. Improves prose quality of the oldest-reviewed doc, independent of accuracy patching.
 
-2. Spawn a focused **Explore subagent**:
+1. Walk `docs/**/*.md` recursively. Exclude `docs/clarity-log.md` itself.
 
+2. Read `docs/clarity-log.md` (create the file if it does not exist). Each entry format:
    ```
-   The solution design document for this repository was last updated on <last_updated>.
-   Recent commits since then:
-   <RECENT_COMMITS>
-
-   Investigate the repository to identify architectural changes since <last_updated>:
-   1. New domain directories added or existing ones removed?
-   2. New external integrations (new entries in package.json, new env vars, new config)?
-   3. Changes to the tech stack (new framework, database change)?
-   4. Changes to deployment model (new Docker service, new cloud resource)?
-   5. Any significant restructuring of existing domains?
-
-   Read at most 8 files. Focus on recently-modified files based on the commit list.
-   Only report what has changed — not what remains the same.
+   YYYY-MM-DD | path/to/file.md | One sentence describing what was improved
    ```
 
-3. Patch only the affected sections of `docs/solution-design.md`. Append to Section 5 (Changelog): `- <today>: <1-sentence summary of what changed>.` Bump `last_updated`.
+3. Select the **one file** with the oldest clarity-review date. Files that have never appeared in the log (never reviewed) take absolute priority over any dated entry. If multiple files are never-reviewed, pick the one with the oldest `last_updated` frontmatter date.
+
+4. Read the selected file carefully.
+
+5. Improve **clarity only** — do not change factual content, do not add new sections unless something is obviously missing:
+   - Fix ambiguous or confusing explanations
+   - Improve sentence structure and flow
+   - Add missing context where a reader might get lost
+   - Ensure examples are clear and accurate
+
+6. Write the improved file back.
+
+7. Append to `docs/clarity-log.md`:
+   ```
+   <today> | <path/to/file.md> | <One sentence describing what was improved>
+   ```
+
+8. Print:
+   ```
+   [doc-maintainer] Clarity review: improved <path/to/file.md>
+   ```
 
 ---
 
@@ -496,7 +553,7 @@ Use this phase when the mode is `refresh` or `refresh-one`.
 
 ### Step 3.1 — Determine scope
 
-**For `refresh`:** all domains in `docs/*/` (every directory containing an `overview.md`), plus `docs/solution-design.md`.
+**For `refresh`:** all files under `docs/` (every `overview.md` plus `solution-design.md` and `containers.md` if it exists).
 
 **For `refresh-one <domain>`:** the single named domain. Verify `docs/<domain>/overview.md` exists; if not, print an error and abort:
 
@@ -510,13 +567,13 @@ Before overwriting any file, read and store its Changelog section. These entries
 
 ### Step 3.3 — Full exploration
 
-**For `refresh`:** re-run Phase 1 Steps 1.1–1.3 in full.
+**For `refresh`:** re-run Phase 1 Steps 1.1–1.2 (whole-system + domain discovery). Then spawn per-domain Explore subagents (Step 2.L3 prompt) for all domains. Also spawn a container Explore subagent (Step 2.L2 prompt).
 
-**For `refresh-one <domain>`:** spawn a single per-domain Explore subagent (Step 1.3 prompt) for the named domain only. Skip the whole-system subagent.
+**For `refresh-one <domain>`:** spawn a single per-domain Explore subagent (Step 2.L3 prompt) for the named domain only.
 
 ### Step 3.4 — Rewrite files
 
-**For `refresh`:** rewrite both `docs/solution-design.md` (Step 1.4) and all per-domain overviews (Step 1.5). Carry forward all Changelog entries. Append: `- <today>: Full refresh via doc-maintainer.`
+**For `refresh`:** rewrite `docs/solution-design.md` (Phase 1 Step 1.3), `docs/containers.md` (Step 2.L2), and all per-domain overviews (Step 2.L3). Carry forward all Changelog entries. Append: `- <today>: Full refresh via doc-maintainer.`
 
 **For `refresh-one <domain>`:** rewrite only `docs/<domain>/overview.md`. Carry forward Changelog. Append: `- <today>: Full refresh via doc-maintainer.` Set `last_updated` to today.
 
@@ -546,9 +603,49 @@ Use this when classifying domains in Phase 1 Step 1.2 and whenever writing domai
 
 ---
 
+## Post-Write Size Check
+
+Run this after writing or patching **any** doc file.
+
+Count the lines of the file just written:
+
+```bash
+wc -l <filepath>
+```
+
+If the file exceeds **500 lines**, split it into a folder of smaller files:
+
+**For `docs/<domain>/overview.md`** → split into:
+- `docs/<domain>/index.md` — frontmatter + one-paragraph intro + table of contents linking to sub-files
+- `docs/<domain>/lifecycle.md` — "How It Works" narrative + Core Objects table
+- `docs/<domain>/code-map.md` — Code Map section + Internal Architecture section
+- `docs/<domain>/decisions.md` — Dependencies + Gotchas
+- `docs/<domain>/changelog.md` — Changelog only
+
+**For `docs/solution-design.md`** → split into:
+- `docs/solution-design/index.md` — frontmatter + intro + domain map table + links
+- `docs/solution-design/context.md` — System Context section (diagram + external systems)
+- `docs/solution-design/decisions.md` — Key Architectural Decisions
+- `docs/solution-design/changelog.md` — Changelog only
+
+**For `docs/containers.md`** → split into:
+- `docs/containers/index.md` — frontmatter + intro + services table + links
+- `docs/containers/diagram.md` — ASCII container diagram
+- `docs/containers/flows.md` — Primary Data Flows + Deployment Model
+- `docs/containers/changelog.md` — Changelog only
+
+After splitting:
+1. Delete the original single file.
+2. Update any cross-references in other doc files that linked to the old path (e.g., `solution-design.md` links to `docs/<domain>/overview.md` → update to `docs/<domain>/index.md`).
+3. Print: `[doc-maintainer] Split <file> into <folder>/ (exceeded 500 lines).`
+
+**The clarity review step (Step 2.6) walks `docs/**/*.md` recursively**, so it handles split folder structures automatically without any special handling.
+
+---
+
 ## Commit and Restore (end of every mode)
 
-After the main phase completes, always run these steps in order.
+After the main phase and Post-Write Size Check complete, always run these steps in order.
 
 ### Commit
 
@@ -575,8 +672,11 @@ Otherwise, commit with the appropriate message:
 | Mode | Commit message |
 | --- | --- |
 | init | `docs: init` |
-| maintain | `docs: daily maintenance <YYYY-MM-DD>` |
-| refresh | `docs: refresh all domains` |
+| maintain (L2 generated) | `docs: add container architecture` |
+| maintain (L3 generated) | `docs: add <domain> overview` |
+| maintain (accuracy patch) | `docs: accuracy patch <domain> <YYYY-MM-DD>` |
+| maintain (clarity review) | `docs: clarity review <YYYY-MM-DD>` |
+| refresh | `docs: refresh all` |
 | refresh-one | `docs: refresh <domain>` |
 
 Then push:
@@ -619,7 +719,7 @@ Print the error, abort with `git rebase --abort`, restore original branch, and e
 ### `docs/solution-design.md` already exists on init
 Print:
 ```
-[doc-maintainer] docs/solution-design.md already exists. Run 'maintain' to update stale pages or 'refresh' for a full rewrite.
+[doc-maintainer] docs/solution-design.md already exists. Run 'maintain' to continue building docs or 'refresh' for a full rewrite.
 ```
 Restore original branch and exit without writing anything.
 
@@ -642,12 +742,13 @@ Abort immediately:
 Do not consider this skill complete until ALL of the following are true:
 
 - [ ] Phase 0 ran completely: dirty-tree check, branch recorded, fetch attempted, on `chore/claude-maintain`.
-- [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented no-op reason.
-- [ ] `docs/solution-design.md` was written or patched (init, refresh, or maintain when stale).
-- [ ] All generated or patched per-domain `docs/<domain>/overview.md` files were written to disk.
-- [ ] Per-domain overviews use the object-oriented template (What Is / How It Works / Core Objects / Code Map / Internal Architecture / Dependencies / Gotchas / Changelog).
+- [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented reason.
+- [ ] **Init**: `docs/solution-design.md` was written (L1 only — no overviews, no containers.md).
+- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review).
+- [ ] **Refresh**: all in-scope docs were rewritten.
+- [ ] Post-Write Size Check ran on every file written; any file >500 lines was split.
 - [ ] `git add docs/`, `git commit`, and `git push` ran (or "nothing to commit" was printed).
 - [ ] `git checkout <ORIGINAL_BRANCH>` ran and the terminal is back on the original branch.
-- [ ] A final summary was printed listing: mode run, domains affected, commit hash or no-op reason.
+- [ ] A final summary was printed listing: mode run, file(s) affected, commit hash or no-op reason.
 
 If any item is unchecked, you are not done.
