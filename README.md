@@ -190,43 +190,59 @@ Systematic feature planning through structured discovery — generates detailed 
 
 #### `/systematic-dev-kit:doc-maintainer`
 
-Initialise, maintain, and refresh a codebase's `docs/` tree on a dedicated `docs` branch. Runs interactively or headless via a systemd daily timer.
+Builds and maintains a **C4-layered documentation tree** that grows incrementally — one file per run. Designed so both humans and agents can navigate to exactly the information they need without reading everything.
+
+**The C4 navigation model:**
+
+| Level | File | What it answers | When to read |
+|-------|------|-----------------|--------------|
+| L1 | `docs/solution-design.md` | What is this system, who uses it, what external systems does it touch? | Always — it's the entry point |
+| L2 | `docs/containers.md` | What services run, how do they communicate, how is it deployed? | When you need infrastructure context |
+| L3 | `docs/<domain>/overview.md` | What is this domain, how does it work end-to-end, which files touch it? | When working in a specific domain |
+
+**Key principle:** `init` generates L1 only. Each subsequent `maintain` run adds or improves exactly one file — L2 first, then one L3 domain per run, then daily clarity reviews. Token cost scales with task scope.
 
 **What it produces:**
 
 | File | Description |
 |------|-------------|
-| `docs/index.md` | Overview paragraph + table of all domains with links |
-| `docs/<domain>/overview.md` | Per-domain doc: purpose, key files, public interface, dependencies, gotchas, changelog |
+| `docs/solution-design.md` | L1 system context: purpose, users, external systems, domain map with drill-down links |
+| `docs/containers.md` | L2 container architecture: deployable units, data flows, deployment model |
+| `docs/<domain>/overview.md` | L3 per-domain: object lifecycle, core entities, code map, gotchas |
+| `docs/clarity-log.md` | Running log of daily clarity reviews — one entry per run |
 
 **Usage:**
 ```bash
 /systematic-dev-kit:doc-maintainer          # auto-detect: init if docs/ absent, else maintain
-/systematic-dev-kit:doc-maintainer init     # seed fresh docs for every domain
-/systematic-dev-kit:doc-maintainer maintain # incremental update of stalest domain(s)
-/systematic-dev-kit:doc-maintainer refresh  # full rewrite of all domains
-/systematic-dev-kit:doc-maintainer refresh <dir>  # full rewrite of one named domain
+/systematic-dev-kit:doc-maintainer init     # generate L1 (solution-design.md) only
+/systematic-dev-kit:doc-maintainer maintain # one unit of work: next missing doc, stale patch, or clarity review
+/systematic-dev-kit:doc-maintainer refresh  # full rewrite of all docs
+/systematic-dev-kit:doc-maintainer refresh <domain>  # full rewrite of one named domain
 ```
 
-**How it works (4 phases):**
+**How maintain mode prioritises work (one per run):**
 
-1. **Phase 0 — Git safety** — Checks for dirty working tree (abort unless `--force`), stashes current branch, fetches, and checks out (or creates) the `docs` branch from the current HEAD.
-2. **Phase 1 — Init** — Discovers top-level domain dirs under `src/` (or repo root), spawns an Explore subagent per domain, seeds `docs/<domain>/overview.md` from `template.md`, and writes `docs/index.md`.
-3. **Phase 2 — Maintain** — Runs `scripts/find-stale-domains.sh` to find domains with `last_updated` >30 days old, picks the N stalest (configurable via `DOC_MAINTAIN_BATCH`), and incrementally patches each doc rather than rewriting it. Exits cleanly with "no stale docs" when nothing needs updating — the expected daily no-op.
-4. **Phase 3 — Refresh** — Full re-investigation and rewrite of all domains (or one named domain), carrying existing Changelog entries forward.
-
-After every mode: commits to the `docs` branch with a conventional message (`docs: init`, `docs: daily maintenance YYYY-MM-DD`, etc.) and restores the original branch. Never pushes.
+1. Generate `docs/containers.md` (L2) if missing
+2. Generate the next missing `docs/<domain>/overview.md` (L3), oldest-discovered domain first
+3. Accuracy-patch the most stale existing doc (>30 days old)
+4. Clarity review — improve prose quality of the oldest-reviewed doc
 
 **Scheduling (unattended daily runs):**
 ```bash
-# Install a systemd user timer for a target repo
-bash skills/doc-maintainer/scripts/install-schedule.sh /path/to/repo --time 09:00
+# Install a daily cron job for a target repo
+bash skills/doc-maintainer/scripts/install-schedule.sh /path/to/repo --time 13:15
+
+# Run Monday–Friday only
+bash skills/doc-maintainer/scripts/install-schedule.sh /path/to/repo --time 09:00 --days mon-fri
 
 # Uninstall
 bash skills/doc-maintainer/scripts/uninstall-schedule.sh /path/to/repo
+
+# Check installed jobs
+crontab -l | grep doc-maintainer
 ```
 
-**Key principle:** Docs live on a separate `docs` branch so they never pollute source history. The daily timer runs `maintain` mode, which does zero LLM work on days when nothing is stale — cheap and reliable.
+**File size discipline:** Any doc that grows beyond 500 lines is automatically split into a subfolder (`docs/<domain>/index.md` + sub-files) so no single file ever needs to be read in full to get oriented.
 
 ---
 
