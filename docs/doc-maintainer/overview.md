@@ -1,67 +1,79 @@
 ---
 domain: doc-maintainer
-last_updated: 2026-04-24
+last_updated: 2026-05-01
 source_path: skills/doc-maintainer
 ---
 
-# Doc Maintainer
+# Doc Maintainer (L3)
+
+> → [System overview](../solution-design.md) | → [Container architecture](../containers.md)
 
 ## What Is Doc Maintainer?
 
-Doc Maintainer is an automated documentation lifecycle system that explores a codebase, infers its architecture, and produces living documentation that stays synchronised with code changes. The primary object it owns is a **DocumentationSnapshot** — a timestamped pair of files: one high-level `docs/solution-design.md` covering project purpose, architecture, and domain map, and a set of `docs/<domain>/overview.md` files each describing one domain in an object-oriented, narrative style. It is a code-archaeology agent, not a prose-writing assistant.
+Doc Maintainer is an automated documentation lifecycle system that explores a codebase, infers its architecture, and produces a living C4-layered documentation tree that stays synchronised with code changes over time. Its primary object is the **DocumentationTree** — a multi-file, versioned hierarchy containing an L1 system context file (`docs/solution-design.md`), an L2 container architecture file (`docs/containers.md`), and L3 per-domain deep-dives (`docs/<domain>/overview.md`). The system grows incrementally — one file per run — so token cost per invocation stays bounded and predictable regardless of codebase size.
 
 ## How It Works
 
-A DocumentationSnapshot is seeded on first run (`init` mode), maintained incrementally on a schedule (`maintain` mode), and fully rewritten on demand (`refresh` mode). Every mode begins with a git safety routine: the working tree must be clean, the current branch is recorded, and the skill checks out or creates the `chore/claude-maintain` branch (rebased from `origin/main`). All doc changes happen exclusively on this branch — the developer's working branch is never touched.
+A DocumentationTree is seeded on first run (`init` mode), built out incrementally on a schedule (`maintain` mode), and fully rewritten on demand (`refresh` mode). Every mode begins with Phase 0 — a git safety routine that checks the working tree is clean, records the current branch, fetches from origin, and checks out (or creates) the `chore/claude-maintain` branch rebased onto `origin/main`. All documentation changes happen exclusively on this branch; the developer's working branch is never touched.
 
-In `init` mode, the skill spawns a whole-system Explore sub-agent to understand the project's tech stack, runtime topology, and domain list. It then classifies each domain directory as Business or Auxiliary using name-matching rules and code inspection. For each domain, it spawns a per-domain Explore sub-agent that produces a structured object-oriented summary. Those summaries fill the `solution-design.md` and `overview.md` templates. Once all files are written, the skill stages, commits (`docs: init`), and pushes, then restores the developer's original branch.
+In `init` mode, a whole-system Explore subagent investigates the codebase (up to 10 files: README, CLAUDE.md, top-level structure, docker-compose, package files, OpenAPI spec, and entry point). The skill classifies each top-level domain directory as Business or Auxiliary, then writes only `docs/solution-design.md` (L1). No container architecture or domain overviews are written on init — those accumulate through subsequent maintain runs.
 
-In `maintain` mode (typically run daily via cron), the skill identifies stale `overview.md` files by reading the `last_updated` frontmatter field, detects any new domain directories that have no corresponding doc, and checks whether `solution-design.md` is older than 30 days or whether the domain list has changed. It updates only what is stale — most runs produce a no-op exit. In `refresh` mode, the skill repeats the full exploration and overwrites all files, preserving the Changelog sections so history is not lost.
+In `maintain` mode (typically run daily via cron), a priority queue dispatcher picks exactly one unit of work per run: (1) generate `docs/containers.md` if missing, (2) generate the next ⬜ domain overview, (3) run an accuracy patch on any doc whose `last_updated` frontmatter is older than the staleness threshold (default 30 days), or (4) run a clarity review on the oldest-reviewed doc in the tree. In `refresh` mode, all docs are fully re-explored and rewritten, preserving existing Changelog entries.
+
+After every mode, the skill stages `docs/`, commits with a mode-specific message, pushes to `origin/chore/claude-maintain`, and restores the developer's original branch.
 
 ## Core Objects / Entities
 
 | Object | Description |
 | ------ | ----------- |
-| `DocumentationSnapshot` | The full set of generated docs at a point in time: `solution-design.md` + all `docs/<domain>/overview.md` files. |
-| `Domain` | A code directory classified as Business or Auxiliary, with name, path, type, and purpose. The unit of documentation. |
-| `DomainOverview` | Per-domain markdown doc with YAML frontmatter (`domain`, `last_updated`, `source_path`). Contains What/How narrative, Core Objects table, Code Map, dependencies, and gotchas. |
-| `SolutionDesign` | Project-level markdown doc. Contains project purpose, architecture diagram, component map, data flows, external integrations, and domain tables. |
-| `ChangeLog` | Ordered list of `(date, description)` entries appended on every generation. Preserved across refresh cycles. |
+| `DocumentationTree` | The full multi-file hierarchy: L1 solution-design.md, L2 containers.md, L3 domain overviews. Versioned, incrementally built. |
+| `SolutionDesignDoc (L1)` | Entry-point file. Contains project name, purpose, users, external systems diagram, domain map table with status (⬜/📄), and key architectural decisions. |
+| `ContainerArchDoc (L2)` | Infrastructure topology. Contains ASCII container diagram, services table, primary data flows, and deployment model. |
+| `DomainOverview (L3)` | Per-domain deep-dive. Contains what/how narrative, core objects table, code map by concern, internal patterns, dependencies, gotchas, and changelog. |
+| `DomainClassification` | Each domain tagged as Business (user-visible capability) or Auxiliary (technical infrastructure). Used in the L1 domain map. |
+| `DocumentStatus` | Track state of each L3 doc: ⬜ (not yet generated) or 📄 (generated). Stored in the L1 domain map table. |
+| `StalenessTracker` | The `last_updated` YAML frontmatter date in each doc. Read by `find-stale-domains.sh` to detect which overviews need accuracy patches. |
+| `ClarityLog` | `docs/clarity-log.md` — audit trail of clarity reviews: one entry per file per review, format `YYYY-MM-DD | path | one-sentence description`. |
 
 ## Code Map — Which Code Touches This
 
-- **Models / Schema**: `skills/doc-maintainer/template.md` — per-domain `overview.md` structure (What Is / How It Works / Core Objects / Code Map / Internal Architecture / Dependencies / Gotchas / Changelog); `skills/doc-maintainer/template-solution-design.md` — `solution-design.md` structure.
-- **Business Logic / Services**: `skills/doc-maintainer/SKILL.md` — complete specification of all three modes (init, maintain, refresh), git safety routines (Phase 0), domain classification rules, stale detection logic, and per-domain exploration prompts.
-- **API / Interface**: Invoked as `/systematic-dev-kit:doc-maintainer [init|maintain|refresh|refresh <domain>]`; `scripts/maintain.sh` is the cron wrapper that invokes `claude -p "/systematic-dev-kit:doc-maintainer maintain"` non-interactively.
-- **Persistence**: `scripts/find-stale-domains.sh` — walks `docs/*/overview.md`, reads `last_updated` frontmatter, prints stale paths oldest-first; `scripts/install-schedule.sh` / `scripts/uninstall-schedule.sh` — manage the user's crontab entry.
-- **External callers**: `scripts/maintain.sh` (called by cron); the Claude Code harness (interactive invocation).
+- **Templates (data shapes)**: `skills/doc-maintainer/template.md` (L3 structure), `skills/doc-maintainer/template-solution-design.md` (L1 structure), `skills/doc-maintainer/template-containers.md` (L2 structure)
+- **Business Logic**: `skills/doc-maintainer/SKILL.md` — the master specification defining all three modes and their phases, Phase 0 git safety routine, domain classification rules, priority queue dispatch logic, and post-write size check (split files >500 lines)
+- **Cron Interface**: `skills/doc-maintainer/scripts/maintain.sh` — wrapper that invokes `claude -p "/systematic-dev-kit:doc-maintainer maintain"` non-interactively and logs output to `<repo>/logs/doc-maintainer/YYYY-MM-DD.log`
+- **Scheduler**: `skills/doc-maintainer/scripts/install-schedule.sh` / `uninstall-schedule.sh` — manage the user's crontab entry (accepts `--time HH:MM`, `--days`, `--stale-days` options)
+- **Staleness Detection**: `skills/doc-maintainer/scripts/find-stale-domains.sh` — reads `last_updated` from YAML frontmatter of every `docs/*/overview.md`, prints paths older than the threshold, sorted oldest-first
+- **Examples**: `skills/doc-maintainer/examples/` — realistic L1, L2, and L3 reference implementations used as quality bar
 
 ## Internal Architecture
 
-**Phase Gate Pattern**: Every mode (init, maintain, refresh) begins with Phase 0 (git safety) and ends with Commit + Restore. Mode-specific logic runs between these two bookends, ensuring consistent branch hygiene regardless of outcome.
+**Phase Gate Pattern**: Every mode (init, maintain, refresh) begins with Phase 0 (git safety) and ends with Commit + Restore. Mode-specific logic runs between these bookends, ensuring consistent branch hygiene regardless of outcome or error.
 
-**Domain Classification State Machine**: Domains are classified in two steps — (1) exact name-match against a hardcoded auxiliary pattern list (`auth`, `db`, `logger`, `middleware`, etc.), then (2) if unmatched, code inspection to determine whether the directory has user-visible business logic. Default on ambiguity: Auxiliary.
+**Priority Queue Dispatch (Maintain Mode)**: Four-tier priority system ensures every maintain run is productive. L2 generation always comes before L3; new domains (⬜) before stale patches; stale patches before clarity reviews. There is no "nothing to do" exit path — Priority 4 (clarity review) is always reachable.
 
-**Batch Update Window**: The `DOC_MAINTAIN_BATCH` env var (default: 1) caps how many stale domains are updated per maintain run, limiting the token cost of each cron execution.
+**Subagent-Driven Exploration**: The skill never reads code itself. All codebase investigation is delegated to focused Explore subagents with bounded file budgets (6–10 files per subagent depending on phase). Subagent results are formatted into template-driven Markdown by the orchestrating skill.
 
-**Staleness via Frontmatter**: `last_updated` in each doc's YAML frontmatter is the source of truth. If the field is missing or malformed, `find-stale-domains.sh` falls back to file mtime.
+**Domain Classification Logic**: Two-step automatic classification. Step 1: exact name-match against a hardcoded auxiliary list (auth, jwt, db, logger, middleware, utils, etc.). Step 2 (if no match): heuristic — "Does this implement user-visible capability with business rules?" Default on ambiguity: Auxiliary.
 
-**No-op Exit Path**: If no stale domains, no new domains, and `solution-design.md` is not stale, maintain exits cleanly with a no-op message. This is the expected outcome on most daily runs.
+**File Size Splitting**: After writing any doc, the skill counts lines. Files exceeding 500 lines are split into a folder structure (`index.md`, `lifecycle.md`, `code-map.md`, `decisions.md`, `changelog.md`), keeping individual files scannable by downstream agents.
+
+**Staleness Tracking via Frontmatter**: `last_updated` in each doc's YAML frontmatter is the source of truth. `find-stale-domains.sh` reads this field; if missing or malformed, it falls back to file mtime.
 
 ## Dependencies
 
-- **Internal**: `systematic-dev-kit:explore` — spawned as sub-agents during init, maintain, and refresh to perform codebase investigation.
-- **External**: `bash`/coreutils (`date`, `stat`, `sort`, `grep`, `sed`) for staleness detection scripts; `git` for all branch operations; `cron` for scheduled maintenance; Claude Code CLI (`claude` binary) called by `maintain.sh`.
+- **Internal**: `systematic-dev-kit:explore` — spawned as subagents during all three modes to perform codebase investigation
+- **External**: `git` (all branch operations); `bash`/coreutils (`date`, `stat`, `sort`, `grep`, `sed`) for staleness detection and scheduling scripts; `cron` for scheduled maintenance; Claude Code CLI (`claude` binary) called by `maintain.sh`
 
 ## Gotchas
 
-- The `chore/claude-maintain` branch must rebase cleanly onto `origin/main`. If there are conflicts, the skill aborts and asks the developer to resolve them manually.
-- Cron does not source the user's shell profile, so the `claude` binary (typically at `~/.local/bin/claude`) may not be on `PATH`. Fix by adding `PATH=/home/<user>/.local/bin:$PATH` as the first line of the crontab, or using the full path in `maintain.sh`.
-- The `--force` flag bypasses the dirty-tree check. Use it only when you explicitly want to proceed with uncommitted changes; it will print a warning but not abort.
-- Log files in `<repo>/logs/doc-maintainer/` grow unbounded — one file per calendar day. There is no built-in log rotation; prune manually for long-running repos.
-- Stale detection does not track fine-grained architectural changes (e.g., a new external integration) unless a domain directory was added or removed. Run `refresh` to force a full re-exploration when significant structural changes occur.
-- `last_updated` must be in strict `YYYY-MM-DD` format. Malformed dates silently degrade to file mtime for staleness comparison.
+- **Rebase failures block execution**: If `chore/claude-maintain` has diverged from `origin/main` (e.g., due to a force-push or manual edit), the rebase in Phase 0 fails and the skill aborts without modifying any docs. Resolve conflicts manually and re-invoke.
+- **Dirty working tree blocks execution** (unless `--force`): Any uncommitted changes cause Phase 0 to abort. `--force` bypasses this check but prints a warning; use with care as git operations may produce unexpected results.
+- **`claude` not on PATH under cron**: Cron does not source the user's shell profile, so `~/.local/bin/claude` may not be available. Fix by adding `PATH=/home/<user>/.local/bin:$PATH` as the first line of the crontab.
+- **No auto-cleanup of deleted domains**: If a domain directory is removed from the codebase, its `docs/<domain>/overview.md` is not automatically deleted. The L1 domain map table will contain a stale link. Remove the doc and update the table manually.
+- **Stale detection does not track structural changes**: The staleness script only checks the `last_updated` date — it does not detect whether the code has actually changed. Run `refresh` after major structural changes rather than waiting for the 30-day threshold.
+- **Log files grow unbounded**: `logs/doc-maintainer/` accumulates one file per calendar day with no built-in rotation. Prune manually for long-running repos.
+- **`last_updated` must be strict `YYYY-MM-DD`**: Malformed dates silently degrade to file mtime for staleness comparison, which may cause unexpected accuracy patches.
 
 ## Changelog
 
 - 2026-04-24: Initial documentation generated by doc-maintainer.
+- 2026-05-01: Full refresh via doc-maintainer.
