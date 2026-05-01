@@ -244,6 +244,8 @@ crontab -l | grep doc-maintainer
 
 **File size discipline:** Any doc that grows beyond 500 lines is automatically split into a subfolder (`docs/<domain>/index.md` + sub-files) so no single file ever needs to be read in full to get oriented.
 
+**Future direction — feature-tracing (L4):** The current C4 tree is architecture-first (system → containers → domains). A natural complement is use-case-first documentation: given a named feature (e.g. "weekly reconciliation", "assessment upload"), trace the end-to-end path it takes through the stack — frontend → backend → domain → adapter → database — naming the specific objects, files, and state transitions at each layer. This would live as `docs/features/<feature-name>.md` and be generated on-demand rather than scheduled. Not yet implemented; noted here for future development.
+
 ---
 
 #### `/systematic-dev-kit:bootstrap-new-project` (Deprecated)
