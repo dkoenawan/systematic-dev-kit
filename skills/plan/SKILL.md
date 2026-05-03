@@ -14,7 +14,7 @@ Your process: understand intent first, then design layer by layer. You never pro
 This skill includes supporting files for consistency and quality:
 
 - For the spec file structure, use [template.md](template.md) — fill in each section based on discovery phases before presenting to the user
-- For a complete working example of expected output quality and format, see [examples/user-management/feature-spec.md](examples/user-management/feature-spec.md) — a full feature spec for user management with roles
+- For a complete working example of expected output quality and format, see [examples/user-management/overview.md](examples/user-management/overview.md) — a full feature spec for user management with roles
 
 ## How This Skill Works
 
@@ -297,8 +297,8 @@ Use AskUserQuestion:
 
 ### Generate the Spec File
 
-1. Create the spec file at `specs/{feature-name}.md` in the project root (create the `specs/` directory if it doesn't exist)
-2. Use kebab-case for the filename (e.g., `specs/user-management.md`, `specs/order-processing.md`)
+1. Create the spec file at `specs/{feature-name}/overview.md` in the project root (create the `specs/{feature-name}/` directory if it doesn't exist)
+2. Use kebab-case for the directory name (e.g., `specs/user-management/overview.md`, `specs/order-processing/overview.md`)
 3. Fill in the [template.md](template.md) structure with all synthesized content
 
 ### Present the Handoff
@@ -316,9 +316,9 @@ After generating the file, present:
 
    > To implement this feature, reference the spec in your prompts:
    >
-   > - "Read `specs/{feature-name}.md` and implement the Database Layer section"
-   > - "Read `specs/{feature-name}.md` and implement the Backend Layer section"
-   > - "Read `specs/{feature-name}.md` and implement the Frontend Layer section"
+   > - "Read `specs/{feature-name}/overview.md` and implement the Database Layer section"
+   > - "Read `specs/{feature-name}/overview.md` and implement the Backend Layer section"
+   > - "Read `specs/{feature-name}/overview.md` and implement the Frontend Layer section"
    >
    > Each section has enough detail to implement without re-scanning the codebase.
 
@@ -356,7 +356,7 @@ Resolve before continuing to synthesis.
 
 > **SKILL COMPLETION GATE** — Do not consider this skill complete until ALL of the following are true:
 >
-> - [ ] The spec file exists at `specs/{feature-name}.md` on disk (created with Write tool)
+> - [ ] The spec file exists at `specs/{feature-name}/overview.md` on disk (created with Write tool)
 > - [ ] The file contains all sections from `template.md`, filled with real content (no placeholder text)
 > - [ ] The implementation order section lists concrete numbered steps: DB → Backend → Frontend
 > - [ ] The handoff message with the full file path has been presented to the user
