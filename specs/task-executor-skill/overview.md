@@ -181,7 +181,7 @@ The skill is "thin orchestration": Claude reads plan files, calls scripts, makes
 3. Update `skills/plan/examples/` to mirror new layout
 4. Bump plugin minor version (breaking path change for plan skill)
 
-### 2. Helper Scripts
+### 2. Helper Scripts ✓
 
 1. `install-schedule.sh` + `uninstall-schedule.sh` (with `gh auth status` preflight + crontab clash detection)
 2. `execute-daily.sh` cron entry wrapper (logging + lock-file + claude invocation)
@@ -192,7 +192,7 @@ The skill is "thin orchestration": Claude reads plan files, calls scripts, makes
 7. `comment-on-issue.sh` + `open-pr.sh`
 8. Each script: shellcheck-clean, `set -euo pipefail`, structured stdout, non-zero exit on failure
 
-### 3. SKILL.md
+### 3. SKILL.md ✓
 
 1. Frontmatter: `name: task-executor`, model unset (defaults to Opus for planning) or `claude-haiku-4-5` for execute mode (mode-conditional model selection if supported; else accept Opus everywhere and rely on script-based ops to keep tokens low)
 2. Mode dispatch (Phase 0): parse args, route to plan / execute / status / stop / resume
@@ -202,13 +202,13 @@ The skill is "thin orchestration": Claude reads plan files, calls scripts, makes
 6. Error-handling section listing E1–E14 with handling
 7. Skill completion gate: enumerate exit conditions for plan vs. execute modes
 
-### 4. Templates & Examples
+### 4. Templates & Examples ✓
 
 1. `template-tasks.md` — frontmatter skeleton + checklist example with all three states + dependency annotation
 2. `examples/sample-feature/tasks.md` — concrete example of a mid-completion plan with retries, failures, completed tasks (illustrative)
 3. `examples/sample-feature/overview.md` — corresponding design spec for context
 
-### 5. Documentation
+### 5. Documentation ✓
 
 1. Update root `README.md` skill catalog to document task-executor
 2. Add usage section: typical workflow (issue → plan → wait → review PR)
