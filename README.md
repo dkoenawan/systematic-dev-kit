@@ -248,6 +248,46 @@ crontab -l | grep doc-maintainer
 
 ---
 
+### Autonomous Task Execution
+
+#### `/systematic-dev-kit:task-executor`
+
+Runs large GitHub issues autonomously via cron over multiple days. An interactive planning conversation decomposes an issue into hour-sized tasks, then executes up to 3 per scheduled run — rebasing, implementing, testing, committing, and opening a PR on completion.
+
+**Why 6-hour cadence:** Aligns with the ~5h Claude quota window so runs don't exhaust quota mid-task.
+
+**What it produces:**
+
+| Artifact | Description |
+|----------|-------------|
+| `specs/<feature-name>/tasks.md` | Plan file with frontmatter (issue, branch, test command, retry counts) + dependency-annotated checklist |
+| `feat/<feature-name>` branch | One commit per completed task, conventional-commit format |
+| GitHub PR | Opened automatically on completion, linked to the issue |
+
+**Usage:**
+```bash
+/systematic-dev-kit:task-executor                    # auto: show status or start planning
+/systematic-dev-kit:task-executor plan <issue-number> # interactive planning conversation
+/systematic-dev-kit:task-executor status             # show active plan summary
+/systematic-dev-kit:task-executor stop               # pause (preserves branch + plan)
+/systematic-dev-kit:task-executor resume             # resume a paused plan
+```
+
+**Typical workflow:**
+1. Open a GitHub issue describing the feature
+2. Run `plan <issue-number>` — 9-phase conversation produces tasks.md, creates branch, installs cron
+3. Come back in a day or two — skill has been committing completed tasks every 6h
+4. Review the auto-opened PR
+
+**Task checklist states:**
+- `- [ ]` pending
+- `- [x]` complete
+- `- [!] <desc> (failed YYYY-MM-DD: <reason>)` failed/skipped
+
+**Failure recovery:** Failed tasks are marked `- [!]` after two consecutive failures. Dependent tasks are skipped. If all remaining tasks are blocked, a draft PR is opened with the completed work.
+
+---
+
 #### `/systematic-dev-kit:bootstrap-new-project` (Deprecated)
 
 > **Deprecated**: Use `/systematic-dev-kit:init` instead. This skill generates files directly which is less token-efficient.
