@@ -8,13 +8,54 @@ This plugin provides a comprehensive set of skills that guide Claude Code throug
 
 ## Installation
 
-### Option 1: Load from Local Directory
+### Option 1: Permanent (Recommended)
+
+Installs the plugin so it loads automatically on every `claude` session — no flags needed.
+
+**Step 1 — Clone the repo**
+
+```bash
+git clone https://github.com/dkoenawan/systematic-dev-kit.git
+```
+
+**Step 2 — Register as a local marketplace**
+
+```bash
+claude plugin marketplace add /path/to/systematic-dev-kit
+```
+
+**Step 3 — Install the plugin**
+
+```bash
+claude plugin install systematic-dev-kit@systematic-dev-kit
+```
+
+**Step 4 — Verify**
+
+```bash
+claude plugin list
+# systematic-dev-kit@systematic-dev-kit should show Status: ✔ enabled
+```
+
+All skills are now available in every `claude` session. To update later:
+
+```bash
+claude plugin update systematic-dev-kit@systematic-dev-kit
+```
+
+---
+
+### Option 2: Session-only (quick test)
+
+Loads the plugin for the current session only. Nothing is written to your user config.
 
 ```bash
 claude --plugin-dir /path/to/systematic-dev-kit
 ```
 
-### Option 2: Clone and Configure
+---
+
+### Option 3: Clone and load session-only
 
 ```bash
 git clone https://github.com/dkoenawan/systematic-dev-kit.git

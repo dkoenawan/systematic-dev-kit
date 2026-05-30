@@ -1,0 +1,30 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "systematic-dev-kit",
+  "description": "Systematic development skills for building full-stack applications",
+  "owner": {
+    "name": "Daniel Koenawan",
+    "email": "daniel.k.koenawan@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "systematic-dev-kit",
+      "description": "A systematic methodology for building full-stack applications - opinionated skills covering infrastructure, database, backend, and frontend development",
+      "source": "./",
+      "strict": true,
+      "skills": [
+        "./skills/backend",
+        "./skills/bootstrap-new-project",
+        "./skills/brand-designer",
+        "./skills/database",
+        "./skills/doc-maintainer",
+        "./skills/explore",
+        "./skills/frontend",
+        "./skills/infrastructure",
+        "./skills/init",
+        "./skills/plan",
+        "./skills/task-executor"
+      ]
+    }
+  ]
+}
