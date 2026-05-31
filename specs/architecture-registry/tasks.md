@@ -3,7 +3,7 @@ issue: 11
 branch: feat/architecture-registry
 status: in-progress
 test_command: null
-last_skill_commit: e6f9ae361fcc3bf1cfbbe46ccb2bd0ce3648314b
+last_skill_commit: 09786ad8cfb081083434aae2d3824349f4c06c23
 retry_counts: {}
 schedule: "0 */6 * * *"
 budget:
@@ -17,7 +17,7 @@ budget:
 - [x] Extend init skill — greenfield registry bootstrap: create docs/registry/ skeleton on init, write ADR-001 from stack choices, inject agent nav protocol into target project CLAUDE.md (depends on: 1)
 - [x] Extend init skill — brownfield-migrate mode: seed registry from specs/*/overview.md + src/ tree + schema file + IaC grep, max 5 source reads, generate migration report showing N planned / N built / N gaps (depends on: 3)
 - [x] Extend doc-maintainer skill — registry consistency passes: bidirectional link enforcement (spec ↔ construct), back-link reconciliation, stub verification 3/run, Known Gaps reduction 1/run, L0 80-line size guard, existing C4 passes unchanged (depends on: 1)
-- [ ] Extend doc-maintainer skill — HTML regeneration: generate docs/index.html (arc42 structure, searchable construct registry, feature cross-reference, worked examples, ADR viewer) from registry markdown on each maintain run (depends on: 5)
+- [x] Extend doc-maintainer skill — HTML regeneration: generate docs/index.html (arc42 structure, searchable construct registry, feature cross-reference, worked examples, ADR viewer) from registry markdown on each maintain run (depends on: 5)
 - [ ] Extend plan skill — registry read before designing: read L0 "Does" column + Feature Cross-Reference before any proposal, invoke explore only for Known Gap areas, present found constructs to user before Q1 (depends on: 1)
 - [ ] Extend plan skill — registry write after spec approval: write construct stubs (status: planned) with FR list and planned interface, append rows to L0 index, create domain directory if new (depends on: 7)
 - [ ] Extend explore skill — registry as Tier 1: read L0 + relevant construct files before source code, sufficiency gate fires if registry covers focus area with no gaps, write newly discovered constructs to registry after investigation (depends on: 1)

@@ -624,6 +624,103 @@ If the gap cannot be resolved in one read (e.g., the path does not exist), remov
 
 Cap: process **1 gap per run**.
 
+#### Pass R6 — HTML Regeneration
+
+After passes R1–R5 complete (or are skipped), regenerate `docs/index.html` from the current state of the registry markdown. This pass always runs if `docs/registry/index.md` exists.
+
+The generated HTML is a **single self-contained file** — no external CDN dependencies, no build step. Inline all CSS and JS.
+
+**Structure (arc42-aligned sections):**
+
+```
+docs/index.html
+├── Section 1  — System Context         (from docs/solution-design.md if it exists)
+├── Section 2  — Construct Registry     (from docs/registry/index.md — searchable table)
+├── Section 3  — Feature Cross-Reference (from registry index.md Feature Cross-Reference table)
+├── Section 4  — Architecture Decisions  (ADR viewer — from docs/registry/decisions/)
+├── Section 5  — Patterns               (from docs/registry/patterns.md)
+├── Section 6  — Domain Docs            (links to each docs/<domain>/overview.md)
+└── Section 7  — Worked Examples        (inline example stubs from construct files)
+```
+
+**Content rules:**
+
+| Section | Source | Behaviour |
+|---------|--------|-----------|
+| System Context | `docs/solution-design.md` | Render the "What It Does" paragraph and system context diagram (pre-formatted ASCII). Omit section if file absent. |
+| Construct Registry | `docs/registry/index.md` Constructs table | Render as an HTML `<table>` with a live `<input>` filter that searches Name, Does, Layer, and Status columns in real time (vanilla JS, no libraries). Each Name cell links to the construct file path. |
+| Feature Cross-Reference | `docs/registry/index.md` Feature Cross-Reference table | Render as a collapsible HTML table. Each Feature row expands to show its constructs. |
+| ADR Viewer | All `docs/registry/decisions/*.md` (excluding `index.md`) | Render each ADR as a collapsible `<details>` block. Show ID, date, status badge (colour-coded: Accepted=green, Proposed=yellow, Deprecated=grey, Superseded=red), and the full ADR body converted to simple HTML (headings, paragraphs, tables). Sort by ID descending (newest first). |
+| Patterns | `docs/registry/patterns.md` | Render as static HTML. Convert markdown headings, lists, and tables. |
+| Domain Docs | Scan for `docs/*/overview.md` | Render a grid of cards, one per domain. Each card: domain name as heading, first paragraph of the overview as excerpt, link to the overview file. Omit section if no domain overviews exist. |
+| Worked Examples | First 3 construct files whose `status: verified` | Render the Does, Interface, and Key Decisions sections as inline examples. Omit section if fewer than 1 verified construct exists. |
+
+**HTML generation approach** — do not invoke a markdown parser library. Write the HTML directly using this minimal markdown-to-HTML mapping:
+
+| Markdown | HTML |
+|---------|------|
+| `# Heading` | `<h1>` |
+| `## Heading` | `<h2>` |
+| `### Heading` | `<h3>` |
+| ` ```code``` ` | `<pre><code>` |
+| `**bold**` | `<strong>` |
+| `*italic*` | `<em>` |
+| `- item` | `<li>` in `<ul>` |
+| `| col | col |` table | `<table><tr><th>/<td>` |
+| `[text](url)` | `<a href="url">` |
+
+**CSS — minimal inline style block:**
+
+```css
+body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; color: #1a1a1a; }
+nav { position: sticky; top: 0; background: white; border-bottom: 1px solid #ddd; padding: 0.5rem 0; display: flex; gap: 1.5rem; }
+nav a { text-decoration: none; color: #0066cc; font-weight: 500; }
+h1 { font-size: 1.8rem; } h2 { font-size: 1.4rem; border-bottom: 1px solid #eee; padding-bottom: 0.25rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+th { background: #f5f5f5; }
+input[type=text] { width: 100%; padding: 0.4rem; margin-bottom: 0.75rem; border: 1px solid #ccc; border-radius: 4px; }
+.badge { padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; font-weight: 600; }
+.badge-accepted { background: #d4edda; color: #155724; }
+.badge-proposed { background: #fff3cd; color: #856404; }
+.badge-deprecated { background: #e2e3e5; color: #383d41; }
+.badge-superseded { background: #f8d7da; color: #721c24; }
+details summary { cursor: pointer; font-weight: 600; padding: 0.4rem 0; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.card { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; }
+pre { background: #f8f8f8; padding: 0.75rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem; }
+```
+
+**JS — construct registry filter (inline `<script>`):**
+
+```js
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('construct-filter');
+  if (!input) return;
+  const rows = document.querySelectorAll('#construct-table tbody tr');
+  input.addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    rows.forEach(function(r) {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+});
+```
+
+**Nav bar:** sticky nav with anchor links to each section: `System Context | Constructs | Features | Decisions | Patterns | Domains | Examples`.
+
+**File header comment:**
+
+```html
+<!-- Generated by systematic-dev-kit doc-maintainer. Do not edit manually — re-generated on each maintain run. Last updated: {today YYYY-MM-DD} -->
+```
+
+After writing `docs/index.html`, print:
+
+```
+[doc-maintainer] R6: regenerated docs/index.html ({N} constructs, {M} ADRs, {K} domains).
+```
+
 ---
 
 ## Phase 3 — Refresh Mode
@@ -824,7 +921,7 @@ Do not consider this skill complete until ALL of the following are true:
 - [ ] Phase 0 ran completely: dirty-tree check, branch recorded, fetch attempted, on `chore/claude-maintain`.
 - [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented reason.
 - [ ] **Init**: `docs/solution-design.md` was written (L1 only — no overviews, no containers.md).
-- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist).
+- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist); AND `docs/index.html` was regenerated (Pass R6) or skipped for the same reason.
 - [ ] **Refresh**: all in-scope docs were rewritten.
 - [ ] Post-Write Size Check ran on every file written; any file >500 lines was split.
 - [ ] `git add docs/`, `git commit`, and `git push` ran (or "nothing to commit" was printed).
