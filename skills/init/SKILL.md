@@ -232,3 +232,181 @@ The opt-out approach means:
 - **Faster setup** - Just press Enter to accept defaults
 - **Clear intent** - Users explicitly choose what to remove
 - **Simpler logic** - No complex combinations to validate
+
+---
+
+## Phase 6: Registry Bootstrap (Greenfield)
+
+After Phase 5 summary, always bootstrap the architecture registry for the new project. This is not optional — the registry is part of the project structure, not a feature.
+
+### Step 1: Create registry directory skeleton
+
+In the target project directory, create:
+
+```bash
+mkdir -p {target-directory}/docs/registry/constructs
+mkdir -p {target-directory}/docs/registry/decisions
+```
+
+### Step 2: Write docs/registry/index.md
+
+Write the L0 construct index with today's date and empty tables:
+
+```markdown
+---
+last_updated: {today YYYY-MM-DD}
+construct_count: 0
+verified: 0
+stubs: 0
+---
+
+# System Model — Construct Registry
+
+> Before building anything: search this index.
+> Column "Does" is the capability description — search it before creating a new construct.
+
+## Constructs
+
+| Name | Type | Does | Layer | File | Status |
+|------|------|------|-------|------|--------|
+
+## Feature Cross-Reference
+
+| Feature | Constructs |
+|---------|-----------|
+
+## Known Gaps
+
+- docs/ tree not yet surveyed
+- src/ tree not yet surveyed
+
+## Patterns
+
+[Cross-cutting conventions](patterns.md) — 0 patterns established
+```
+
+### Step 3: Write docs/registry/patterns.md
+
+```markdown
+# Established Patterns
+
+> These are non-negotiable conventions. Before implementing anything,
+> check if a pattern applies. If you need to deviate, write an ADR first.
+
+## Anti-Patterns
+
+- ❌ Do not build a construct without searching the registry first
+```
+
+### Step 4: Write docs/registry/decisions/index.md
+
+```markdown
+---
+last_updated: {today YYYY-MM-DD}
+adr_count: 1
+---
+
+# Architecture Decision Record Index
+
+> Each row is one significant decision. Click the title to read the full ADR.
+> Status: Proposed | Accepted | Deprecated | Superseded
+
+| ID | Date | Status | Decision | Affects |
+|----|------|--------|----------|---------|
+| [001](001-initial-stack-choices.md) | {today YYYY-MM-DD} | Accepted | Initial stack choices for {project-name} | all |
+```
+
+### Step 5: Write ADR-001 — initial stack choices
+
+Derive the content from the choices made during Phases 1–3 (which components were included/excluded, and why the user chose them if they said anything). If the user gave no reasons, use "team default / project requirements" as the rationale.
+
+Write `docs/registry/decisions/001-initial-stack-choices.md`:
+
+```markdown
+---
+id: "001"
+date: {today YYYY-MM-DD}
+status: Accepted
+deciders: [{user name if known, else "project initiator"}]
+affects: [all]
+---
+
+## Context
+
+New project {project-name} initialized via systematic-dev-kit init.
+Stack selected during initialization.
+
+## Decision
+
+We will use the following stack for {project-name}:
+{list each included component — e.g. "React + Vite + TypeScript (frontend), Node.js + Prisma (backend), PostgreSQL (database)"}
+
+## Options Considered
+
+| Option | Pros | Cons | Why rejected |
+|--------|------|------|--------------|
+| **Selected stack (chosen)** | Full-stack type safety, ORM-managed migrations, containerized development | Initial complexity vs. simpler alternatives | — chosen |
+{For each excluded component, add a row explaining it was removed: e.g. "Frontend excluded" | N/A | N/A | User opted out during init}
+
+## NFR Captured
+
+- (none captured at initialization — add NFRs as decisions are made)
+
+## Consequences
+
+**Now easier**: Consistent tooling across the team, containerized environment, type-safe DB queries.
+**Now harder**: Higher initial setup cost vs. a single-language or no-ORM approach.
+**New constraints**: All schema changes must go through Prisma migrations.
+
+## Revisit Conditions
+
+If the team grows past 10 engineers and the monorepo structure creates bottlenecks,
+or if a component proves unsuitable for the project's actual requirements.
+```
+
+### Step 6: Inject agent navigation protocol into project CLAUDE.md
+
+Read `{target-directory}/CLAUDE.md` if it exists. If not, create it.
+
+Append the following block at the **top** of the file (before any existing content):
+
+```markdown
+## Agent Navigation Protocol
+
+Before designing or building anything in this codebase, always:
+
+1. Read `docs/registry/index.md` — search the "Does" column for capabilities that already exist
+2. Check the Feature Cross-Reference for related constructs across all layers
+3. If the registry has Known Gaps in the relevant area — read source only for those specific areas
+4. After any implementation: write or update the construct file in `docs/registry/constructs/`
+
+This prevents duplicate work and keeps the registry as the single source of truth for what exists.
+
+**Sufficiency gate**: If the registry fully covers the area you're investigating with no Known Gaps, stop reading. You have enough context. Do not read source code for areas the registry already covers.
+
+See `docs/registry/index.md` for the current construct map.
+```
+
+### Step 7: Commit registry files
+
+```bash
+git -C {target-directory} add docs/registry/ CLAUDE.md
+git -C {target-directory} commit -m "feat: bootstrap architecture registry with ADR-001"
+```
+
+If git was not initialized (user chose No in Phase 3), skip the commit — the files are already written.
+
+### Step 8: Tell the user
+
+```
+Registry bootstrapped:
+  docs/registry/index.md          (L0 construct index — empty, ready to fill)
+  docs/registry/patterns.md       (cross-cutting conventions — empty)
+  docs/registry/decisions/
+    index.md                      (ADR index)
+    001-initial-stack-choices.md  (stack decision captured)
+  CLAUDE.md updated               (agent navigation protocol injected)
+
+Next: run /systematic-dev-kit:plan to design your first feature. The plan skill
+will read the registry before proposing anything new.
+```

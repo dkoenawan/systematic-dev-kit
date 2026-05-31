@@ -3,7 +3,7 @@ issue: 11
 branch: feat/architecture-registry
 status: in-progress
 test_command: null
-last_skill_commit: 588f902169e5b9f9f08da18522687277dcb7857d
+last_skill_commit: eaac6bf7756fe36935eed64e1f52a8fea68595f0
 retry_counts: {}
 schedule: "0 */6 * * *"
 budget:
@@ -14,7 +14,7 @@ budget:
 
 - [x] Write registry file format templates — docs/registry/index.md (L0, 80-line limit), docs/registry/constructs/<Name>.md (L1 with all frontmatter fields), docs/registry/patterns.md, docs/registry/decisions/index.md, docs/registry/decisions/<NNN>-<title>.md
 - [x] Write /adr skill SKILL.md — 6-phase conversation, MADR output with options table, pattern detection, NFR capture, affected construct cross-linking, decisions/index.md append (depends on: 1)
-- [ ] Extend init skill — greenfield registry bootstrap: create docs/registry/ skeleton on init, write ADR-001 from stack choices, inject agent nav protocol into target project CLAUDE.md (depends on: 1)
+- [x] Extend init skill — greenfield registry bootstrap: create docs/registry/ skeleton on init, write ADR-001 from stack choices, inject agent nav protocol into target project CLAUDE.md (depends on: 1)
 - [ ] Extend init skill — brownfield-migrate mode: seed registry from specs/*/overview.md + src/ tree + schema file + IaC grep, max 5 source reads, generate migration report showing N planned / N built / N gaps (depends on: 3)
 - [ ] Extend doc-maintainer skill — registry consistency passes: bidirectional link enforcement (spec ↔ construct), back-link reconciliation, stub verification 3/run, Known Gaps reduction 1/run, L0 80-line size guard, existing C4 passes unchanged (depends on: 1)
 - [ ] Extend doc-maintainer skill — HTML regeneration: generate docs/index.html (arc42 structure, searchable construct registry, feature cross-reference, worked examples, ADR viewer) from registry markdown on each maintain run (depends on: 5)
