@@ -376,6 +376,8 @@ Always reached when Priorities 1–3 do not apply. Run **Step 2.6**.
 
 There is no "nothing to do" exit path. Maintain mode always produces exactly one improvement per run.
 
+**After the priority queue produces its one unit of work**, always run **Step 2.R — Registry Consistency Passes** before proceeding to Post-Write Size Check and Commit. If `docs/registry/index.md` does not exist in the repo, skip Step 2.R entirely.
+
 ---
 
 ### Step 2.L2 — Generate `docs/containers.md`
@@ -547,6 +549,83 @@ One file per run. Improves prose quality of the oldest-reviewed doc, independent
 
 ---
 
+### Step 2.R — Registry Consistency Passes
+
+Run these passes **every maintain run** after the priority-queue step completes, provided `docs/registry/index.md` exists. These passes are bounded — they will not balloon run time. The budget caps are hard limits, not targets.
+
+#### Pass R1 — L0 Size Guard
+
+Read `docs/registry/index.md` and count its lines:
+
+```bash
+wc -l docs/registry/index.md
+```
+
+If the file exceeds **80 lines**, trim it to 80 lines using this strategy:
+1. Preserve the frontmatter block (`---` ... `---`) in full.
+2. Preserve the Constructs table header row and all rows.
+3. Trim verbose prose from the Known Gaps or Patterns sections until the file is ≤ 80 lines.
+4. If trimming prose is insufficient, move overflow Known Gaps entries to a `docs/registry/known-gaps.md` file (create if absent) and replace the Known Gaps section in `index.md` with: `See [known-gaps.md](known-gaps.md) — {N} gaps tracked.`
+
+Print: `[doc-maintainer] R1: L0 is {N} lines — {trimmed to 80 | within limit, no action}.`
+
+#### Pass R2 — Bidirectional Link Enforcement
+
+For each row in the `docs/registry/index.md` Constructs table:
+1. Derive the construct file path: `docs/registry/constructs/{Name}.md`.
+2. Check whether it exists. If it does not → create a minimal stub using the construct template (same format as brownfield-migrate stubs). Print: `[doc-maintainer] R2: created missing stub for {Name}.`
+3. Read the construct file. Check the `planned_in:` frontmatter field. If it points to a spec file (e.g., `specs/feature/overview.md`), verify that file exists. If not → set `planned_in: null` and add a comment in the Key Decisions section: `- planned_in spec file no longer exists — review provenance.` Print: `[doc-maintainer] R2: cleared stale planned_in for {Name}.`
+
+Cap: process at most **5 rows per run**. Start from the first row not yet processed in this run. Rows already having a valid construct file and valid `planned_in` (or null) are skipped instantly (they count toward the 5-row cap only if a check was needed).
+
+Print summary: `[doc-maintainer] R2: checked {N} construct links — {M} issues fixed.`
+
+#### Pass R3 — Back-Link Reconciliation
+
+For each construct file in `docs/registry/constructs/`:
+1. Read its `planned_in:` field. If `planned_in` is non-null, check that the spec file contains at least one mention of the construct name.
+2. If the spec exists but does not mention the construct → append a note to the spec file's Known Gaps or Notes section (create one if absent): `<!-- construct {Name} claims this spec as its origin — verify and add cross-reference -->`
+3. If the spec does not exist → already handled by R2; skip.
+
+Cap: process at most **3 construct files per run**.
+
+Print summary: `[doc-maintainer] R3: back-link check on {N} constructs — {M} stale back-links noted.`
+
+#### Pass R4 — Stub Verification Prompts
+
+Identify up to **3 construct stubs** (files in `docs/registry/constructs/` where `status: planned` or `status: built` but `last_verified: null`). For each:
+1. Read the construct file.
+2. Check if the `file:` field is non-null and the referenced source file exists:
+   ```bash
+   test -f {construct.file}
+   ```
+3. If the source file does not exist → set `status: diverged` and append to Key Decisions: `- Source file {file} not found at verification time — stub may be stale.`
+4. If the source file exists but `status: planned` → note in the construct's Does section (append in italics): `*Source file exists — ready for human verification.*`
+5. Do not mark status as `verified` — that transition requires a human (see post-hook validator skill). Only flag readiness.
+
+Print: `[doc-maintainer] R4: stub check on {N} constructs — {M} flagged for human verification, {K} marked diverged.`
+
+#### Pass R5 — Known Gaps Reduction
+
+Read the Known Gaps section of `docs/registry/index.md`. If there are no entries (or only the placeholder), skip this pass.
+
+Select the **first non-placeholder gap entry**. The gap description should name a source area not yet surveyed (e.g., "IaC not surveyed", "src/payments/ not surveyed").
+
+Perform one targeted read of that area — a `Glob` or directory listing of the named path (this does NOT count against brownfield-migrate's 5-read budget; it is a doc-maintainer budget). Extract any constructs visible from the listing alone (file names → construct name inferences, same heuristics as brownfield-migrate Phase 7 Step 3).
+
+Write any newly discovered construct stubs (up to 3 new stubs per run). Update `docs/registry/index.md`:
+- Add new rows to the Constructs table.
+- Remove the resolved gap entry from Known Gaps.
+- Update frontmatter `construct_count` and `stubs`.
+
+Print: `[doc-maintainer] R5: resolved Known Gap "{gap}" — {N} new stubs written.`
+
+If the gap cannot be resolved in one read (e.g., the path does not exist), remove the gap entry and print: `[doc-maintainer] R5: removed stale gap "{gap}" — path does not exist.`
+
+Cap: process **1 gap per run**.
+
+---
+
 ## Phase 3 — Refresh Mode
 
 Use this phase when the mode is `refresh` or `refresh-one`.
@@ -676,6 +755,7 @@ Otherwise, commit with the appropriate message:
 | maintain (L3 generated) | `docs: add <domain> overview` |
 | maintain (accuracy patch) | `docs: accuracy patch <domain> <YYYY-MM-DD>` |
 | maintain (clarity review) | `docs: clarity review <YYYY-MM-DD>` |
+| maintain (registry passes only — no C4 work) | `docs: registry consistency passes <YYYY-MM-DD>` |
 | refresh | `docs: refresh all` |
 | refresh-one | `docs: refresh <domain>` |
 
@@ -744,7 +824,7 @@ Do not consider this skill complete until ALL of the following are true:
 - [ ] Phase 0 ran completely: dirty-tree check, branch recorded, fetch attempted, on `chore/claude-maintain`.
 - [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented reason.
 - [ ] **Init**: `docs/solution-design.md` was written (L1 only — no overviews, no containers.md).
-- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review).
+- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist).
 - [ ] **Refresh**: all in-scope docs were rewritten.
 - [ ] Post-Write Size Check ran on every file written; any file >500 lines was split.
 - [ ] `git add docs/`, `git commit`, and `git push` ran (or "nothing to commit" was printed).
