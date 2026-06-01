@@ -359,18 +359,92 @@ Use AskUserQuestion:
 2. Use kebab-case for the directory name (e.g., `specs/user-management/overview.md`, `specs/order-processing/overview.md`)
 3. Fill in the [template.md](template.md) structure with all synthesized content
 
+### Write Construct Stubs to Registry (if registry exists)
+
+After writing the spec file, check whether `docs/registry/index.md` exists. If it does, extract every new construct from the spec (entities/models, services/commands/queries, pages/components) and write stubs for each one.
+
+**For each new construct identified in the spec:**
+
+1. Determine the `type` (Service | Component | Repository | Model | Resource | Utility | Middleware | Hook)
+2. Determine the `layer` (Backend | Frontend | Database | Infra | Shared)
+3. Derive a PascalCase `Name` and a kebab-case `file` path (use the proposed path from the spec if available)
+4. Create the domain directory if it doesn't exist: `docs/registry/constructs/`
+5. Write `docs/registry/constructs/<Name>.md` using this exact structure:
+
+```markdown
+---
+name: <Name>
+type: <type>
+layer: <layer>
+file: <path>
+status: planned
+planned_in: specs/<feature-name>/overview.md
+last_verified: null
+---
+
+## Does
+
+<one or two sentences from the spec describing what this construct does>
+
+## Functional Requirements
+
+<extract FRs from the spec section for this construct — make each testable and user-facing>
+
+## Proof
+
+- method: null
+- verified_by: null
+- checklist_result: null
+- test_file: null
+
+## Interface
+
+```<language>
+<planned interface derived from the spec — class signature, function signatures, or API shape>
+```
+
+## Dependencies
+
+- Calls: <other construct names or "none">
+- Called by: <other construct names or "none">
+- Reads: <data sources or "none">
+- Writes: <data sources or "none">
+
+## Patterns Applied
+
+- (none)
+
+## Key Decisions
+
+- (none)
+```
+
+**Skip writing a stub if** the construct already appeared in Phase 0's registry summary as `built` or `verified` status — don't overwrite real data with a planned stub.
+
+**After writing all stubs**, update `docs/registry/index.md`:
+
+- Add one row per new construct to the Constructs table: `| <Name> | <type> | <Does one-line> | <layer> | constructs/<Name>.md | planned |`
+- Add one row to the Feature Cross-Reference table: `| <feature-name> | <Name>, <Name>, ... |`
+- Increment `construct_count` in the frontmatter by the number of new stubs
+- Increment `stubs` by the same count
+- Update `last_updated` to today's date
+
 ### Present the Handoff
 
-After generating the file, present:
+After generating the file and writing registry stubs, present:
 
 1. **File created** — the full path to the spec file
 
-2. **Implementation order** — concrete steps:
+2. **Registry updated** — list the construct stubs written (or "Registry not found — skipped"):
+   - `docs/registry/constructs/<Name>.md` (planned)
+   - ...
+
+3. **Implementation order** — concrete steps:
    - **Database**: Which models to create, which migrations to run
    - **Backend**: Which commands/queries to implement first, API endpoints to wire up
    - **Frontend**: Which pages to build, in what order
 
-3. **How to use this spec** — explain to the user:
+4. **How to use this spec** — explain to the user:
 
    > To implement this feature, reference the spec in your prompts:
    >
@@ -380,7 +454,7 @@ After generating the file, present:
    >
    > Each section has enough detail to implement without re-scanning the codebase.
 
-4. **Open questions** — if any remained unresolved, list them clearly
+5. **Open questions** — if any remained unresolved, list them clearly
 
 ---
 
@@ -418,5 +492,6 @@ Resolve before continuing to synthesis.
 > - [ ] The file contains all sections from `template.md`, filled with real content (no placeholder text)
 > - [ ] The implementation order section lists concrete numbered steps: DB → Backend → Frontend
 > - [ ] The handoff message with the full file path has been presented to the user
+> - [ ] If `docs/registry/index.md` exists: construct stubs written for every new entity, service, and component in the spec; L0 index rows appended; `construct_count` and `stubs` incremented
 >
 > If any item is unchecked, you are not done. Generate the missing output before closing.
