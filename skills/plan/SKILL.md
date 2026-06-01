@@ -18,9 +18,67 @@ This skill includes supporting files for consistency and quality:
 
 ## How This Skill Works
 
-This skill follows 5 phases. The discovery phases (1-2) are where the real work happens — rushing them produces vague specs that need rework.
+This skill follows 6 phases. Phase 0 reads the architecture registry (if it exists) so you never propose constructs that already exist. The discovery phases (1-2) are where the real work happens — rushing them produces vague specs that need rework.
 
 **Adaptive Depth**: The number of questions in Phase 2 scales with feature complexity. Simple features get fewer questions; complex features get the full set plus tradeoff surfacing.
+
+---
+
+## Phase 0: Registry Read (runs before asking anything)
+
+Before prompting the user, check whether an architecture registry exists in the project.
+
+```
+Check for: docs/registry/index.md
+```
+
+### If the registry does NOT exist
+
+Skip this phase silently — proceed directly to Phase 1.
+
+### If the registry exists
+
+Read `docs/registry/index.md` and extract two things:
+
+1. **Constructs table** — the `Name`, `Does`, `Layer`, and `Status` columns
+2. **Feature Cross-Reference table** — feature → constructs mapping
+3. **Known Gaps list** — gap entries that may be relevant
+
+**Step 1 — Derive the feature topic from invocation context.**
+
+The user may have provided a feature name, an issue title, or a short description in the invocation. If none was provided yet, you don't have a topic — skip filtering and show the full registry summary.
+
+**Step 2 — Filter constructs by topic relevance.**
+
+Scan the `Does` column of each construct for terms that match the feature topic (keyword overlap, synonyms). Consider a construct relevant if its `Does` text or `Name` overlaps with the feature topic. Do not filter too aggressively — prefer false positives over false negatives.
+
+**Step 3 — Check Known Gaps.**
+
+If any Known Gap entry matches the feature topic, invoke the explore skill for that specific gap area only (not a full codebase explore). Pass the gap description as the focus. Incorporate the explore results into the construct summary.
+
+**Step 4 — Present the registry summary to the user before Q1.**
+
+Format as:
+
+```
+## What the registry already knows
+
+**Relevant constructs found:**
+- `<Name>` (<Layer>, <Status>) — <Does>
+- ...
+
+**Feature cross-references:**
+- <Feature>: <Constructs>
+- ...
+
+**Known gaps in this area:** <gap text or "none">
+```
+
+If no relevant constructs were found, say:
+
+> No existing constructs found for this feature area — we're building from scratch.
+
+Then proceed to Phase 1 immediately (do not wait for user acknowledgment — they can read the summary while you ask Q1).
 
 ---
 
