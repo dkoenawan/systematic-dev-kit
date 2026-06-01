@@ -162,6 +162,18 @@ On `error:concurrency_conflict` → E14.
 
 Read `status` from plan frontmatter. If `complete` → exit clean (cron already uninstalled; this is a no-op).
 
+**Validation block check** (runs before task selection):
+
+```bash
+[ -f "specs/<feature-name>/.validation-blocked" ] && cat "specs/<feature-name>/.validation-blocked"
+```
+
+If the lockfile exists: halt the run with:
+```
+Validation blocked: construct <Name> diverged on <date>. Run /systematic-dev-kit:post-hook-validator and /systematic-dev-kit:adr to clear the block before resuming.
+```
+Do not select or execute any tasks. Do NOT uninstall cron — the block is temporary and will be cleared by the developer.
+
 ```bash
 scripts/select-next-task.sh <plan-file>
 ```
