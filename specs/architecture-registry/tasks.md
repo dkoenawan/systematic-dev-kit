@@ -3,7 +3,7 @@ issue: 11
 branch: feat/architecture-registry
 status: in-progress
 test_command: null
-last_skill_commit: 7ae69185e2748214d9d6c6bc5f8f2463ed9f785b
+last_skill_commit: e9ae8a6937ae04d0c598a3c8f01ecf8c43d35f9c
 retry_counts: {}
 schedule: "0 */6 * * *"
 budget:
@@ -20,7 +20,7 @@ budget:
 - [x] Extend doc-maintainer skill — HTML regeneration: generate docs/index.html (arc42 structure, searchable construct registry, feature cross-reference, worked examples, ADR viewer) from registry markdown on each maintain run (depends on: 5)
 - [x] Extend plan skill — registry read before designing: read L0 "Does" column + Feature Cross-Reference before any proposal, invoke explore only for Known Gap areas, present found constructs to user before Q1 (depends on: 1)
 - [x] Extend plan skill — registry write after spec approval: write construct stubs (status: planned) with FR list and planned interface, append rows to L0 index, create domain directory if new (depends on: 7)
-- [ ] Extend explore skill — registry as Tier 1: read L0 + relevant construct files before source code, sufficiency gate fires if registry covers focus area with no gaps, write newly discovered constructs to registry after investigation (depends on: 1)
+- [x] Extend explore skill — registry as Tier 1: read L0 + relevant construct files before source code, sufficiency gate fires if registry covers focus area with no gaps, write newly discovered constructs to registry after investigation (depends on: 1)
 - [ ] Extend task-executor skill — mandatory pre-task registry check: read L0 + relevant construct files before every task, search for constructs about to be created or modified, Known Gap domain fallback ls check (depends on: 1)
 - [ ] Extend task-executor skill — mandatory post-task registry write: write or update construct file (planned→built with real interface and dependencies), update L0 row, note cross-domain dependencies for doc-maintainer to reconcile (depends on: 10)
 - [ ] Write post-hook validator skill — reads FRs from construct file after each task-executor commit, generates human FR checklist, developer marks pass/fail, transitions status to verified or diverged, auto-triggers /adr on divergence and blocks next task until ADR written (depends on: 2, 11)
