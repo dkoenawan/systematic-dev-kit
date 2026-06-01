@@ -236,7 +236,112 @@ Include a registry check summary in the commit body:
 - `registry: no match — task domain not in registry` — if no match
 - `registry: not found — skipped` — if docs/registry/index.md does not exist
 
-#### Step 5 — Next Task
+#### Step 5 — Post-Task Registry Write (mandatory after every successful commit)
+
+Check whether `docs/registry/index.md` exists.
+
+**If it does NOT exist**: Skip this step, proceed to Step 6.
+
+**If it exists**:
+
+Determine what was built or modified in the task. Use the task description and the files changed in the commit to derive construct names and types.
+
+**Case A — Task matched a `planned` construct in Step 0:**
+
+Update the construct file at `docs/registry/constructs/<Name>.md`:
+
+1. Change `status: planned` → `status: built`
+2. Set `last_verified: null` (verification is the post-hook validator's job)
+3. Fill in the `## Interface` section with the actual implemented interface (class/function signatures, API shape) from the just-committed code — read the committed file(s) to extract it.
+4. Fill in `## Dependencies` — list constructs it calls and constructs that call it, derived from the committed code.
+5. Note cross-domain dependencies in `## Key Decisions`: for each dependency that crosses a layer boundary (e.g., Backend → Database, Frontend → Backend), add an entry: `cross-domain dependency: <ThisConstruct> → <OtherConstruct> (doc-maintainer: reconcile)`.
+
+Then update `docs/registry/index.md`:
+- Change the row's `Status` column from `planned` to `built`.
+- Increment `verified` count only if a test was run and passed; otherwise leave as-is.
+- Update `last_updated` to today's date.
+
+**Case B — Task created a new construct not previously in the registry:**
+
+Determine: type (Service | Component | Repository | Model | Resource | Utility | Middleware | Hook), layer (Backend | Frontend | Database | Infra | Shared), PascalCase name, file path.
+
+Write `docs/registry/constructs/<Name>.md` with `status: built`:
+
+```markdown
+---
+name: <Name>
+type: <type>
+layer: <layer>
+file: <path>
+status: built
+planned_in: null
+last_verified: null
+---
+
+## Does
+
+<one or two sentences describing what this construct does, derived from the task description and committed code>
+
+## Functional Requirements
+
+<extract FRs from the task description — make each testable and user-facing>
+
+## Proof
+
+- method: null
+- verified_by: null
+- checklist_result: null
+- test_file: null
+
+## Interface
+
+```<language>
+<actual interface from committed code — class/function signatures or API shape>
+```
+
+## Dependencies
+
+- Calls: <other construct names or "none">
+- Called by: <other construct names or "none">
+- Reads: <data sources or "none">
+- Writes: <data sources or "none">
+
+## Patterns Applied
+
+- (none)
+
+## Key Decisions
+
+- <cross-domain dependency entries if applicable>
+```
+
+Then update `docs/registry/index.md`:
+- Append a row to the Constructs table: `| <Name> | <type> | <Does one-line> | <layer> | constructs/<Name>.md | built |`
+- Append a row to Feature Cross-Reference if the feature isn't already there, or add the construct name to the existing row.
+- Increment `construct_count` and update `last_updated`.
+
+**Case C — Task modified an existing `built` or `verified` construct:**
+
+Update the construct file:
+- Update the `## Interface` section to reflect any signature changes.
+- Add a note to `## Key Decisions`: `updated by task-executor on <date>: <one-line description of what changed>`.
+- Do NOT change `status` — leave `built`/`verified` as-is.
+
+Update `docs/registry/index.md`: update `last_updated`.
+
+**Case D — Task touched code unrelated to any registered construct (tooling, config, tests):**
+
+Skip the registry write. Log "registry write skipped — task is tooling/config, no construct boundary crossed" in the next commit body.
+
+**Hard limit**: Write or update at most 3 construct files per task. If more were touched, note the remainder as "registry write deferred — exceeded 3-construct limit per task."
+
+Commit the registry update separately:
+```bash
+git add docs/registry/ && git commit -m "chore(<feature-name>): update registry after task <index>"
+git push origin feat/<feature-name>
+```
+
+#### Step 6 — Next Task
 
 Repeat for next task (budget check first).
 

@@ -3,7 +3,7 @@ issue: 11
 branch: feat/architecture-registry
 status: in-progress
 test_command: null
-last_skill_commit: a36ea722c69152d42d1655759eb735fd56b8cb84
+last_skill_commit: b95f545cdeafcd206b4f17a89921ff8cdfae2bf8
 retry_counts: {}
 schedule: "0 */6 * * *"
 budget:
@@ -22,5 +22,5 @@ budget:
 - [x] Extend plan skill — registry write after spec approval: write construct stubs (status: planned) with FR list and planned interface, append rows to L0 index, create domain directory if new (depends on: 7)
 - [x] Extend explore skill — registry as Tier 1: read L0 + relevant construct files before source code, sufficiency gate fires if registry covers focus area with no gaps, write newly discovered constructs to registry after investigation (depends on: 1)
 - [x] Extend task-executor skill — mandatory pre-task registry check: read L0 + relevant construct files before every task, search for constructs about to be created or modified, Known Gap domain fallback ls check (depends on: 1)
-- [ ] Extend task-executor skill — mandatory post-task registry write: write or update construct file (planned→built with real interface and dependencies), update L0 row, note cross-domain dependencies for doc-maintainer to reconcile (depends on: 10)
+- [x] Extend task-executor skill — mandatory post-task registry write: write or update construct file (planned→built with real interface and dependencies), update L0 row, note cross-domain dependencies for doc-maintainer to reconcile (depends on: 10)
 - [ ] Write post-hook validator skill — reads FRs from construct file after each task-executor commit, generates human FR checklist, developer marks pass/fail, transitions status to verified or diverged, auto-triggers /adr on divergence and blocks next task until ADR written (depends on: 2, 11)
