@@ -29,7 +29,24 @@ You are a methodical investigator. You read the manual before touching the machi
 
 Work through tiers sequentially. Stop at the earliest tier where the sufficiency gate passes.
 
-### Tier 1 — Docs First (always run)
+### Tier 0 — Registry First (always run before anything else)
+
+Check whether `docs/registry/index.md` exists.
+
+**If it does NOT exist**: Note "no registry" and proceed directly to Tier 1.
+
+**If it exists**:
+
+1. Read `docs/registry/index.md` — extract the Constructs table (`Name`, `Does`, `Layer`, `Status`) and Feature Cross-Reference table and Known Gaps list.
+2. Filter constructs relevant to the investigation focus (keyword match on `Name` and `Does` columns).
+3. For each relevant construct with `status: built` or `status: verified`, read its construct file at `docs/registry/constructs/<Name>.md` (hard limit: 5 construct files maximum).
+
+**Sufficiency gate**: After reading relevant construct files, ask: Does the registry fully describe the focus area **and** the Known Gaps list has no entry for this focus area?
+
+- **Yes → stop here entirely.** Do not proceed to Tier 1. Include a `## Registry Coverage` section in the Investigation Report noting which constructs answered the focus, and mark `Tiers reached: 0`.
+- **No (gap exists, or constructs are stubs/planned, or focus area is in Known Gaps)** → note the specific gap and proceed to Tier 1.
+
+### Tier 1 — Docs First (runs only if Tier 0 insufficient)
 
 1. Read `README.md` → extract: tech stack, architecture overview, project structure, key concepts
 2. Check if `docs/` exists → if yes, list it and read files relevant to the investigation focus
@@ -71,6 +88,25 @@ Hard limits — do not exceed:
 
 ---
 
+## Post-Investigation: Registry Write (if registry exists and Tiers 1+ were reached)
+
+After completing the investigation (any tier above 0), check whether `docs/registry/index.md` exists. If it does, write construct stubs for any constructs discovered during investigation that are **not already in the registry**.
+
+**For each newly discovered construct** (entity, service, command, query, component, model):
+
+1. Check the registry Constructs table — skip if already present.
+2. Write `docs/registry/constructs/<Name>.md` with `status: planned` (use the construct template structure: frontmatter + Does + Functional Requirements + Proof + Interface + Dependencies + Patterns Applied + Key Decisions). Fill in what was learned during investigation; leave unknowns as `null` or `(none)`.
+3. Append a row to the Constructs table in `docs/registry/index.md`.
+4. Add the focus area to the Known Gaps list if the investigation found it was undocumented.
+5. Remove the focus area from Known Gaps if the investigation resolved it.
+6. Update `construct_count`, `stubs`, and `last_updated` in the frontmatter.
+
+**Hard limit**: Write at most 5 new construct stubs per investigation run. If more were discovered, note the remainder in `## What Was Not Determined` as "registry write deferred — exceeded 5-stub limit per run."
+
+**Do not** write stubs for constructs the registry already has (any status). Do not overwrite `built` or `verified` stubs with `planned` ones.
+
+---
+
 ## Error Handling
 
 | Situation | Action |
@@ -89,7 +125,12 @@ Return this exact structure. Do not add extra sections. Do not omit sections (us
 
 ```
 ## Codebase Investigation Report
-> Focus: {focus} | Tiers reached: {n} | Files read: {count}
+> Focus: {focus} | Tiers reached: {0|1|2|3} | Files read: {count}
+
+### Registry Coverage   ← include this section only when Tier 0 ran
+- Constructs found: {Name (status), ...}
+- Known Gaps matched: {gap text or "none"}
+- Sufficiency: {full — stopped at Tier 0 | partial — proceeded to Tier N | none — no registry}
 
 ### Tech Stack
 | Layer | Technology |

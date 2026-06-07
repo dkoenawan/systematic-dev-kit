@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Registry — Skill Lifecycle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg:          #080b10;
+    --surface:     #0d1117;
+    --surface2:    #131922;
+    --border:      #1e2a38;
+    --border-hi:   #2a3f58;
+
+    --registry:    #e8d5a3;
+    --registry-bg: #1a160a;
+    --registry-glow: rgba(232,213,163,0.15);
+
+    --plan:        #6eb5ff;
+    --plan-bg:     #091524;
+    --explore:     #7dd9a8;
+    --explore-bg:  #091a11;
+    --executor:    #c89dff;
+    --executor-bg: #130b1f;
+    --maintainer:  #ff8f6b;
+    --maintainer-bg: #1a0e08;
+
+    --text:        #c9d4e0;
+    --text-dim:    #5a6a7a;
+    --text-hi:     #eef2f6;
+
+    --stage-green:    #2d7a4a;
+    --stage-brown:    #7a5c2d;
+    --stage-sparse:   #2d4d7a;
+    --stage-mature:   #5a2d7a;
+
+    --font-display: 'Syne', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 14px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.012) 40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 3rem 4rem 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--registry), transparent);
+    opacity: 0.4;
+  }
+
+  .header-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 800;
+    color: var(--text-hi);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  h1 span { color: var(--registry); }
+
+  .header-sub {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    max-width: 60ch;
+    line-height: 1.6;
+  }
+
+  /* ── INVARIANTS BANNER ── */
+  .invariants {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 4rem 0;
+    flex-wrap: wrap;
+  }
+
+  .invariant {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--surface);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .invariant-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--registry);
+    font-size: 0.85rem;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
+    gap: 0;
+    height: calc(100vh - 180px);
+    min-height: 600px;
+  }
+
+  /* ── STAGE SELECTOR ── */
+  .stage-panel {
+    border-right: 1px solid var(--border);
+    padding: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .stage-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stage-btn {
+    all: unset;
+    cursor: pointer;
+    padding: 1rem 1.5rem;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .stage-btn:hover { background: var(--surface); }
+
+  .stage-btn.active {
+    background: var(--surface2);
+    border-left-color: var(--stage-color);
+  }
+
+  .stage-btn.active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(var(--stage-rgb),0.06), transparent);
+    pointer-events: none;
+  }
+
+  .stage-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-hi);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .stage-desc {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .stage-badge {
+    display: inline-block;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+  }
+
+  /* ── DIAGRAM CANVAS ── */
+  .diagram-area {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .diagram-area::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, var(--registry-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  svg#diagram {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+  }
+
+  /* ── SKILL NODE STYLES ── */
+  .node-registry { filter: drop-shadow(0 0 12px rgba(232,213,163,0.3)); }
+  .node-plan     { filter: drop-shadow(0 0 8px rgba(110,181,255,0.2)); }
+  .node-explore  { filter: drop-shadow(0 0 8px rgba(125,217,168,0.2)); }
+  .node-executor { filter: drop-shadow(0 0 8px rgba(200,157,255,0.2)); }
+  .node-maintainer { filter: drop-shadow(0 0 8px rgba(255,143,107,0.2)); }
+
+  .flow-line {
+    transition: opacity 0.3s, stroke-width 0.3s;
+  }
+
+  .flow-line.dimmed { opacity: 0.08; }
+  .flow-line.active { opacity: 1; stroke-width: 2.5; }
+  .flow-line.inactive { opacity: 0.15; }
+
+  .node-group {
+    transition: opacity 0.3s;
+    cursor: default;
+  }
+  .node-group.dimmed { opacity: 0.2; }
+  .node-group.active { opacity: 1; }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    border-left: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .detail-panel::-webkit-scrollbar { width: 4px; }
+  .detail-panel::-webkit-scrollbar-track { background: transparent; }
+  .detail-panel::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  .detail-stage-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-hi);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-stage-title span {
+    display: block;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+    font-weight: 400;
+  }
+
+  .skill-detail {
+    border-left: 2px solid var(--skill-color);
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+    background: var(--skill-bg);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .skill-detail-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.78rem;
+    color: var(--skill-color);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .skill-detail-name::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--skill-color);
+    flex-shrink: 0;
+  }
+
+  .skill-actions {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .skill-actions li {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    padding-left: 0.75rem;
+    position: relative;
+  }
+
+  .skill-actions li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--skill-color);
+    opacity: 0.6;
+  }
+
+  .prevent-tag {
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+  }
+
+  .prevent-dup  { background: rgba(110,181,255,0.1); color: var(--plan); }
+  .prevent-scan { background: rgba(125,217,168,0.1); color: var(--explore); }
+
+  .not-invoked {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    opacity: 0.5;
+    font-style: italic;
+    padding: 0.4rem 0;
+  }
+
+  /* ── MERMAID SECTION ── */
+  .mermaid-section {
+    position: relative;
+    z-index: 1;
+    margin: 0 4rem;
+    padding: 3rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .mermaid-section h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-hi);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mermaid-section h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .code-block {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .code-block pre {
+    padding: 1.5rem;
+    overflow-x: auto;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+
+  .code-block pre::-webkit-scrollbar { height: 4px; }
+  .code-block pre::-webkit-scrollbar-track { background: transparent; }
+  .code-block pre::-webkit-scrollbar-thumb { background: var(--border-hi); }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.75rem; right: 0.75rem;
+    all: unset;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { border-color: var(--registry); color: var(--registry); }
+  .copy-btn.copied { color: var(--explore); border-color: var(--explore); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1rem 4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-line {
+    width: 20px; height: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; height: auto; }
+    .stage-panel { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 1rem; }
+    .detail-panel { border-left: none; border-top: 1px solid var(--border); }
+    header, .mermaid-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .invariants { margin-left: 1.5rem; margin-right: 1.5rem; }
+    .legend { padding: 1rem 1.5rem; }
+    .diagram-area { height: 480px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">systematic-dev-kit · architecture registry</div>
+  <h1>Skill Integration <span>Lifecycle</span></h1>
+  <p class="header-sub">How plan, explore, task-executor, and doc-maintainer interact with the Architecture Registry across every stage of a project's life.</p>
+</header>
+
+<div class="invariants">
+  <div class="invariant"><span class="invariant-num">I</span> No agent creates a construct without checking the registry first</div>
+  <div class="invariant"><span class="invariant-num">II</span> No agent reads more source files than needed</div>
+</div>
+
+<div class="main">
+
+  <!-- STAGE SELECTOR -->
+  <nav class="stage-panel" aria-label="Lifecycle stages">
+    <div class="stage-label">Select Stage</div>
+
+    <button class="stage-btn active" data-stage="greenfield"
+            style="--stage-color: #4caf80; --stage-rgb: 76,175,128">
+      <span class="stage-badge" style="background:rgba(76,175,128,0.15);color:#4caf80">01</span>
+      <span class="stage-name">Greenfield</span>
+      <span class="stage-desc">Brand new project, registry does not exist yet</span>
+    </button>
+
+    <button class="stage-btn" data-stage="brownfield"
+            style="--stage-color: #c49a4a; --stage-rgb: 196,154,74">
+      <span class="stage-badge" style="background:rgba(196,154,74,0.15);color:#c49a4a">02</span>
+      <span class="stage-name">Brownfield</span>
+      <span class="stage-desc">Existing codebase, first time setting up registry</span>
+    </button>
+
+    <button class="stage-btn" data-stage="sparse"
+            style="--stage-color: #5b9bd5; --stage-rgb: 91,155,213">
+      <span class="stage-badge" style="background:rgba(91,155,213,0.15);color:#5b9bd5">03</span>
+      <span class="stage-name">Sparse</span>
+      <span class="stage-desc">1–3 features built, registry is thin with Known Gaps</span>
+    </button>
+
+    <button class="stage-btn" data-stage="mature"
+            style="--stage-color: #a87fd4; --stage-rgb: 168,127,212">
+      <span class="stage-badge" style="background:rgba(168,127,212,0.15);color:#a87fd4">04</span>
+      <span class="stage-name">Mature</span>
+      <span class="stage-desc">10+ features, registry is authoritative source of truth</span>
+    </button>
+  </nav>
+
+  <!-- SVG DIAGRAM -->
+  <div class="diagram-area">
+    <svg id="diagram" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Arrowheads -->
+        <marker id="arrow-plan" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#6eb5ff"/>
+        </marker>
+        <marker id="arrow-explore" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#7dd9a8"/>
+        </marker>
+        <marker id="arrow-executor" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#c89dff"/>
+        </marker>
+        <marker id="arrow-maintainer" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#ff8f6b"/>
+        </marker>
+        <marker id="arrow-registry" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#e8d5a3"/>
+        </marker>
+        <marker id="arrow-dim" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#2a3f58"/>
+        </marker>
+
+        <!-- Glows -->
+        <filter id="glow-registry" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-skill" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- ── FLOW LINES ── -->
+
+      <!-- plan → registry (write stubs) -->
+      <path id="line-plan-write" class="flow-line"
+            d="M 175,145 Q 280,170 320,230"
+            fill="none" stroke="#6eb5ff" stroke-width="1.5" stroke-dasharray="5,3"
+            marker-end="url(#arrow-plan)" opacity="0.7"/>
+
+      <!-- registry → plan (read) -->
+      <path id="line-registry-plan" class="flow-line"
+            d="M 318,222 Q 275,175 177,152"
+            fill="none" stroke="#e8d5a3" stroke-width="1.5"
+            marker-end="url(#arrow-registry)" opacity="0.7"/>
+
+      <!-- explore → registry (write gaps) -->
+      <path id="line-explore-write" class="flow-line"
+            d="M 175,285 Q 260,280 320,278"
+            fill="none" stroke="#7dd9a8" stroke-width="1.5" stroke-dasharray="5,3"
+            marker-end="url(#arrow-explore)" opacity="0.7"/>
+
+      <!-- registry → explore (read) -->
+      <path id="line-registry-explore" class="flow-line"
+            d="M 318,270 Q 255,274 177,291"
+            fill="none" stroke="#e8d5a3" stroke-width="1.5"
+            marker-end="url(#arrow-registry)" opacity="0.7"/>
+
+      <!-- executor → registry (promote stubs) -->
+      <path id="line-executor-write" class="flow-line"
+            d="M 175,390 Q 265,370 322,325"
+            fill="none" stroke="#c89dff" stroke-width="1.5" stroke-dasharray="5,3"
+            marker-end="url(#arrow-executor)" opacity="0.7"/>
+
+      <!-- registry → executor (pre-task check) -->
+      <path id="line-registry-executor" class="flow-line"
+            d="M 320,332 Q 262,360 177,398"
+            fill="none" stroke="#e8d5a3" stroke-width="1.5"
+            marker-end="url(#arrow-registry)" opacity="0.7"/>
+
+      <!-- maintainer → registry (seed/fill) -->
+      <path id="line-maintainer-write" class="flow-line"
+            d="M 525,285 Q 465,278 400,278"
+            fill="none" stroke="#ff8f6b" stroke-width="1.5" stroke-dasharray="5,3"
+            marker-end="url(#arrow-maintainer)" opacity="0.7"/>
+
+      <!-- registry → maintainer (stale check) -->
+      <path id="line-registry-maintainer" class="flow-line"
+            d="M 400,270 Q 462,264 523,276"
+            fill="none" stroke="#e8d5a3" stroke-width="1.5"
+            marker-end="url(#arrow-registry)" opacity="0.7"/>
+
+      <!-- plan → explore (invoke) -->
+      <path id="line-plan-explore" class="flow-line"
+            d="M 120,170 Q 100,230 120,270"
+            fill="none" stroke="#6eb5ff" stroke-width="1.5" stroke-dasharray="3,4"
+            marker-end="url(#arrow-plan)" opacity="0.5"/>
+
+      <!-- explore → plan (report) -->
+      <path id="line-explore-plan" class="flow-line"
+            d="M 128,272 Q 108,230 128,168"
+            fill="none" stroke="#7dd9a8" stroke-width="1.5" stroke-dasharray="3,4"
+            marker-end="url(#arrow-explore)" opacity="0.5"/>
+
+      <!-- task-executor → plan (invoke) -->
+      <path id="line-executor-plan" class="flow-line"
+            d="M 108,370 Q 85,290 108,175"
+            fill="none" stroke="#c89dff" stroke-width="1.5" stroke-dasharray="3,4"
+            marker-end="url(#arrow-executor)" opacity="0.3"/>
+
+
+      <!-- ── REGISTRY (CENTER) ── -->
+      <g class="node-group node-registry" id="node-registry">
+        <!-- outer ring -->
+        <circle cx="360" cy="275" r="68" fill="none" stroke="#e8d5a3" stroke-width="0.5" opacity="0.2"/>
+        <circle cx="360" cy="275" r="60" fill="none" stroke="#e8d5a3" stroke-width="0.5" opacity="0.35"/>
+        <!-- body -->
+        <rect x="310" y="245" width="100" height="60" rx="3"
+              fill="#1a160a" stroke="#e8d5a3" stroke-width="1.5" filter="url(#glow-registry)"/>
+        <!-- inner lines decoration -->
+        <line x1="318" y1="261" x2="402" y2="261" stroke="#e8d5a3" stroke-width="0.5" opacity="0.3"/>
+        <line x1="318" y1="269" x2="402" y2="269" stroke="#e8d5a3" stroke-width="0.5" opacity="0.2"/>
+        <line x1="318" y1="277" x2="380" y2="277" stroke="#e8d5a3" stroke-width="0.5" opacity="0.2"/>
+        <line x1="318" y1="285" x2="390" y2="285" stroke="#e8d5a3" stroke-width="0.5" opacity="0.15"/>
+        <!-- label -->
+        <text x="360" y="253" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="8" fill="#e8d5a3" letter-spacing="1">ARCHITECTURE</text>
+        <text x="360" y="264" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="8" fill="#e8d5a3" letter-spacing="1">REGISTRY</text>
+        <!-- sub-labels -->
+        <text x="360" y="280" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="5.5" fill="#e8d5a3" opacity="0.5">building-blocks.md</text>
+        <text x="360" y="289" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="5.5" fill="#e8d5a3" opacity="0.5">data-models.md</text>
+        <text x="360" y="298" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="5.5" fill="#e8d5a3" opacity="0.5">infrastructure.md</text>
+      </g>
+
+      <!-- ── PLAN (TOP LEFT) ── -->
+      <g class="node-group" id="node-plan">
+        <rect x="60" y="118" width="110" height="56" rx="3"
+              fill="#091524" stroke="#6eb5ff" stroke-width="1.5" filter="url(#glow-skill)"/>
+        <text x="115" y="136" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="9" fill="#6eb5ff" letter-spacing="0.5">plan</text>
+        <text x="115" y="150" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#6eb5ff" opacity="0.55">feature spec</text>
+        <text x="115" y="162" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#6eb5ff" opacity="0.55">+ stub writer</text>
+      </g>
+
+      <!-- ── EXPLORE (MIDDLE LEFT) ── -->
+      <g class="node-group" id="node-explore">
+        <rect x="60" y="254" width="110" height="56" rx="3"
+              fill="#091a11" stroke="#7dd9a8" stroke-width="1.5" filter="url(#glow-skill)"/>
+        <text x="115" y="272" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="9" fill="#7dd9a8" letter-spacing="0.5">explore</text>
+        <text x="115" y="287" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#7dd9a8" opacity="0.55">codebase</text>
+        <text x="115" y="298" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#7dd9a8" opacity="0.55">investigator</text>
+      </g>
+
+      <!-- ── TASK-EXECUTOR (BOTTOM LEFT) ── -->
+      <g class="node-group" id="node-executor">
+        <rect x="60" y="362" width="110" height="56" rx="3"
+              fill="#130b1f" stroke="#c89dff" stroke-width="1.5" filter="url(#glow-skill)"/>
+        <text x="115" y="380" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="9" fill="#c89dff" letter-spacing="0.5">task-executor</text>
+        <text x="115" y="394" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#c89dff" opacity="0.55">autonomous</text>
+        <text x="115" y="405" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#c89dff" opacity="0.55">cron executor</text>
+      </g>
+
+      <!-- ── DOC-MAINTAINER (RIGHT) ── -->
+      <g class="node-group" id="node-maintainer">
+        <rect x="523" y="254" width="118" height="56" rx="3"
+              fill="#1a0e08" stroke="#ff8f6b" stroke-width="1.5" filter="url(#glow-skill)"/>
+        <text x="582" y="272" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700"
+              font-size="9" fill="#ff8f6b" letter-spacing="0.5">doc-maintainer</text>
+        <text x="582" y="287" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#ff8f6b" opacity="0.55">incremental</text>
+        <text x="582" y="298" text-anchor="middle" font-family="DM Mono,monospace"
+              font-size="6" fill="#ff8f6b" opacity="0.55">cron updater</text>
+      </g>
+
+      <!-- ── STAGE LABEL OVERLAY ── -->
+      <g id="stage-overlay">
+        <rect x="265" y="155" width="190" height="22" rx="2" fill="#080b10" opacity="0.85"/>
+        <text id="stage-label-text" x="360" y="170" text-anchor="middle"
+              font-family="Syne,sans-serif" font-weight="700" font-size="9"
+              fill="#4caf80" letter-spacing="2">GREENFIELD</text>
+      </g>
+
+      <!-- ── FLOW LABELS ── -->
+      <text x="237" y="190" font-family="DM Mono,monospace" font-size="5.5" fill="#6eb5ff" opacity="0.7" transform="rotate(-12,237,190)">write stubs</text>
+      <text x="228" y="225" font-family="DM Mono,monospace" font-size="5.5" fill="#e8d5a3" opacity="0.7" transform="rotate(-12,228,225)">read registry</text>
+
+      <text x="198" y="274" font-family="DM Mono,monospace" font-size="5.5" fill="#7dd9a8" opacity="0.7">write gaps</text>
+      <text x="198" y="289" font-family="DM Mono,monospace" font-size="5.5" fill="#e8d5a3" opacity="0.7">read registry</text>
+
+      <text x="215" y="345" font-family="DM Mono,monospace" font-size="5.5" fill="#c89dff" opacity="0.7" transform="rotate(12,215,345)">promote stubs</text>
+      <text x="215" y="378" font-family="DM Mono,monospace" font-size="5.5" fill="#e8d5a3" opacity="0.7" transform="rotate(12,215,378)">pre-task check</text>
+
+      <text x="415" y="270" font-family="DM Mono,monospace" font-size="5.5" fill="#e8d5a3" opacity="0.7">stale check</text>
+      <text x="415" y="290" font-family="DM Mono,monospace" font-size="5.5" fill="#ff8f6b" opacity="0.7">seed / fill</text>
+
+      <text x="74" y="220" font-family="DM Mono,monospace" font-size="5" fill="#6eb5ff" opacity="0.5">invoke</text>
+      <text x="84" y="235" font-family="DM Mono,monospace" font-size="5" fill="#7dd9a8" opacity="0.5">report</text>
+    </svg>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <aside class="detail-panel" id="detail-panel">
+    <!-- filled by JS -->
+  </aside>
+
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#6eb5ff"></div> plan</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7dd9a8"></div> explore</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c89dff"></div> task-executor</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff8f6b"></div> doc-maintainer</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e8d5a3"></div> Registry</div>
+  <div class="legend-item" style="margin-left:1rem">
+    <div class="legend-line" style="background: repeating-linear-gradient(90deg,#6eb5ff 0,#6eb5ff 4px,transparent 4px,transparent 7px)"></div>
+    write
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background:#e8d5a3"></div>
+    read
+  </div>
+  <div class="legend-item">
+    <div class="legend-line" style="background: repeating-linear-gradient(90deg,#6eb5ff 0,#6eb5ff 3px,transparent 3px,transparent 6px)"></div>
+    invoke
+  </div>
+</div>
+
+<!-- MERMAID SOURCE -->
+<section class="mermaid-section">
+  <h2>Mermaid Source</h2>
+  <div class="code-block">
+    <button class="copy-btn" id="copyBtn">copy</button>
+    <pre id="mermaid-source">graph TD
+  subgraph REGISTRY["🗂 Architecture Registry"]
+    BB["building-blocks.md"]
+    DM["data-models.md"]
+    INF["infrastructure.md"]
+    IDX["index.md (entry, ≤80 lines)"]
+    ADR["docs/decisions/ (ADRs)"]
+  end
+
+  subgraph SKILLS["🔧 Skills"]
+    PLAN["plan\n(feature spec + stub writer)"]
+    EXPLORE["explore\n(codebase investigator)"]
+    EXEC["task-executor\n(autonomous cron executor)"]
+    MAINT["doc-maintainer\n(incremental cron updater)"]
+    INIT["init\n(project scaffolder)"]
+  end
+
+  %% ── Greenfield ──
+  INIT -->|"creates skeleton + ADR-001"| REGISTRY
+  PLAN -->|"writes stubs from spec"| BB
+  EXEC -->|"promotes stubs → full entries"| BB
+  EXEC -->|"pre-task check"| IDX
+  MAINT -->|"fills entries from git diff"| BB
+
+  %% ── Brownfield init ──
+  MAINT -->|"seeds from schema"| DM
+  MAINT -->|"seeds from IaC grep"| INF
+  MAINT -->|"top-20 git churn → stubs"| BB
+
+  %% ── Sparse ──
+  PLAN -->|"reads registry"| IDX
+  PLAN -->|"scoped invoke if Known Gap"| EXPLORE
+  EXPLORE -->|"scoped to domain"| BB
+  EXPLORE -->|"writes new stubs discovered"| BB
+  EXEC -->|"mandatory pre-task protocol"| IDX
+  MAINT -->|"3 entries per cron run"| BB
+
+  %% ── Mature ──
+  PLAN -->|"registry only, no explore"| BB
+  EXEC -->|"1 file read pre-task"| IDX
+  MAINT -->|"staleness verification"| BB
+
+  %% ── Invariants ──
+  IDX -->|"always read first"| PLAN
+  IDX -->|"always read first"| EXEC
+  IDX -->|"always read first"| EXPLORE
+
+  %% Styles
+  classDef registry fill:#1a160a,stroke:#e8d5a3,color:#e8d5a3
+  classDef plan     fill:#091524,stroke:#6eb5ff,color:#6eb5ff
+  classDef explore  fill:#091a11,stroke:#7dd9a8,color:#7dd9a8
+  classDef exec     fill:#130b1f,stroke:#c89dff,color:#c89dff
+  classDef maint    fill:#1a0e08,stroke:#ff8f6b,color:#ff8f6b
+  classDef init     fill:#0d1117,stroke:#5a6a7a,color:#c9d4e0
+
+  class BB,DM,INF,IDX,ADR registry
+  class PLAN plan
+  class EXPLORE explore
+  class EXEC exec
+  class MAINT maint
+  class INIT init</pre>
+  </div>
+</section>
+
+<script>
+// ── DATA ──
+const stages = {
+  greenfield: {
+    label: 'GREENFIELD',
+    color: '#4caf80',
+    title: 'Greenfield',
+    subtitle: 'Brand new project — registry does not exist yet',
+    activeLines: ['line-plan-write','line-maintainer-write'],
+    inactiveLines: ['line-registry-plan','line-registry-explore','line-explore-write','line-plan-explore','line-explore-plan','line-registry-maintainer'],
+    dimmedLines: [],
+    activeNodes: ['node-plan','node-executor','node-maintainer','node-registry'],
+    dimmedNodes: ['node-explore'],
+    skills: {
+      init: {
+        color: '#8a9ab0', bg: 'rgba(30,42,56,0.3)',
+        actions: [
+          'Scaffolds project from template',
+          'Invokes doc-maintainer init automatically',
+          'Creates docs/architecture/ skeleton — all four files as empty shells',
+          'Writes ADR-001: stack rationale from provisioned choices',
+          'Adds agent navigation protocol to project CLAUDE.md',
+        ]
+      },
+      plan: {
+        color: '#6eb5ff', bg: 'rgba(9,21,36,0.8)',
+        actions: [
+          'User selects "New feature" — no existing code',
+          'explore is NOT invoked (nothing to explore)',
+          'Generates specs/<feature>/overview.md',
+          ['Writes stubs for anticipated building blocks to building-blocks.md','prevent-dup'],
+          ['Zero source file reads — stubs come from spec only','prevent-scan'],
+        ]
+      },
+      'task-executor': {
+        color: '#c89dff', bg: 'rgba(19,11,31,0.8)',
+        actions: [
+          'Phase 0: reads docs/architecture/index.md before any task',
+          'Before each task: checks building-blocks.md for stub',
+          ['Finds stub → confirms not yet built → proceeds','prevent-dup'],
+          'After each task: promotes stub → full entry (location, inputs, outputs, deps)',
+          ['1 registry read per task — no source scanning','prevent-scan'],
+        ]
+      },
+      'doc-maintainer': {
+        color: '#ff8f6b', bg: 'rgba(26,14,8,0.8)',
+        actions: [
+          'Fills entries from changed files (git diff)',
+          'Max 3 building blocks updated per cron run',
+          'Max 8 source files read per run — hard limit',
+          'Updates Known Gaps section in index.md',
+        ]
+      },
+      explore: { notInvoked: true }
+    }
+  },
+
+  brownfield: {
+    label: 'BROWNFIELD',
+    color: '#c49a4a',
+    title: 'Brownfield Init',
+    subtitle: 'Existing codebase — first time setting up the registry',
+    activeLines: ['line-maintainer-write','line-registry-maintainer'],
+    inactiveLines: ['line-plan-write','line-registry-plan','line-explore-write','line-registry-explore','line-executor-write','line-registry-executor','line-plan-explore','line-explore-plan','line-executor-plan'],
+    dimmedLines: [],
+    activeNodes: ['node-maintainer','node-registry'],
+    dimmedNodes: ['node-plan','node-explore','node-executor'],
+    skills: {
+      'doc-maintainer': {
+        color: '#ff8f6b', bg: 'rgba(26,14,8,0.8)',
+        actions: [
+          'Runs targeted one-time init pass on the existing codebase',
+          'Tier 1: reads README + CLAUDE.md → populates index.md coverage',
+          ['Reads schema file ONCE → populates data-models.md fully','prevent-scan'],
+          ['Greps IaC files → populates infrastructure.md resource table','prevent-scan'],
+          'git log --name-only -20 → finds 20 highest-churn files → documents as stubs',
+          'Marks Known Gaps: most building blocks not yet registered',
+          'Writes ADR-001: stack rationale reconstructed from package.json + schema',
+          ['Hard limit: max 15 source files read during init','prevent-scan'],
+        ]
+      },
+      plan: { notInvoked: true },
+      explore: { notInvoked: true },
+      'task-executor': { notInvoked: true },
+    }
+  },
+
+  sparse: {
+    label: 'SPARSE (1–3 FEATURES)',
+    color: '#5b9bd5',
+    title: 'Sparse Project',
+    subtitle: 'Registry exists but thin — Known Gaps list is long',
+    activeLines: ['line-plan-write','line-registry-plan','line-explore-write','line-registry-explore','line-executor-write','line-registry-executor','line-maintainer-write','line-plan-explore','line-explore-plan'],
+    inactiveLines: ['line-registry-maintainer','line-executor-plan'],
+    dimmedLines: [],
+    activeNodes: ['node-plan','node-explore','node-executor','node-maintainer','node-registry'],
+    dimmedNodes: [],
+    skills: {
+      plan: {
+        color: '#6eb5ff', bg: 'rgba(9,21,36,0.8)',
+        actions: [
+          'Reads docs/architecture/index.md first',
+          ['Checks if relevant domain is in Known Gaps','prevent-dup'],
+          'Known Gap → invokes explore scoped to that domain only (not full scan)',
+          'No Known Gap → reads registry section only, explore NOT invoked',
+          'After approval: writes stubs for all new building blocks in the spec',
+          ['Drops typical "Extends existing" token cost by ~60% vs. full explore','prevent-scan'],
+        ]
+      },
+      explore: {
+        color: '#7dd9a8', bg: 'rgba(9,26,17,0.8)',
+        actions: [
+          'Scoped to a specific domain (not full codebase)',
+          'Tier 1: reads registry files before README — higher info density',
+          ['Sufficiency gate more likely to trigger early with registry context','prevent-scan'],
+          'Reads 2–4 files vs. 5–8 for a full unscoped pass',
+          ['After investigation: appends newly discovered blocks to building-blocks.md','prevent-dup'],
+          'Each explore run makes the next run cheaper',
+        ]
+      },
+      'task-executor': {
+        color: '#c89dff', bg: 'rgba(19,11,31,0.8)',
+        actions: [
+          'Pre-task protocol is MANDATORY (written into SKILL.md):',
+          '  1. Read docs/architecture/index.md (80 lines, always)',
+          '  2. If task touches Known Gap domain → ls src/<domain>/ only',
+          '  3. If construct in listing → read building-blocks.md entry or first 30 lines of source',
+          ['Mandatory check prevents creating duplicate in undocumented area','prevent-dup'],
+          'After each task: update registry (new stubs or full entries)',
+          ['ls + one targeted read vs. scanning whole domain','prevent-scan'],
+        ]
+      },
+      'doc-maintainer': {
+        color: '#ff8f6b', bg: 'rgba(26,14,8,0.8)',
+        actions: [
+          'Priority: fill Known Gaps entries',
+          'Selects 3 oldest stubs per cron run',
+          'For each stub: reads source file once, fills full entry, removes from Known Gaps',
+          'Over time Known Gaps shrinks to zero',
+          ['3 source file reads per run — bounded, never grows with codebase size','prevent-scan'],
+        ]
+      }
+    }
+  },
+
+  mature: {
+    label: 'MATURE (10+ FEATURES)',
+    color: '#a87fd4',
+    title: 'Mature Project',
+    subtitle: 'Registry is authoritative — Known Gaps is empty',
+    activeLines: ['line-registry-plan','line-registry-executor','line-registry-maintainer','line-maintainer-write'],
+    inactiveLines: ['line-plan-write','line-explore-write','line-registry-explore','line-executor-write','line-plan-explore','line-explore-plan','line-executor-plan'],
+    dimmedLines: [],
+    activeNodes: ['node-plan','node-executor','node-maintainer','node-registry'],
+    dimmedNodes: ['node-explore'],
+    skills: {
+      plan: {
+        color: '#6eb5ff', bg: 'rgba(9,21,36,0.8)',
+        actions: [
+          'Does NOT invoke explore at all — registry is source of truth',
+          ['Reads building-blocks.md + data-models.md (2 file reads, full stop)','prevent-scan'],
+          'Presents complete context: "Existing: UserAuthService, OrderRepository..."',
+          ['Greps registry by name and type — reliably catches conflicts','prevent-dup'],
+          'After spec approval: appends new building block entries',
+        ]
+      },
+      explore: { notInvoked: true,
+        note: 'Only invoked for deep debugging, security reviews, or cross-cutting refactors. Even then, Tier 1 registry read almost always passes sufficiency gate.'
+      },
+      'task-executor': {
+        color: '#c89dff', bg: 'rgba(19,11,31,0.8)',
+        actions: [
+          'Pre-task: reads index.md only (80 lines)',
+          'No Known Gaps + no STALE markers → no further reads needed before implementing',
+          ['Registry is dense enough — grep building-blocks.md by name catches all conflicts','prevent-dup'],
+          ['Best case: 1 file read before each task. Registry pays for itself fully.','prevent-scan'],
+          'Post-task: updates building block entries, adds used-by fields on deps',
+        ]
+      },
+      'doc-maintainer': {
+        color: '#ff8f6b', bg: 'rgba(26,14,8,0.8)',
+        actions: [
+          'Staleness verification only (no gap-filling needed)',
+          'Re-verifies entries >60 days old: reads source file, confirms accuracy',
+          'Flags STALE if file has changed significantly',
+          ['Bounded to entries that need re-verification — not full rescans','prevent-scan'],
+        ]
+      }
+    }
+  }
+};
+
+// ── RENDER ──
+function renderDetail(stageKey) {
+  const stage = stages[stageKey];
+  const panel = document.getElementById('detail-panel');
+
+  const skillOrder = ['init','plan','explore','task-executor','doc-maintainer'];
+  const skillLabels = { init:'init', plan:'plan', explore:'explore', 'task-executor':'task-executor', 'doc-maintainer':'doc-maintainer' };
+
+  let html = `<div class="detail-stage-title"><span>lifecycle stage</span>${stage.title}<br><span style="font-size:0.62rem;font-weight:400;margin-top:0.2rem;display:block">${stage.subtitle}</span></div>`;
+
+  for (const skillKey of skillOrder) {
+    const skill = stage.skills[skillKey];
+    if (!skill) continue;
+
+    if (skill.notInvoked) {
+      html += `<div style="--skill-color:${skill.color||'#3a4a5a'};--skill-bg:rgba(13,17,23,0.5)" class="skill-detail">
+        <div class="skill-detail-name" style="opacity:0.4">${skillLabels[skillKey]}</div>
+        <p class="not-invoked">Not invoked at this stage${skill.note ? ' — ' + skill.note : ''}</p>
+      </div>`;
+      continue;
+    }
+
+    const actionsHtml = skill.actions.map(a => {
+      if (Array.isArray(a)) {
+        const [text, tag] = a;
+        const tagLabel = tag === 'prevent-dup' ? 'no-dup' : 'min-reads';
+        return `<li>${text} <span class="prevent-tag ${tag}">${tagLabel}</span></li>`;
+      }
+      return `<li>${a}</li>`;
+    }).join('');
+
+    html += `<div style="--skill-color:${skill.color};--skill-bg:${skill.bg}" class="skill-detail">
+      <div class="skill-detail-name">${skillLabels[skillKey]}</div>
+      <ul class="skill-actions">${actionsHtml}</ul>
+    </div>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+function applyStageToSvg(stageKey) {
+  const stage = stages[stageKey];
+
+  // Reset all lines
+  document.querySelectorAll('.flow-line').forEach(el => {
+    el.classList.remove('active','dimmed','inactive');
+    el.classList.add('inactive');
+  });
+
+  // Activate selected lines
+  stage.activeLines.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('inactive'); el.classList.add('active'); }
+  });
+
+  // Reset all nodes
+  document.querySelectorAll('.node-group').forEach(el => {
+    el.classList.remove('active','dimmed');
+    el.classList.add('active');
+  });
+
+  // Dim nodes
+  stage.dimmedNodes.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active'); el.classList.add('dimmed'); }
+  });
+
+  // Update overlay label
+  const labelEl = document.getElementById('stage-label-text');
+  labelEl.textContent = stage.label;
+  labelEl.setAttribute('fill', stage.color);
+}
+
+function setStage(stageKey) {
+  // Update buttons
+  document.querySelectorAll('.stage-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.stage === stageKey);
+  });
+
+  renderDetail(stageKey);
+  applyStageToSvg(stageKey);
+}
+
+// Stage buttons
+document.querySelectorAll('.stage-btn').forEach(btn => {
+  btn.addEventListener('click', () => setStage(btn.dataset.stage));
+});
+
+// Copy button
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = document.getElementById('mermaid-source').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+});
+
+// Init
+setStage('greenfield');
+</script>
+
+</body>
+</html>

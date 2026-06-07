@@ -18,9 +18,67 @@ This skill includes supporting files for consistency and quality:
 
 ## How This Skill Works
 
-This skill follows 5 phases. The discovery phases (1-2) are where the real work happens — rushing them produces vague specs that need rework.
+This skill follows 6 phases. Phase 0 reads the architecture registry (if it exists) so you never propose constructs that already exist. The discovery phases (1-2) are where the real work happens — rushing them produces vague specs that need rework.
 
 **Adaptive Depth**: The number of questions in Phase 2 scales with feature complexity. Simple features get fewer questions; complex features get the full set plus tradeoff surfacing.
+
+---
+
+## Phase 0: Registry Read (runs before asking anything)
+
+Before prompting the user, check whether an architecture registry exists in the project.
+
+```
+Check for: docs/registry/index.md
+```
+
+### If the registry does NOT exist
+
+Skip this phase silently — proceed directly to Phase 1.
+
+### If the registry exists
+
+Read `docs/registry/index.md` and extract two things:
+
+1. **Constructs table** — the `Name`, `Does`, `Layer`, and `Status` columns
+2. **Feature Cross-Reference table** — feature → constructs mapping
+3. **Known Gaps list** — gap entries that may be relevant
+
+**Step 1 — Derive the feature topic from invocation context.**
+
+The user may have provided a feature name, an issue title, or a short description in the invocation. If none was provided yet, you don't have a topic — skip filtering and show the full registry summary.
+
+**Step 2 — Filter constructs by topic relevance.**
+
+Scan the `Does` column of each construct for terms that match the feature topic (keyword overlap, synonyms). Consider a construct relevant if its `Does` text or `Name` overlaps with the feature topic. Do not filter too aggressively — prefer false positives over false negatives.
+
+**Step 3 — Check Known Gaps.**
+
+If any Known Gap entry matches the feature topic, invoke the explore skill for that specific gap area only (not a full codebase explore). Pass the gap description as the focus. Incorporate the explore results into the construct summary.
+
+**Step 4 — Present the registry summary to the user before Q1.**
+
+Format as:
+
+```
+## What the registry already knows
+
+**Relevant constructs found:**
+- `<Name>` (<Layer>, <Status>) — <Does>
+- ...
+
+**Feature cross-references:**
+- <Feature>: <Constructs>
+- ...
+
+**Known gaps in this area:** <gap text or "none">
+```
+
+If no relevant constructs were found, say:
+
+> No existing constructs found for this feature area — we're building from scratch.
+
+Then proceed to Phase 1 immediately (do not wait for user acknowledgment — they can read the summary while you ask Q1).
 
 ---
 
@@ -301,18 +359,92 @@ Use AskUserQuestion:
 2. Use kebab-case for the directory name (e.g., `specs/user-management/overview.md`, `specs/order-processing/overview.md`)
 3. Fill in the [template.md](template.md) structure with all synthesized content
 
+### Write Construct Stubs to Registry (if registry exists)
+
+After writing the spec file, check whether `docs/registry/index.md` exists. If it does, extract every new construct from the spec (entities/models, services/commands/queries, pages/components) and write stubs for each one.
+
+**For each new construct identified in the spec:**
+
+1. Determine the `type` (Service | Component | Repository | Model | Resource | Utility | Middleware | Hook)
+2. Determine the `layer` (Backend | Frontend | Database | Infra | Shared)
+3. Derive a PascalCase `Name` and a kebab-case `file` path (use the proposed path from the spec if available)
+4. Create the domain directory if it doesn't exist: `docs/registry/constructs/`
+5. Write `docs/registry/constructs/<Name>.md` using this exact structure:
+
+```markdown
+---
+name: <Name>
+type: <type>
+layer: <layer>
+file: <path>
+status: planned
+planned_in: specs/<feature-name>/overview.md
+last_verified: null
+---
+
+## Does
+
+<one or two sentences from the spec describing what this construct does>
+
+## Functional Requirements
+
+<extract FRs from the spec section for this construct — make each testable and user-facing>
+
+## Proof
+
+- method: null
+- verified_by: null
+- checklist_result: null
+- test_file: null
+
+## Interface
+
+```<language>
+<planned interface derived from the spec — class signature, function signatures, or API shape>
+```
+
+## Dependencies
+
+- Calls: <other construct names or "none">
+- Called by: <other construct names or "none">
+- Reads: <data sources or "none">
+- Writes: <data sources or "none">
+
+## Patterns Applied
+
+- (none)
+
+## Key Decisions
+
+- (none)
+```
+
+**Skip writing a stub if** the construct already appeared in Phase 0's registry summary as `built` or `verified` status — don't overwrite real data with a planned stub.
+
+**After writing all stubs**, update `docs/registry/index.md`:
+
+- Add one row per new construct to the Constructs table: `| <Name> | <type> | <Does one-line> | <layer> | constructs/<Name>.md | planned |`
+- Add one row to the Feature Cross-Reference table: `| <feature-name> | <Name>, <Name>, ... |`
+- Increment `construct_count` in the frontmatter by the number of new stubs
+- Increment `stubs` by the same count
+- Update `last_updated` to today's date
+
 ### Present the Handoff
 
-After generating the file, present:
+After generating the file and writing registry stubs, present:
 
 1. **File created** — the full path to the spec file
 
-2. **Implementation order** — concrete steps:
+2. **Registry updated** — list the construct stubs written (or "Registry not found — skipped"):
+   - `docs/registry/constructs/<Name>.md` (planned)
+   - ...
+
+3. **Implementation order** — concrete steps:
    - **Database**: Which models to create, which migrations to run
    - **Backend**: Which commands/queries to implement first, API endpoints to wire up
    - **Frontend**: Which pages to build, in what order
 
-3. **How to use this spec** — explain to the user:
+4. **How to use this spec** — explain to the user:
 
    > To implement this feature, reference the spec in your prompts:
    >
@@ -322,7 +454,7 @@ After generating the file, present:
    >
    > Each section has enough detail to implement without re-scanning the codebase.
 
-4. **Open questions** — if any remained unresolved, list them clearly
+5. **Open questions** — if any remained unresolved, list them clearly
 
 ---
 
@@ -360,5 +492,6 @@ Resolve before continuing to synthesis.
 > - [ ] The file contains all sections from `template.md`, filled with real content (no placeholder text)
 > - [ ] The implementation order section lists concrete numbered steps: DB → Backend → Frontend
 > - [ ] The handoff message with the full file path has been presented to the user
+> - [ ] If `docs/registry/index.md` exists: construct stubs written for every new entity, service, and component in the spec; L0 index rows appended; `construct_count` and `stubs` incremented
 >
 > If any item is unchecked, you are not done. Generate the missing output before closing.

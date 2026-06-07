@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopKit — System Documentation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg:        #09090b;
+  --surface:   #111113;
+  --surface2:  #18181b;
+  --surface3:  #1e1e22;
+  --border:    #27272a;
+  --border2:   #3f3f46;
+
+  --accent:    #e07b39;
+  --accent-dim:rgba(224,123,57,0.12);
+  --blue:      #60a5fa;
+  --blue-dim:  rgba(96,165,250,0.1);
+  --green:     #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --red:       #f87171;
+  --red-dim:   rgba(248,113,113,0.1);
+  --purple:    #c084fc;
+  --purple-dim:rgba(192,132,252,0.1);
+  --yellow:    #fbbf24;
+
+  --planned:   #60a5fa;
+  --built:     #fbbf24;
+  --verified:  #4ade80;
+  --diverged:  #f87171;
+
+  --text:      #a1a1aa;
+  --text-dim:  #52525b;
+  --text-hi:   #fafafa;
+
+  --font-serif: 'Fraunces', serif;
+  --font-sans:  'Inter', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  line-height: 1.65;
+  display: flex;
+}
+
+/* ── SIDEBAR ── */
+aside {
+  width: 250px;
+  min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 50;
+}
+aside::-webkit-scrollbar { width: 3px; }
+aside::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.sidebar-header {
+  padding: 1.5rem 1.25rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0;
+  background: var(--surface); z-index: 1;
+}
+
+.project-label {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.2rem;
+}
+
+.project-name {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-hi);
+  margin-bottom: 0.1rem;
+}
+
+.project-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+}
+
+.project-meta span { color: var(--accent); }
+
+.sidebar-nav { padding: 0.5rem 0 2rem; }
+
+.nav-group {
+  padding: 0.75rem 1.25rem 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.nav-link {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.3rem 1.25rem;
+  font-size: 0.71rem; color: var(--text-dim);
+  text-decoration: none; cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.nav-link.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
+
+.stat-chips {
+  display: flex; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.chip-verified { background: var(--green-dim); color: var(--verified); }
+.chip-built    { background: rgba(251,191,36,0.1); color: var(--built); }
+.chip-planned  { background: var(--blue-dim); color: var(--planned); }
+.chip-adr      { background: var(--purple-dim); color: var(--purple); }
+
+/* ── MAIN ── */
+main { margin-left: 250px; max-width: 880px; padding: 3rem 3.5rem 8rem; flex: 1; }
+
+.section { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+.section:last-child { border-bottom: none; }
+
+.eyebrow {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.57rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.15rem 0.5rem; border-radius: 2px;
+  background: var(--accent-dim); color: var(--accent);
+  border: 1px solid rgba(224,123,57,0.3);
+}
+
+.eyebrow-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 300; color: var(--text-hi);
+  line-height: 1.15; margin-bottom: 0.5rem;
+}
+h1 em { font-style: italic; color: var(--accent); }
+
+h2 {
+  font-family: var(--font-serif);
+  font-size: 1.3rem; font-weight: 300; color: var(--text-hi);
+  margin-bottom: 0.6rem;
+  display: flex; align-items: baseline; gap: 0.6rem;
+}
+
+.sec-num {
+  font-family: var(--font-mono);
+  font-size: 0.6rem; color: var(--accent); font-weight: 400;
+}
+
+h3 {
+  font-weight: 500; font-size: 0.8rem;
+  color: var(--text-hi); margin: 1.4rem 0 0.45rem;
+}
+
+p { font-size: 0.79rem; line-height: 1.75; color: var(--text); margin-bottom: 0.7rem; }
+
+code {
+  font-family: var(--font-mono); font-size: 0.78em;
+  background: var(--surface2); color: var(--accent);
+  padding: 0.1em 0.35em; border-radius: 2px;
+}
+
+.callout {
+  border-left: 2px solid var(--accent);
+  padding: 0.7rem 1rem; background: var(--accent-dim);
+  margin: 0.9rem 0; font-size: 0.77rem; line-height: 1.65; color: var(--text);
+}
+.callout.blue  { border-color: var(--blue);  background: var(--blue-dim); }
+.callout.green { border-color: var(--green); background: var(--green-dim); }
+.callout strong { font-weight: 500; color: var(--text-hi); }
+
+/* ── CONTEXT DIAGRAM ── */
+.context-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2rem 1.5rem;
+  margin: 1.1rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.8;
+  color: var(--text-dim);
+  overflow-x: auto;
+}
+
+/* ── FEATURE MAP ── */
+.feature-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1.1rem 0;
+}
+
+.feature-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.feature-card:hover, .feature-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.fc-name {
+  font-weight: 500; font-size: 0.78rem;
+  color: var(--text-hi); margin-bottom: 0.25rem;
+}
+
+.fc-desc { font-size: 0.67rem; color: var(--text-dim); line-height: 1.45; margin-bottom: 0.5rem; }
+
+.fc-constructs {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+}
+
+.fc-tag {
+  font-family: var(--font-mono);
+  font-size: 0.57rem; padding: 0.1rem 0.4rem;
+  border-radius: 2px; letter-spacing: 0.04em;
+}
+
+.fc-tag.fe  { background: var(--purple-dim); color: var(--purple); }
+.fc-tag.be  { background: var(--blue-dim);   color: var(--blue); }
+.fc-tag.db  { background: rgba(251,191,36,0.1); color: var(--yellow); }
+.fc-tag.inf { background: rgba(74,222,128,0.08); color: var(--green); }
+
+/* ── REGISTRY TABLE ── */
+.reg-controls {
+  display: flex; gap: 0.6rem; margin-bottom: 0.7rem; align-items: center;
+}
+
+.reg-search {
+  flex: 1;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--font-mono); font-size: 0.71rem;
+  padding: 0.5rem 0.75rem; outline: none; border-radius: 2px;
+  transition: border-color 0.2s;
+}
+.reg-search:focus { border-color: var(--accent); }
+.reg-search::placeholder { color: var(--text-dim); }
+
+.filter-pill {
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text-dim); font-family: var(--font-mono); font-size: 0.6rem;
+  padding: 0.42rem 0.7rem; cursor: pointer; border-radius: 2px;
+  letter-spacing: 0.07em; text-transform: uppercase; transition: all 0.15s;
+}
+.filter-pill:hover { color: var(--text); }
+.filter-pill.active { border-color: var(--accent); color: var(--accent); }
+
+.reg-table {
+  width: 100%; border-collapse: collapse; font-size: 0.71rem;
+}
+
+.reg-table th {
+  background: var(--surface2); color: var(--text-dim);
+  padding: 0.45rem 0.7rem; text-align: left;
+  font-family: var(--font-mono); font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border2); cursor: pointer; user-select: none;
+}
+.reg-table th:hover { color: var(--accent); }
+
+.reg-table td {
+  padding: 0.52rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.reg-table tr:hover td { background: var(--surface2); }
+.reg-table tr.hidden { display: none; }
+
+.cn { color: var(--text-hi); font-weight: 400; cursor: pointer; }
+.cn:hover { color: var(--accent); }
+
+.does { color: var(--text); }
+.does mark { background: rgba(224,123,57,0.2); color: var(--accent); border-radius: 1px; }
+
+.sb {
+  font-family: var(--font-mono); font-size: 0.57rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 0.1rem 0.4rem; border-radius: 2px; display: inline-block;
+}
+.sb-v { background: var(--green-dim); color: var(--verified); border: 1px solid rgba(74,222,128,0.25); }
+.sb-b { background: rgba(251,191,36,0.1); color: var(--built); border: 1px solid rgba(251,191,36,0.25); }
+.sb-p { background: var(--blue-dim); color: var(--planned); border: 1px solid rgba(96,165,250,0.25); }
+
+.tb { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim); }
+
+.layer-fe  { color: var(--purple); font-size: 0.65rem; font-family: var(--font-mono); }
+.layer-be  { color: var(--blue);   font-size: 0.65rem; font-family: var(--font-mono); }
+.layer-db  { color: var(--yellow); font-size: 0.65rem; font-family: var(--font-mono); }
+.layer-inf { color: var(--green);  font-size: 0.65rem; font-family: var(--font-mono); }
+.layer-sh  { color: var(--text-dim); font-size: 0.65rem; font-family: var(--font-mono); }
+
+/* ── CONSTRUCT DETAIL PANEL ── */
+.construct-panel {
+  display: none;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  margin-top: 0.75rem;
+  overflow: hidden;
+}
+
+.construct-panel.open { display: block; }
+
+.cp-header {
+  background: var(--surface2);
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap;
+}
+
+.cp-name { font-family: var(--font-serif); font-size: 1rem; font-weight: 300; color: var(--text-hi); }
+.cp-type { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+.cp-status { }
+.cp-file { font-family: var(--font-mono); font-size: 0.65rem; color: var(--accent); }
+
+.cp-body { padding: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.cp-section-label {
+  font-family: var(--font-mono); font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 0.4rem;
+}
+
+.cp-interface {
+  background: var(--surface2); padding: 0.65rem 0.75rem;
+  font-family: var(--font-mono); font-size: 0.65rem;
+  color: var(--text); line-height: 1.7;
+  border-left: 2px solid var(--border2);
+}
+
+.fr-item {
+  display: flex; gap: 0.5rem; align-items: baseline;
+  font-size: 0.7rem; color: var(--text); margin-bottom: 0.25rem; line-height: 1.4;
+}
+
+.fr-check { color: var(--verified); font-weight: 600; font-family: var(--font-mono); flex-shrink: 0; }
+.fr-pending { color: var(--built); font-family: var(--font-mono); flex-shrink: 0; }
+
+.dep-item { font-size: 0.7rem; color: var(--text); margin-bottom: 0.2rem; }
+.dep-item .dep-label { color: var(--text-dim); font-size: 0.62rem; font-family: var(--font-mono); }
+.dep-item .dep-val { color: var(--blue); }
+
+/* ── ADRs ── */
+.adr-list { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
+
+.adr-card {
+  border: 1px solid var(--border);
+  overflow: hidden; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.adr-card:hover { border-color: var(--border2); }
+.adr-card.open { border-color: var(--accent); }
+
+.adr-card-header {
+  display: grid; grid-template-columns: 70px 80px 1fr 90px;
+  gap: 0; align-items: center;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+
+.adr-id-cell {
+  padding: 0.65rem 0.75rem;
+  font-family: var(--font-mono); font-size: 0.65rem;
+  color: var(--accent); font-weight: 400;
+  border-right: 1px solid var(--border);
+}
+
+.adr-date-cell {
+  padding: 0.65rem 0.75rem;
+  font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--text-dim);
+  border-right: 1px solid var(--border);
+}
+
+.adr-title-cell {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.75rem; color: var(--text-hi);
+}
+
+.adr-status-cell {
+  padding: 0.65rem 0.75rem; text-align: right;
+  font-family: var(--font-mono); font-size: 0.57rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--verified);
+}
+
+.adr-body {
+  display: none;
+  padding: 1rem;
+  background: var(--bg);
+}
+
+.adr-card.open .adr-body { display: block; }
+
+.adr-context-text {
+  font-size: 0.73rem; color: var(--text-dim);
+  margin-bottom: 0.9rem; line-height: 1.65;
+  background: var(--surface);
+  padding: 0.6rem 0.8rem;
+  border-left: 2px solid var(--border2);
+}
+
+.adr-decision-stmt {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 0.9rem; color: var(--text-hi);
+  margin-bottom: 0.9rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+
+.options-table {
+  width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-bottom: 0.75rem;
+}
+.options-table th {
+  background: var(--surface2); color: var(--text-dim);
+  padding: 0.4rem 0.6rem; text-align: left;
+  font-family: var(--font-mono); font-size: 0.57rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.options-table td {
+  padding: 0.48rem 0.6rem; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.45; color: var(--text);
+}
+.options-table tr:last-child td { border-bottom: none; }
+.chosen-row { background: var(--green-dim) !important; }
+.chosen-row td:first-child { color: var(--green); font-weight: 500; }
+
+.revisit-box {
+  background: var(--surface2); border-left: 2px solid var(--accent);
+  padding: 0.45rem 0.7rem; font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem;
+}
+.revisit-box strong { color: var(--accent); font-family: var(--font-mono); font-size: 0.62rem; }
+
+/* ── PATTERNS ── */
+.pattern-grid { display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0; }
+
+.pattern-row {
+  display: grid; grid-template-columns: 160px 1fr 120px;
+  gap: 0; border: 1px solid var(--border); overflow: hidden;
+}
+
+.pat-name-cell {
+  background: var(--surface2); border-right: 1px solid var(--border);
+  padding: 0.7rem 0.8rem;
+  font-weight: 500; font-size: 0.75rem; color: var(--text-hi);
+}
+
+.pat-rule-cell {
+  padding: 0.7rem 0.8rem; font-size: 0.71rem; color: var(--text); line-height: 1.55;
+}
+
+.pat-adr-cell {
+  border-left: 1px solid var(--border); padding: 0.7rem 0.8rem;
+  font-family: var(--font-mono); font-size: 0.62rem; color: var(--purple);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.pat-adr-cell:hover { background: var(--purple-dim); }
+
+/* ── WORKED EXAMPLES ── */
+.ex-tabs { display: flex; border-bottom: 1px solid var(--border2); margin-bottom: 0; }
+
+.ex-tab {
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-mono); font-size: 0.62rem;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--text-dim); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none;
+}
+.ex-tab:hover { color: var(--text); }
+.ex-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.ex-panel { display: none; }
+.ex-panel.active { display: block; }
+
+.ex-container { border: 1px solid var(--border); border-top: none; overflow: hidden; }
+
+.ex-head {
+  background: var(--surface2); padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.ex-q {
+  font-family: var(--font-serif); font-size: 0.98rem; font-weight: 300;
+  color: var(--text-hi); font-style: italic; margin-bottom: 0.2rem;
+}
+.ex-who { font-size: 0.68rem; color: var(--text-dim); }
+
+.ex-step {
+  display: grid; grid-template-columns: 44px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.ex-step:last-child { border-bottom: none; }
+
+.ex-n {
+  background: var(--surface2); border-right: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 0.9rem;
+  font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim);
+}
+
+.ex-b { padding: 0.85rem 1rem; }
+
+.ex-reads {
+  font-family: var(--font-mono); font-size: 0.67rem; color: var(--blue);
+  margin-bottom: 0.35rem;
+}
+.ex-reads::before { content: '→ reads '; color: var(--text-dim); }
+
+.ex-finds {
+  background: var(--surface2); border-left: 2px solid var(--border2);
+  padding: 0.48rem 0.7rem; font-family: var(--font-mono);
+  font-size: 0.66rem; color: var(--text); margin: 0.35rem 0; line-height: 1.65;
+}
+
+.gate-pass {
+  background: var(--green-dim); border-left: 2px solid var(--green);
+  padding: 0.45rem 0.7rem; font-size: 0.69rem; color: var(--green);
+  margin-top: 0.4rem; line-height: 1.45;
+}
+.gate-pass::before { content: '◈ Gate passes — '; font-weight: 500; }
+
+.gate-fail {
+  background: var(--blue-dim); border-left: 2px solid var(--blue);
+  padding: 0.45rem 0.7rem; font-size: 0.69rem; color: var(--blue);
+  margin-top: 0.4rem; line-height: 1.45;
+}
+.gate-fail::before { content: '◉ Gate fails — '; font-weight: 500; }
+
+.ex-stats {
+  background: var(--surface2); padding: 0.65rem 1rem;
+  font-size: 0.68rem; color: var(--text-dim);
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+.ex-stats strong { color: var(--accent); font-family: var(--font-mono); font-weight: 400; }
+
+/* ── KNOWN GAPS ── */
+.gaps { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.9rem 0; }
+
+.gap-item {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.5rem 0.75rem; background: var(--surface);
+  border: 1px solid var(--border); font-size: 0.71rem;
+}
+
+.gap-path { font-family: var(--font-mono); font-size: 0.68rem; color: var(--yellow); }
+.gap-desc { color: var(--text-dim); }
+
+@media (max-width: 800px) {
+  aside { display: none; }
+  main { margin-left: 0; padding: 1.5rem 1.25rem 5rem; }
+  .feature-map { grid-template-columns: 1fr; }
+  .cp-body { grid-template-columns: 1fr; }
+  .pattern-row { grid-template-columns: 1fr; }
+  .adr-card-header { grid-template-columns: 60px 1fr; }
+  .adr-date-cell, .adr-status-cell { display: none; }
+}
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="sidebar-header">
+    <div class="project-label">target project · arc42 docs</div>
+    <div class="project-name">ShopKit</div>
+    <div class="project-meta">v1.4.2 · <span>12 features</span> · last updated 2026-05-28</div>
+  </div>
+
+  <div class="stat-chips">
+    <span class="chip chip-verified">18 verified</span>
+    <span class="chip chip-built">4 built</span>
+    <span class="chip chip-planned">3 planned</span>
+    <span class="chip chip-adr">9 ADRs</span>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-group">arc42 Structure</div>
+    <a class="nav-link active" href="#s1">§1 Introduction & Goals</a>
+    <a class="nav-link" href="#s3">§3 Context & Scope</a>
+    <a class="nav-link" href="#s4">§4 Solution Strategy</a>
+    <a class="nav-link" href="#s5">§5 Building Block View</a>
+    <a class="nav-link" href="#registry">§5↳ Construct Registry</a>
+    <a class="nav-link" href="#s6">§6 Runtime View</a>
+    <a class="nav-link" href="#s8">§8 Crosscutting Concepts</a>
+    <a class="nav-link" href="#s9">§9 Architecture Decisions</a>
+
+    <div class="nav-group">Navigation</div>
+    <a class="nav-link" href="#examples">Worked Examples</a>
+    <a class="nav-link" href="#gaps">Known Gaps</a>
+  </div>
+</aside>
+
+<main>
+
+<!-- §1 -->
+<div class="section" id="s1">
+  <div class="eyebrow">
+    <span class="badge">arc42 §1</span>
+    <span class="eyebrow-label">Introduction & Goals</span>
+  </div>
+  <h1>ShopKit — <em>e-commerce platform</em></h1>
+  <p>A full-stack e-commerce platform for independent retailers. Customers browse products, manage carts, and checkout with Stripe. Retailers manage inventory, view orders, and configure shipping through an admin panel. Built on React + Node.js + PostgreSQL, deployed to Azure.</p>
+
+  <h3>Quality Goals</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:0.73rem;margin-top:0.75rem">
+    <thead>
+      <tr>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">#</th>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">Goal</th>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">Measurable scenario</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">1</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Checkout reliability</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">Zero lost orders during checkout — Stripe webhook idempotency enforced</td></tr>
+      <tr><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">2</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Page performance</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">Product listing page &lt; 1.5s LCP on 4G connection</td></tr>
+      <tr><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">3</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Payment security</td><td style="padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">No card data touches our servers — Stripe Elements only</td></tr>
+      <tr><td style="padding:0.5rem 0.7rem;color:var(--accent);font-family:var(--font-mono)">4</td><td style="padding:0.5rem 0.7rem;color:var(--text-hi);font-weight:500">No duplicate constructs</td><td style="padding:0.5rem 0.7rem;color:var(--text)">Registry checked before every new construct is created</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- §3 -->
+<div class="section" id="s3">
+  <div class="eyebrow">
+    <span class="badge">arc42 §3</span>
+    <span class="eyebrow-label">Context & Scope</span>
+  </div>
+  <h2><span class="sec-num">§3</span> Context & Scope</h2>
+
+  <div class="context-diagram">
+    <pre style="color:var(--text-dim)">
+  [Customer]                [Retailer / Admin]
+      │                            │
+      │ browse, cart, checkout     │ manage inventory, view orders
+      ▼                            ▼
+┌─────────────────────────────────────────────────────┐
+│                      ShopKit                        │
+│  React SPA  ·  Node/Express API  ·  PostgreSQL      │
+│  Azure Container Apps  ·  Azure CDN                 │
+└─────────────────────────────────────────────────────┘
+      │              │              │           │
+      │ charge/      │ order        │ images    │ email
+      │ refund       │ webhooks     │ CDN       │
+      ▼              ▼              ▼           ▼
+  [Stripe]    [Stripe Webhooks]  [Azure    [SendGrid]
+                                  Blob]</pre>
+  </div>
+
+  <h3>Feature Cross-Reference</h3>
+  <p style="font-size:0.72rem;color:var(--text-dim);margin-bottom:0.75rem">Click a feature to see all constructs it touches across every layer.</p>
+
+  <div class="feature-map" id="feature-map">
+    <div class="feature-card" data-feature="auth">
+      <div class="fc-name">Auth</div>
+      <div class="fc-desc">Registration, login, JWT sessions, password reset</div>
+      <div class="fc-constructs">
+        <span class="fc-tag fe">LoginPage</span>
+        <span class="fc-tag fe">RegisterPage</span>
+        <span class="fc-tag be">UserAuthService</span>
+        <span class="fc-tag be">AuthMiddleware</span>
+        <span class="fc-tag be">UserRepository</span>
+        <span class="fc-tag db">users</span>
+        <span class="fc-tag db">sessions</span>
+      </div>
+    </div>
+    <div class="feature-card" data-feature="catalogue">
+      <div class="fc-name">Product Catalogue</div>
+      <div class="fc-desc">Browse, search, filter products. PDPs.</div>
+      <div class="fc-constructs">
+        <span class="fc-tag fe">ProductListPage</span>
+        <span class="fc-tag fe">ProductDetailPage</span>
+        <span class="fc-tag fe">ProductCard</span>
+        <span class="fc-tag be">ProductService</span>
+        <span class="fc-tag be">ProductRepository</span>
+        <span class="fc-tag db">products</span>
+        <span class="fc-tag db">categories</span>
+        <span class="fc-tag inf">cdn-images</span>
+      </div>
+    </div>
+    <div class="feature-card" data-feature="cart">
+      <div class="fc-name">Cart & Checkout</div>
+      <div class="fc-desc">Add to cart, checkout flow, Stripe payment</div>
+      <div class="fc-constructs">
+        <span class="fc-tag fe">CartDrawer</span>
+        <span class="fc-tag fe">CheckoutPage</span>
+        <span class="fc-tag be">CartService</span>
+        <span class="fc-tag be">CheckoutService</span>
+        <span class="fc-tag be">StripeAdapter</span>
+        <span class="fc-tag db">carts</span>
+        <span class="fc-tag db">orders</span>
+      </div>
+    </div>
+    <div class="feature-card" data-feature="orders">
+      <div class="fc-name">Order Management</div>
+      <div class="fc-desc">Order lifecycle, fulfilment, refunds</div>
+      <div class="fc-constructs">
+        <span class="fc-tag fe">OrdersPage</span>
+        <span class="fc-tag be">OrderService</span>
+        <span class="fc-tag be">RefundService</span>
+        <span class="fc-tag be">WebhookHandler</span>
+        <span class="fc-tag db">orders</span>
+        <span class="fc-tag db">order_items</span>
+        <span class="fc-tag inf">webhook-queue</span>
+      </div>
+    </div>
+    <div class="feature-card" data-feature="inventory">
+      <div class="fc-name">Inventory</div>
+      <div class="fc-desc">Stock levels, alerts, product management</div>
+      <div class="fc-constructs">
+        <span class="fc-tag fe">AdminInventoryPage</span>
+        <span class="fc-tag be">InventoryService</span>
+        <span class="fc-tag be">StockAlertJob</span>
+        <span class="fc-tag db">products</span>
+        <span class="fc-tag db">stock_movements</span>
+      </div>
+    </div>
+    <div class="feature-card" data-feature="notifications">
+      <div class="fc-name">Notifications</div>
+      <div class="fc-desc">Order emails, stock alerts via SendGrid</div>
+      <div class="fc-constructs">
+        <span class="fc-tag be">NotificationService</span>
+        <span class="fc-tag be">EmailTemplateRenderer</span>
+        <span class="fc-tag inf">notification-queue</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- §4 -->
+<div class="section" id="s4">
+  <div class="eyebrow">
+    <span class="badge">arc42 §4</span>
+    <span class="eyebrow-label">Solution Strategy</span>
+  </div>
+  <h2><span class="sec-num">§4</span> Solution Strategy</h2>
+
+  <table style="width:100%;border-collapse:collapse;font-size:0.73rem">
+    <thead>
+      <tr>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">#</th>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">Decision</th>
+        <th style="background:var(--surface2);color:var(--text-dim);padding:0.45rem 0.7rem;text-align:left;font-family:var(--font-mono);font-size:0.58sm;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border2)">Rationale</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">1</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Stripe Elements for payment</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">No card data on our servers — PCI compliance without SAQ-D overhead. See ADR-002.</td></tr>
+      <tr><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">2</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">JWT auth, stateless API</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">Horizontal scaling without sticky sessions. See ADR-003.</td></tr>
+      <tr><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">3</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Webhook queue for Stripe events</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">Idempotent processing prevents duplicate order state changes. See ADR-005.</td></tr>
+      <tr><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--accent);font-family:var(--font-mono)">4</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text-hi);font-weight:500">Soft delete everywhere except sessions</td><td style="padding:0.52rem 0.7rem;border-bottom:1px solid var(--border);color:var(--text)">Orders, products, users never hard-deleted — audit trail required. See ADR-001.</td></tr>
+      <tr><td style="padding:0.52rem 0.7rem;color:var(--accent);font-family:var(--font-mono)">5</td><td style="padding:0.52rem 0.7rem;color:var(--text-hi);font-weight:500">Azure CDN for product images</td><td style="padding:0.52rem 0.7rem;color:var(--text)">Images served from edge, not origin. Blob storage for uploads. See ADR-007.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- §5 BUILDING BLOCK -->
+<div class="section" id="s5">
+  <div class="eyebrow">
+    <span class="badge">arc42 §5</span>
+    <span class="eyebrow-label">Building Block View</span>
+  </div>
+  <h2><span class="sec-num">§5</span> Building Block View</h2>
+
+  <p>Three levels. Read only as deep as your task requires.</p>
+
+  <div style="display:grid;grid-template-columns:70px 1fr;gap:0;border:1px solid var(--border);margin:1rem 0;overflow:hidden">
+    <div style="background:var(--surface2);border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0.9rem 0.6rem;text-align:center;display:flex;flex-direction:column;gap:0.2rem;justify-content:center;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--accent)">L0</span>
+      <span style="font-family:var(--font-mono);font-size:0.52rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim)">Black box</span>
+    </div>
+    <div style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);background:var(--bg)">
+      <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--blue);margin-bottom:0.3rem">docs/registry/index.md · hard limit 80 lines</div>
+      <div style="font-size:0.71rem;color:var(--text-dim)">The "Does" column. One-line capability per construct. Feature Cross-Reference. Known Gaps.</div>
+      <div style="font-size:0.65rem;color:var(--green);margin-top:0.4rem">◈ Stop if: you find what you need or confirm it doesn't exist.</div>
+    </div>
+    <div style="background:var(--surface2);border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0.9rem 0.6rem;text-align:center;display:flex;flex-direction:column;gap:0.2rem;justify-content:center;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--accent)">L1</span>
+      <span style="font-family:var(--font-mono);font-size:0.52rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim)">White box</span>
+    </div>
+    <div style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);background:var(--bg)">
+      <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--blue);margin-bottom:0.3rem">docs/registry/constructs/&lt;Name&gt;.md · one file per construct</div>
+      <div style="font-size:0.71rem;color:var(--text-dim)">Full interface, FR list + proof, dependencies (calls/called-by), ADR links, patterns applied, status.</div>
+      <div style="font-size:0.65rem;color:var(--green);margin-top:0.4rem">◈ Stop if: you have interface + dependencies. Do not open source unless modifying internals.</div>
+    </div>
+    <div style="background:var(--surface2);border-right:1px solid var(--border);padding:0.9rem 0.6rem;text-align:center;display:flex;flex-direction:column;gap:0.2rem;justify-content:center;align-items:center">
+      <span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--accent)">L2</span>
+      <span style="font-family:var(--font-mono);font-size:0.52rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim)">Source</span>
+    </div>
+    <div style="padding:0.8rem 1rem;background:var(--bg)">
+      <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--blue);margin-bottom:0.3rem">src/... — actual source file</div>
+      <div style="font-size:0.71rem;color:var(--text-dim)">Read only when modifying internals or debugging. Not documentation — this is the code.</div>
+      <div style="font-size:0.65rem;color:var(--green);margin-top:0.4rem">◈ Terminal level. No deeper documentation exists.</div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTRY -->
+<div class="section" id="registry">
+  <div class="eyebrow">
+    <span class="badge">arc42 §5 ↳</span>
+    <span class="eyebrow-label">Construct Registry — L0 index</span>
+  </div>
+  <h2><span class="sec-num">§5↳</span> Construct Registry</h2>
+
+  <p>Search the <strong>"Does"</strong> column before creating anything. Click a construct name to see its L1 detail.</p>
+
+  <div class="reg-controls">
+    <input type="text" class="reg-search" id="shopReg" placeholder='Search "format", "cart", "stripe", "auth"...'>
+    <button class="filter-pill active" data-f="all">All</button>
+    <button class="filter-pill" data-f="verified">Verified</button>
+    <button class="filter-pill" data-f="built">Built</button>
+    <button class="filter-pill" data-f="planned">Planned</button>
+  </div>
+
+  <table class="reg-table" id="shopTable">
+    <thead>
+      <tr>
+        <th>Name</th><th>Type</th><th>Does (search this)</th><th>Layer</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="shopBody">
+      <tr data-s="verified" data-name="UserAuthService" data-detail="uas">
+        <td><span class="cn" onclick="openDetail('uas')">UserAuthService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Validates JWT tokens, manages user sessions. Does NOT handle OAuth or password hashing.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="LoginPage">
+        <td><span class="cn">LoginPage</span></td>
+        <td><span class="tb">Page</span></td>
+        <td class="does">Renders login form. Handles credential submission and redirect after auth. No auth logic — delegates to UserAuthService.</td>
+        <td><span class="layer-fe">Frontend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="AuthMiddleware">
+        <td><span class="cn">AuthMiddleware</span></td>
+        <td><span class="tb">Middleware</span></td>
+        <td class="does">Validates JWT on every protected route. Attaches UserContext to request. Returns 401 on missing/expired token.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="ProductService">
+        <td><span class="cn">ProductService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Fetches, searches, and filters products. Handles pagination. Does NOT manage stock levels (see InventoryService).</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="ProductCard">
+        <td><span class="cn">ProductCard</span></td>
+        <td><span class="tb">Component</span></td>
+        <td class="does">Renders a single product tile with image, name, price, and add-to-cart button. Used in list and carousel contexts.</td>
+        <td><span class="layer-fe">Frontend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="CartService">
+        <td><span class="cn">CartService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Manages cart state: add, remove, update quantity, calculate totals. Applies discount codes. Does NOT process payment.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="StripeAdapter">
+        <td><span class="cn">StripeAdapter</span></td>
+        <td><span class="tb">Adapter</span></td>
+        <td class="does">Bridges to Stripe API for payment intents and charges. Does NOT handle refunds (see RefundService). Handles idempotency keys.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="built" data-name="RefundService">
+        <td><span class="cn">RefundService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Processes full and partial refunds via Stripe refund API. Updates order status to refunded. Triggers notification email.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-b">built</span></td>
+      </tr>
+      <tr data-s="verified" data-name="OrderService">
+        <td><span class="cn">OrderService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Manages order lifecycle: pending → processing → fulfilled → cancelled. State machine enforced. Idempotent.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="WebhookHandler">
+        <td><span class="cn">WebhookHandler</span></td>
+        <td><span class="tb">Handler</span></td>
+        <td class="does">Receives Stripe webhook events, verifies signature, enqueues to webhook-queue. Idempotent via event ID deduplication.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="NotificationService">
+        <td><span class="cn">NotificationService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Sends transactional emails via SendGrid. Supports order confirmation, shipping update, refund confirmation, stock alert.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="formatCurrency">
+        <td><span class="cn">formatCurrency</span></td>
+        <td><span class="tb">Utility</span></td>
+        <td class="does">Formats numbers as locale-aware currency strings. Handles GBP, USD, AUD, EUR, NZD. Used in price display and invoice generation.</td>
+        <td><span class="layer-sh">Shared</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="formatDate">
+        <td><span class="cn">formatDate</span></td>
+        <td><span class="tb">Utility</span></td>
+        <td class="does">Formats ISO dates as human-readable strings with locale and timezone support. Used in order history and emails.</td>
+        <td><span class="layer-sh">Shared</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="InventoryService">
+        <td><span class="cn">InventoryService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Tracks stock levels, reserves stock on checkout, releases on cancellation. Fires low-stock alerts when threshold breached.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="orders (model)">
+        <td><span class="cn">orders</span></td>
+        <td><span class="tb">Model</span></td>
+        <td class="does">Persists order records with status, totals, Stripe payment intent ID. Soft-delete. Has order_items relation.</td>
+        <td><span class="layer-db">Database</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="products (model)">
+        <td><span class="cn">products</span></td>
+        <td><span class="tb">Model</span></td>
+        <td class="does">Persists product catalogue entries: name, description, price, stock_qty, image_urls. Soft-delete. Category relation.</td>
+        <td><span class="layer-db">Database</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="verified" data-name="webhook-queue">
+        <td><span class="cn">webhook-queue</span></td>
+        <td><span class="tb">Resource</span></td>
+        <td class="does">Azure Service Bus queue for Stripe webhook events. Guarantees at-least-once delivery with deduplication via event ID.</td>
+        <td><span class="layer-inf">Infra</span></td>
+        <td><span class="sb sb-v">verified</span></td>
+      </tr>
+      <tr data-s="planned" data-name="DiscountEngine">
+        <td><span class="cn">DiscountEngine</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Validates and applies discount codes and promotional rules to cart totals. Supports percentage and fixed-amount discounts.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-p">planned</span></td>
+      </tr>
+      <tr data-s="planned" data-name="WishlistService">
+        <td><span class="cn">WishlistService</span></td>
+        <td><span class="tb">Service</span></td>
+        <td class="does">Manages per-user wishlists: add product, remove product, list. Fires notification when wishlisted product goes on sale.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-p">planned</span></td>
+      </tr>
+      <tr data-s="built" data-name="EmailTemplateRenderer">
+        <td><span class="cn">EmailTemplateRenderer</span></td>
+        <td><span class="tb">Utility</span></td>
+        <td class="does">Renders HTML email templates from structured data. Supports order confirmation, shipping, refund, and stock alert templates.</td>
+        <td><span class="layer-be">Backend</span></td>
+        <td><span class="sb sb-b">built</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Construct detail panel -->
+  <div class="construct-panel" id="detail-uas">
+    <div class="cp-header">
+      <span class="cp-name">UserAuthService</span>
+      <span class="cp-type">Service · Backend</span>
+      <span class="sb sb-v">verified</span>
+      <span class="cp-file">src/services/auth.ts</span>
+    </div>
+    <div class="cp-body">
+      <div>
+        <div class="cp-section-label">Interface</div>
+        <div class="cp-interface">class UserAuthService {
+  login(email, password): Promise&lt;Session&gt;
+  logout(sessionId): Promise&lt;void&gt;
+  validateToken(token): Promise&lt;UserContext | null&gt;
+  refreshToken(refreshToken): Promise&lt;Session&gt;
+  revokeAllSessions(userId): Promise&lt;void&gt;
+}</div>
+
+        <div class="cp-section-label" style="margin-top:1rem">Dependencies</div>
+        <div class="dep-item"><span class="dep-label">Calls: </span><span class="dep-val">UserRepository, bcrypt, jsonwebtoken</span></div>
+        <div class="dep-item"><span class="dep-label">Called by: </span><span class="dep-val">AuthMiddleware, LoginController, RegisterController</span></div>
+        <div class="dep-item"><span class="dep-label">Reads: </span><span class="dep-val">users (model), sessions (model)</span></div>
+        <div class="dep-item"><span class="dep-label">Writes: </span><span class="dep-val">sessions (model)</span></div>
+        <div class="dep-item" style="margin-top:0.5rem"><span class="dep-label">Key decisions: </span><span style="color:var(--purple);font-size:0.68rem">ADR-003 (JWT over sessions)</span></div>
+      </div>
+      <div>
+        <div class="cp-section-label">Functional Requirements</div>
+        <div class="fr-item"><span class="fr-check">✓</span> User logs in with valid email + password → receives JWT + refresh token</div>
+        <div class="fr-item"><span class="fr-check">✓</span> Invalid credentials → 401, never 500. No detail on which field failed.</div>
+        <div class="fr-item"><span class="fr-check">✓</span> Expired JWT rejected. Valid refresh token → new JWT issued.</div>
+        <div class="fr-item"><span class="fr-check">✓</span> Max 5 concurrent sessions per user. Oldest revoked on overflow.</div>
+        <div class="fr-item"><span class="fr-check">✓</span> Logout revokes specific session only.</div>
+
+        <div class="cp-section-label" style="margin-top:1rem">Proof</div>
+        <div style="font-size:0.68rem;color:var(--text-dim);font-family:var(--font-mono)">
+          method: human + unit tests<br>
+          verified_by: dk · 2026-05-01<br>
+          test_file: src/services/__tests__/auth.test.ts
+        </div>
+
+        <div class="cp-section-label" style="margin-top:1rem">Patterns Applied</div>
+        <div style="font-size:0.7rem;color:var(--text)">JWT Stateless Auth · Repository Pattern</div>
+        <div style="font-size:0.68rem;color:var(--text-dim)">Sessions hard-deleted (not soft-delete) — see ADR-004</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- §6 RUNTIME -->
+<div class="section" id="s6">
+  <div class="eyebrow">
+    <span class="badge">arc42 §6</span>
+    <span class="eyebrow-label">Runtime View</span>
+  </div>
+  <h2><span class="sec-num">§6</span> Runtime View</h2>
+  <p>Key interaction scenarios. Read when debugging a flow or tracing a call sequence.</p>
+
+  <h3>Checkout Flow</h3>
+  <div style="background:var(--surface);border:1px solid var(--border);padding:1.25rem;font-family:var(--font-mono);font-size:0.67rem;line-height:2;overflow-x:auto;margin:0.75rem 0">
+    <pre style="color:var(--text-dim)">
+CheckoutPage  AuthMiddleware  CheckoutService  CartService  StripeAdapter  OrderService
+     │               │               │               │             │             │
+     │─ POST /checkout▶              │               │             │             │
+     │               │─ validate JWT ▶              │             │             │
+     │               │               │─ getCart() ──▶             │             │
+     │               │               │◀─ cart items ─             │             │
+     │               │               │─ reserveStock()            │             │
+     │               │               │─ createPaymentIntent() ────▶             │
+     │               │               │◀─ clientSecret ────────────              │
+     │◀─ clientSecret ───────────────│               │             │             │
+     │─ [Stripe.js confirms payment] │               │             │             │
+     │─ POST /checkout/confirm ──────▶              │             │             │
+     │               │               │─ createOrder() ────────────────────────▶ │
+     │               │               │◀─ order ───────────────────────────────  │
+     │◀─ order ID ───────────────────│               │             │             │</pre>
+  </div>
+
+  <h3>Webhook Processing (Stripe → Order State)</h3>
+  <div style="background:var(--surface);border:1px solid var(--border);padding:1.25rem;font-family:var(--font-mono);font-size:0.67rem;line-height:2;overflow-x:auto;margin:0.75rem 0">
+    <pre style="color:var(--text-dim)">
+Stripe  WebhookHandler  webhook-queue  OrderService  NotificationService
+  │           │               │              │               │
+  │─ POST ───▶│               │              │               │
+  │           │─ verifySignature             │               │
+  │           │─ dedup check                 │               │
+  │           │─ enqueue ────▶│              │               │
+  │◀─ 200 OK ─│               │              │               │
+  │           │               │─ dequeue ───▶│               │
+  │           │               │              │─ updateState  │
+  │           │               │              │─ notify ─────▶│
+  │           │               │              │               │─ sendEmail(SendGrid)</pre>
+  </div>
+</div>
+
+<!-- §8 CROSSCUTTING -->
+<div class="section" id="s8">
+  <div class="eyebrow">
+    <span class="badge">arc42 §8</span>
+    <span class="eyebrow-label">Crosscutting Concepts</span>
+  </div>
+  <h2><span class="sec-num">§8</span> Crosscutting Concepts</h2>
+  <p>Rules that apply uniformly across all building blocks. Deviation requires an ADR.</p>
+
+  <div class="pattern-grid">
+    <div class="pattern-row">
+      <div class="pat-name-cell">Soft Delete</div>
+      <div class="pat-rule-cell">All entities use <code>deletedAt DateTime?</code>. Hard deletes never used except sessions (see ADR-004). All queries filter <code>WHERE deletedAt IS NULL</code>. Applies to: orders, products, users, categories, carts.</div>
+      <div class="pat-adr-cell" onclick="openAdr('adr1')">ADR-001 →</div>
+    </div>
+    <div class="pattern-row">
+      <div class="pat-name-cell">JWT Stateless Auth</div>
+      <div class="pat-rule-cell"><code>UserAuthService</code> is the single point of token validation. <code>AuthMiddleware</code> attaches <code>UserContext</code> to every protected request. No session store. Refresh tokens are 30-day, JWT is 15-min.</div>
+      <div class="pat-adr-cell" onclick="openAdr('adr3')">ADR-003 →</div>
+    </div>
+    <div class="pattern-row">
+      <div class="pat-name-cell">Repository Pattern</div>
+      <div class="pat-rule-cell">Controllers and services never import Prisma directly. All persistence goes through a Repository. Repositories are the only constructs that touch Prisma client. Services call repositories.</div>
+      <div class="pat-adr-cell" onclick="openAdr('adr6')">ADR-006 →</div>
+    </div>
+    <div class="pattern-row">
+      <div class="pat-name-cell">API Response Envelope</div>
+      <div class="pat-rule-cell">All API responses: <code>&#123; data, error, meta &#125;</code>. Never naked arrays. Error: <code>&#123; code, message, details? &#125;</code>. Meta includes pagination. HTTP status codes must match error semantics.</div>
+      <div class="pat-adr-cell">ADR-008 →</div>
+    </div>
+    <div class="pattern-row">
+      <div class="pat-name-cell">Idempotency Keys</div>
+      <div class="pat-rule-cell">All Stripe API calls include idempotency keys. All webhook processing deduplicates on Stripe event ID. Prevents duplicate charges and double-processing of payment events.</div>
+      <div class="pat-adr-cell" onclick="openAdr('adr5')">ADR-005 →</div>
+    </div>
+  </div>
+
+  <h3>Anti-Patterns</h3>
+  <div style="border-left:2px solid var(--red);padding:0.45rem 0.75rem;background:var(--red-dim);margin-bottom:0.4rem;font-size:0.71rem;color:var(--text)">✗ Do not call Prisma directly from controllers or services — use a Repository.</div>
+  <div style="border-left:2px solid var(--red);padding:0.45rem 0.75rem;background:var(--red-dim);margin-bottom:0.4rem;font-size:0.71rem;color:var(--text)">✗ Do not format prices inline — always use <code>formatCurrency()</code>.</div>
+  <div style="border-left:2px solid var(--red);padding:0.45rem 0.75rem;background:var(--red-dim);margin-bottom:0.4rem;font-size:0.71rem;color:var(--text)">✗ Do not hard-delete orders, products, or users — soft-delete only.</div>
+  <div style="border-left:2px solid var(--red);padding:0.45rem 0.75rem;background:var(--red-dim);margin-bottom:0.4rem;font-size:0.71rem;color:var(--text)">✗ Do not call Stripe without an idempotency key.</div>
+</div>
+
+<!-- §9 ADRs -->
+<div class="section" id="s9">
+  <div class="eyebrow">
+    <span class="badge">arc42 §9</span>
+    <span class="eyebrow-label">Architecture Decisions</span>
+  </div>
+  <h2><span class="sec-num">§9</span> Architecture Decisions</h2>
+  <p>Click any row to expand the full decision. NFRs live here — not on individual constructs.</p>
+
+  <div class="adr-list">
+
+    <div class="adr-card" id="adr1" onclick="toggleAdr('adr1')">
+      <div class="adr-card-header">
+        <div class="adr-id-cell">ADR-001</div>
+        <div class="adr-date-cell">2026-01-10</div>
+        <div class="adr-title-cell">Soft-delete strategy for all business entities</div>
+        <div class="adr-status-cell">Accepted</div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-context-text">E-commerce data has audit and dispute requirements. Orders in particular must never be deleted — regulatory requirement in AU/UK for 7 years. At decision time: 2 engineers, pre-launch, no specific compliance framework mandated yet.</div>
+        <div class="adr-decision-stmt">We will use soft-delete (deletedAt timestamp) for all business entities. Hard deletes are prohibited except for session tokens.</div>
+        <table class="options-table">
+          <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Why rejected</th></tr></thead>
+          <tbody>
+            <tr class="chosen-row"><td>Soft delete ✓</td><td>Full audit trail, recoverable, dispute-safe</td><td>Queries need deletedAt IS NULL everywhere; slightly more complex</td><td>— chosen</td></tr>
+            <tr><td>Hard delete</td><td>Simpler queries, smaller tables</td><td>No audit trail, irrecoverable, compliance risk</td><td>Compliance risk. Orders must be retained.</td></tr>
+            <tr><td>Archive table</td><td>Clean active tables</td><td>Complex migrations, two schemas to maintain</td><td>Over-engineered for current scale.</td></tr>
+          </tbody>
+        </table>
+        <div class="revisit-box"><strong>Revisit if:</strong> a specific jurisdiction requires full data erasure (GDPR right-to-erasure for user data — handle via anonymisation, not hard delete).</div>
+      </div>
+    </div>
+
+    <div class="adr-card" id="adr3" onclick="toggleAdr('adr3')">
+      <div class="adr-card-header">
+        <div class="adr-id-cell">ADR-003</div>
+        <div class="adr-date-cell">2026-01-14</div>
+        <div class="adr-title-cell">JWT stateless auth over server-side sessions</div>
+        <div class="adr-status-cell">Accepted</div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-context-text">We need auth for the storefront and admin panel. At decision time: 2 engineers, Azure Container Apps deployment (horizontally scalable), no Redis provisioned, 3-week MVP deadline.</div>
+        <div class="adr-decision-stmt">We will use stateless JWT (15-min access token + 30-day refresh token). No server-side session storage.</div>
+        <table class="options-table">
+          <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Why rejected</th></tr></thead>
+          <tbody>
+            <tr class="chosen-row"><td>JWT stateless ✓</td><td>Stateless, horizontal scale, no Redis dependency</td><td>Token revocation requires blacklist; larger cookie</td><td>— chosen</td></tr>
+            <tr><td>Server-side sessions + Redis</td><td>Easy revocation, smaller token</td><td>Adds Redis, sticky sessions or Redis Cluster needed</td><td>Adds Redis dependency. Over-engineered at current scale.</td></tr>
+            <tr><td>NextAuth / Clerk</td><td>Managed, feature-rich</td><td>Vendor dependency, harder to customise</td><td>Wanted full control. Vendor lock-in concern.</td></tr>
+          </tbody>
+        </table>
+        <div class="revisit-box"><strong>Revisit if:</strong> we need real-time session revocation (e.g. compromised account), or if team grows and manages auth becomes complex.</div>
+      </div>
+    </div>
+
+    <div class="adr-card" id="adr5" onclick="toggleAdr('adr5')">
+      <div class="adr-card-header">
+        <div class="adr-id-cell">ADR-005</div>
+        <div class="adr-date-cell">2026-02-03</div>
+        <div class="adr-title-cell">Webhook queue (Service Bus) for Stripe event processing</div>
+        <div class="adr-status-cell">Accepted</div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-context-text">Stripe webhooks must be processed exactly once. A duplicate payment.succeeded event could result in double-fulfilling an order. At decision time: 50 orders/day in staging, Azure stack, webhook failures in testing when processing was synchronous.</div>
+        <div class="adr-decision-stmt">We will use Azure Service Bus Standard queue to buffer Stripe webhook events with deduplication via Stripe event ID.</div>
+        <table class="options-table">
+          <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Why rejected</th></tr></thead>
+          <tbody>
+            <tr class="chosen-row"><td>Service Bus queue ✓</td><td>At-least-once delivery, dedup, retry, dead-letter</td><td>Extra infra cost, adds latency</td><td>— chosen</td></tr>
+            <tr><td>Synchronous processing</td><td>Simple, low latency</td><td>Stripe requires 200ms response; complex logic exceeds this</td><td>Hit this in testing — Stripe retried, caused duplicates.</td></tr>
+            <tr><td>DB-backed queue</td><td>No extra infra</td><td>Polling, DB load, build-your-own reliability</td><td>Wheel reinvention. Service Bus is the right tool.</td></tr>
+          </tbody>
+        </table>
+        <div class="revisit-box"><strong>Revisit if:</strong> order volume exceeds 50,000/day and we need premium tier SB features (sessions, transactions).</div>
+      </div>
+    </div>
+
+    <div class="adr-card" id="adr6" onclick="toggleAdr('adr6')">
+      <div class="adr-card-header">
+        <div class="adr-id-cell">ADR-006</div>
+        <div class="adr-date-cell">2026-01-12</div>
+        <div class="adr-title-cell">Repository pattern — no direct Prisma in services</div>
+        <div class="adr-status-cell">Accepted</div>
+      </div>
+      <div class="adr-body">
+        <div class="adr-context-text">Two engineers, both touching the same data access layer. Early decision to prevent query duplication and make future DB migrations testable. Observed in an earlier project that services importing Prisma directly made testing and refactoring painful.</div>
+        <div class="adr-decision-stmt">All persistence goes through Repository classes. Services and controllers never import Prisma client directly.</div>
+        <table class="options-table">
+          <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Why rejected</th></tr></thead>
+          <tbody>
+            <tr class="chosen-row"><td>Repository pattern ✓</td><td>Single place for queries, testable, swappable ORM</td><td>More files, some boilerplate</td><td>— chosen</td></tr>
+            <tr><td>Prisma directly in services</td><td>Less boilerplate, fewer files</td><td>Queries scattered, hard to test services in isolation</td><td>Burned by this previously — duplicated queries and untestable services.</td></tr>
+          </tbody>
+        </table>
+        <div class="revisit-box"><strong>Revisit if:</strong> switching ORMs — repositories abstract the ORM, so the blast radius is contained to repository files only.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- WORKED EXAMPLES -->
+<div class="section" id="examples">
+  <div class="eyebrow">
+    <span class="badge">Navigation Guide</span>
+    <span class="eyebrow-label">Worked Examples — How the Docs Read</span>
+  </div>
+  <h2>Worked Examples</h2>
+  <p>Three scenarios. Exact reads, gate conditions, stopping points.</p>
+
+  <div class="ex-tabs">
+    <div class="ex-tab active" data-t="e1">Ex 1 — Agent adding feature</div>
+    <div class="ex-tab" data-t="e2">Ex 2 — Agent duplicate check</div>
+    <div class="ex-tab" data-t="e3">Ex 3 — Dev asking why</div>
+  </div>
+
+  <div class="ex-panel active" id="e1">
+    <div class="ex-container">
+      <div class="ex-head">
+        <div class="ex-q">"Add a discount code feature to the cart"</div>
+        <div class="ex-who">plan skill · designing a new feature · needs to know what already exists before proposing anything</div>
+      </div>
+
+      <div class="ex-step">
+        <div class="ex-n">1</div>
+        <div class="ex-b">
+          <div class="ex-reads">docs/registry/index.md (L0)</div>
+          <p style="font-size:0.71rem;color:var(--text-dim);margin-bottom:0.35rem">Searches "Does" column for: discount, coupon, promo, code, cart total</p>
+          <div class="ex-finds">CartService      → Manages cart state: add, remove, update qty, calculate totals. <strong>Applies discount codes.</strong>  verified
+DiscountEngine   → Validates and applies discount codes and promotional rules to cart totals.                  planned</div>
+          <div class="ex-gate pass">Stop. DiscountEngine already exists as a planned construct. CartService already has discount code application. This feature is partially in progress — plan must read the spec that planned DiscountEngine, not start from scratch.</div>
+        </div>
+      </div>
+
+      <div class="ex-stats">
+        <span><strong>Total reads:</strong> 1</span>
+        <span><strong>Source reads:</strong> 0</span>
+        <span><strong>Duplicate prevented:</strong> before a single design question was asked</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ex-panel" id="e2">
+    <div class="ex-container">
+      <div class="ex-head">
+        <div class="ex-q">"I need a utility to format prices for the invoice PDF"</div>
+        <div class="ex-who">task-executor · mid-task · about to write a new price formatting function</div>
+      </div>
+
+      <div class="ex-step">
+        <div class="ex-n">1</div>
+        <div class="ex-b">
+          <div class="ex-reads">docs/registry/index.md (L0) — searches "format", "price", "currency", "number"</div>
+          <div class="ex-finds">formatCurrency   → Formats numbers as locale-aware currency strings. Handles GBP, USD, AUD, EUR, NZD. Used in price display <strong>and invoice generation.</strong>   verified
+formatDate       → Formats ISO dates as human-readable strings with locale and timezone support. Used in order history and emails.</div>
+          <div class="ex-gate pass">Stop. formatCurrency already handles invoice generation explicitly. Use it. Does not read the construct file. Does not read source.</div>
+        </div>
+      </div>
+
+      <div class="ex-stats">
+        <span><strong>Total reads:</strong> 1 (partial)</span>
+        <span><strong>Source reads:</strong> 0</span>
+        <span><strong>Duplicate prevented:</strong> immediately</span>
+        <span><strong>Bonus:</strong> also found formatDate — useful for the same invoice</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ex-panel" id="e3">
+    <div class="ex-container">
+      <div class="ex-head">
+        <div class="ex-q">"Why do we use a Service Bus queue for Stripe webhooks? Can't we just process them synchronously?"</div>
+        <div class="ex-who">Developer returning after 3 weeks · saw the webhook-queue in the codebase · considering simplifying it</div>
+      </div>
+
+      <div class="ex-step">
+        <div class="ex-n">1</div>
+        <div class="ex-b">
+          <div class="ex-reads">This page — arc42 §9 Architecture Decisions</div>
+          <p style="font-size:0.71rem;color:var(--text-dim);margin-bottom:0.35rem">Scans ADR titles for "webhook", "queue", "Stripe"</p>
+          <div class="ex-finds">ADR-005 | 2026-02-03 | Accepted | Webhook queue (Service Bus) for Stripe event processing</div>
+          <div class="ex-gate fail">Gate fails — knows a decision exists. Clicks to expand.</div>
+        </div>
+      </div>
+
+      <div class="ex-step">
+        <div class="ex-n">2</div>
+        <div class="ex-b">
+          <div class="ex-reads">ADR-005 (expanded above)</div>
+          <div class="ex-finds">Context: Hit duplicate order fulfilment in staging when processing was synchronous.
+Stripe requires 200ms response — complex processing exceeded it.
+Stripe retried → caused duplicate order state changes.
+Revisit: only if order volume exceeds 50,000/day.</div>
+          <div class="ex-gate pass">Stop. Full context understood. Not an arbitrary complexity — it solved a real bug in staging. Current volume is 200 orders/day. Not time to revisit. Decision preserved.</div>
+        </div>
+      </div>
+
+      <div class="ex-stats">
+        <span><strong>Total reads:</strong> 1 page, 2 sections</span>
+        <span><strong>Source reads:</strong> 0</span>
+        <span><strong>Without docs:</strong> git archaeology + asking the other engineer</span>
+        <span><strong>Decision quality:</strong> better, with the original context</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- KNOWN GAPS -->
+<div class="section" id="gaps">
+  <div class="eyebrow">
+    <span class="badge">Registry Health</span>
+    <span class="eyebrow-label">Known Gaps</span>
+  </div>
+  <h2>Known Gaps</h2>
+  <p>Areas not yet registered. doc-maintainer fills one gap per cron run. Contributors can fill manually.</p>
+
+  <div class="gaps">
+    <div class="gap-item">
+      <span class="gap-path">src/hooks/</span>
+      <span class="gap-desc">React custom hooks not yet registered — useCart, useAuth, useProduct identified but not documented</span>
+    </div>
+    <div class="gap-item">
+      <span class="gap-path">src/middleware/rateLimit.ts</span>
+      <span class="gap-desc">Rate limiting middleware exists but not registered — discovered during security review</span>
+    </div>
+    <div class="gap-item">
+      <span class="gap-path">infra/monitoring.bicep</span>
+      <span class="gap-desc">Azure Monitor + Application Insights provisioned but infra resources not registered</span>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <strong>doc-maintainer</strong> runs daily at 01:00 UTC. It fills 1 known gap, verifies 3 stubs, and checks bidirectional links on each run. Gaps are typically closed within 3 days of being identified.
+  </div>
+
+  <div style="margin-top:2rem;font-size:0.67rem;color:var(--text-dim);font-family:var(--font-mono);line-height:1.8">
+    Generated by /systematic-dev-kit:doc-maintainer · Source: docs/registry/ · 2026-05-28 01:03 UTC
+  </div>
+</div>
+
+</main>
+
+<script>
+// Scrollspy
+const secs = document.querySelectorAll('.section[id]');
+const navs = document.querySelectorAll('.nav-link');
+const obs = new IntersectionObserver(e => {
+  e.forEach(en => {
+    if (en.isIntersecting) {
+      navs.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.nav-link[href="#${en.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px' });
+secs.forEach(s => obs.observe(s));
+
+// Registry search + filter
+const regInput = document.getElementById('shopReg');
+const filterPills = document.querySelectorAll('.filter-pill');
+let activeFilter = 'all';
+
+function highlightDoes(q) {
+  document.querySelectorAll('#shopBody .does').forEach(cell => {
+    const orig = cell.getAttribute('data-orig') || cell.textContent;
+    cell.setAttribute('data-orig', orig);
+    if (!q) { cell.innerHTML = orig; return; }
+    const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    cell.innerHTML = orig.replace(re, '<mark>$1</mark>');
+  });
+}
+
+function filterReg() {
+  const q = regInput.value.toLowerCase().trim();
+  document.querySelectorAll('#shopBody tr').forEach(row => {
+    const name = row.getAttribute('data-name')?.toLowerCase() || '';
+    const does = row.querySelector('.does')?.textContent.toLowerCase() || '';
+    const status = row.getAttribute('data-s') || '';
+    const ms = !q || name.includes(q) || does.includes(q);
+    const mf = activeFilter === 'all' || status === activeFilter;
+    row.classList.toggle('hidden', !(ms && mf));
+  });
+  highlightDoes(q);
+}
+
+regInput.addEventListener('input', filterReg);
+filterPills.forEach(p => {
+  p.addEventListener('click', () => {
+    filterPills.forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    activeFilter = p.getAttribute('data-f');
+    filterReg();
+  });
+});
+
+// Construct detail
+function openDetail(id) {
+  const panel = document.getElementById('detail-' + id);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.construct-panel').forEach(p => p.classList.remove('open'));
+  if (!isOpen) panel.classList.add('open');
+}
+
+// ADR toggle
+function toggleAdr(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+
+function openAdr(id) {
+  document.getElementById(id)?.classList.add('open');
+  document.getElementById('s9')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Example tabs
+document.querySelectorAll('.ex-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.ex-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ex-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.getAttribute('data-t')).classList.add('active');
+  });
+});
+
+// Feature card highlight
+document.querySelectorAll('.feature-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('selected'));
+    card.classList.toggle('selected');
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>systematic-dev-kit — Redesign Review v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@500;600;700;800&display=swap');
+
+:root {
+  --ink:       #0f0f0f;
+  --paper:     #f5f0e8;
+  --paper2:    #ede7d9;
+  --rule:      #c8b89a;
+  --rule-light:#e0d5c2;
+  --accent:    #b85c2a;
+  --accent2:   #2a6b8a;
+  --accent3:   #4a7c45;
+  --accent4:   #7a3a8a;
+  --dim:       #7a6e60;
+
+  --planned:   #2a6b8a;
+  --built:     #8a6a2a;
+  --verified:  #4a7c45;
+  --diverged:  #9a2a4a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+nav {
+  position: fixed;
+  top: 0; left: 0;
+  width: 210px; height: 100vh;
+  background: var(--paper2);
+  border-right: 1px solid var(--rule);
+  padding: 1.75rem 1.25rem;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+nav::-webkit-scrollbar { width: 3px; }
+nav::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 0.25rem;
+}
+
+.nav-version {
+  font-size: 0.6rem;
+  color: var(--dim);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.nav-group { margin-bottom: 1.25rem; }
+
+.nav-group-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+nav a {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--dim);
+  text-decoration: none;
+  padding: 0.18rem 0;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+
+nav a:hover { color: var(--accent); }
+nav a.active { color: var(--ink); font-weight: 500; }
+
+main {
+  margin-left: 210px;
+  max-width: 860px;
+  padding: 4rem 3.5rem 8rem;
+}
+
+.section { padding: 2.5rem 0; border-bottom: 1px solid var(--rule-light); }
+.section:last-child { border-bottom: none; }
+
+/* Typography */
+.eyebrow {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.6rem;
+}
+
+h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.9rem, 3.5vw, 3rem);
+  font-weight: 400;
+  line-height: 1.12;
+  margin-bottom: 0.6rem;
+}
+h1 em { font-style: italic; color: var(--accent); }
+
+.lede {
+  font-size: 0.8rem;
+  color: var(--dim);
+  line-height: 1.65;
+  max-width: 60ch;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 2rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.sec-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 300;
+  color: var(--dim);
+  letter-spacing: 0.1em;
+}
+
+h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ink);
+  margin: 1.5rem 0 0.5rem;
+}
+
+p {
+  font-size: 0.8rem;
+  line-height: 1.75;
+  margin-bottom: 0.8rem;
+  color: var(--ink);
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  background: var(--paper2);
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+}
+
+/* Callouts */
+.callout {
+  border-left: 3px solid var(--accent);
+  padding: 0.8rem 1.1rem;
+  background: rgba(184,92,42,0.05);
+  margin: 1.1rem 0;
+  font-size: 0.76rem;
+  line-height: 1.65;
+}
+.callout.blue  { border-color: var(--accent2); background: rgba(42,107,138,0.05); }
+.callout.green { border-color: var(--accent3); background: rgba(74,124,69,0.05); }
+.callout.purple{ border-color: var(--accent4); background: rgba(122,58,138,0.05); }
+.callout strong { font-weight: 500; }
+
+/* Problem statement */
+.root-cause {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 1.5rem 2rem;
+  margin: 1.25rem 0;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.root-cause .label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #e8d5a3;
+  margin-bottom: 0.5rem;
+}
+
+/* Lifecycle states */
+.lifecycle {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin: 1.25rem 0;
+}
+
+.lc-cell {
+  background: var(--paper);
+  padding: 1.1rem;
+}
+
+.lc-state {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.lc-cell:nth-child(1) .lc-state { color: var(--planned); }
+.lc-cell:nth-child(2) .lc-state { color: var(--built); }
+.lc-cell:nth-child(3) .lc-state { color: var(--verified); }
+.lc-cell:nth-child(4) .lc-state { color: var(--diverged); }
+
+.lc-who {
+  font-size: 0.62rem;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.lc-desc {
+  font-size: 0.67rem;
+  color: var(--dim);
+  line-height: 1.55;
+}
+
+/* Lifecycle flow arrow */
+.lc-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  font-size: 0.68rem;
+  color: var(--dim);
+}
+
+.lc-arrow::before, .lc-arrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* Registry structure */
+.registry-tree {
+  background: var(--ink);
+  color: #c8b898;
+  padding: 1.75rem 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  line-height: 1.9;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+}
+
+.registry-tree .hl-gold   { color: #e8d5a3; font-weight: 500; }
+.registry-tree .hl-blue   { color: #7bb8d4; }
+.registry-tree .hl-green  { color: #8ecb88; }
+.registry-tree .hl-orange { color: #e8a87c; }
+.registry-tree .hl-dim    { color: #4a4030; }
+.registry-tree .hl-pink   { color: #e88aaa; }
+
+/* Skills grid */
+.skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.skill-card {
+  border: 1px solid var(--rule);
+  padding: 1.1rem;
+  position: relative;
+  background: var(--paper);
+}
+
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--sc);
+}
+
+.sk-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--sc);
+  margin-bottom: 0.15rem;
+}
+
+.sk-role {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 0.6rem;
+}
+
+.sk-body {
+  font-size: 0.7rem;
+  color: var(--dim);
+  line-height: 1.55;
+  margin-bottom: 0.6rem;
+}
+
+.sk-tag {
+  display: inline-block;
+  font-size: 0.58rem;
+  padding: 0.1rem 0.45rem;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.sk-changed { background: rgba(184,92,42,0.1); color: var(--accent); }
+.sk-new     { background: rgba(74,124,69,0.12); color: var(--accent3); }
+.sk-new-validator { background: rgba(122,58,138,0.1); color: var(--accent4); }
+
+/* Q&A decisions */
+.qa-block {
+  border: 1px solid var(--rule);
+  margin: 0.75rem 0;
+  overflow: hidden;
+}
+
+.qa-q {
+  background: var(--paper2);
+  padding: 0.75rem 1rem;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--dim);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.qa-num {
+  font-size: 0.62rem;
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.qa-a {
+  padding: 0.85rem 1rem;
+  font-size: 0.76rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.qa-a strong { font-weight: 500; color: var(--accent); }
+
+/* Phase table */
+.phase-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.7rem;
+}
+
+.phase-table th {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.phase-table td {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--rule-light);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.phase-table tr:hover td { background: var(--paper2); }
+
+.ph-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Validator flow */
+.validator-flow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--rule);
+  margin: 1.25rem 0;
+  overflow: hidden;
+}
+
+.vf-step {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  border-bottom: 1px solid var(--rule-light);
+}
+
+.vf-step:last-child { border-bottom: none; }
+
+.vf-num {
+  background: var(--paper2);
+  border-right: 1px solid var(--rule-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  color: var(--dim);
+}
+
+.vf-content {
+  padding: 0.65rem 1rem;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.vf-outcome {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.4rem;
+}
+
+.vf-yes, .vf-no {
+  font-size: 0.65rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.vf-yes::before { content: '✓'; color: var(--verified); font-weight: 700; }
+.vf-no::before  { content: '↳'; color: var(--diverged); font-weight: 700; }
+
+/* Migration path */
+.migration-steps {
+  counter-reset: mstep;
+  list-style: none;
+  margin: 1rem 0;
+}
+
+.migration-steps li {
+  counter-increment: mstep;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  align-items: start;
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
+.migration-steps li::before {
+  content: counter(mstep);
+  width: 24px; height: 24px;
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.62rem;
+  color: var(--dim);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* Scale table */
+.scale-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.68rem;
+}
+
+.scale-table th {
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.scale-table td {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--rule-light);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+.scale-table strong { font-weight: 500; color: var(--ink); }
+
+@media (max-width: 760px) {
+  nav { display: none; }
+  main { margin-left: 0; padding: 2rem 1.25rem 5rem; }
+  .lifecycle { grid-template-columns: 1fr 1fr; }
+  .skills-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">systematic-dev-kit</div>
+  <div class="nav-version">Redesign Review v2 · 2026-05-29</div>
+
+  <div class="nav-group">
+    <span class="nav-group-label">Problem</span>
+    <a href="#problem">The real problem</a>
+    <a href="#principles">Design principles</a>
+  </div>
+
+  <div class="nav-group">
+    <span class="nav-group-label">System Model</span>
+    <a href="#lifecycle">Construct lifecycle</a>
+    <a href="#registry">Registry structure</a>
+    <a href="#scale">Scale behaviour</a>
+  </div>
+
+  <div class="nav-group">
+    <span class="nav-group-label">Skills</span>
+    <a href="#skills">All skills</a>
+    <a href="#validator">Post-hook validator</a>
+    <a href="#adr">/ adr skill</a>
+  </div>
+
+  <div class="nav-group">
+    <span class="nav-group-label">Decisions</span>
+    <a href="#q1">Q1 — Domain boundaries</a>
+    <a href="#q2">Q2 — Stubs</a>
+    <a href="#q3">Q3 — Back-links</a>
+    <a href="#q4">Q4 — Patterns ownership</a>
+    <a href="#q5">Q5 — Bidirectional links</a>
+    <a href="#q6">Q6 — Phasing</a>
+  </div>
+
+  <div class="nav-group">
+    <span class="nav-group-label">Delivery</span>
+    <a href="#phases">4 phases</a>
+    <a href="#migration">Brownfield migration</a>
+    <a href="#remaining">Remaining questions</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- HEADER -->
+<div class="section" id="header">
+  <div class="eyebrow">systematic-dev-kit · redesign review v2 · all decisions resolved</div>
+  <h1>The <em>System Model</em><br>— finalised design</h1>
+  <p class="lede">Every design question from v1 is resolved. This document is the agreed architecture before spec finalisation and implementation planning.</p>
+</div>
+
+<!-- PROBLEM -->
+<div class="section" id="problem">
+  <h2><span class="sec-num">01</span> The real problem (precisely stated)</h2>
+
+  <p>Feature specs work. The failure mode is specific and concrete:</p>
+
+  <div class="root-cause">
+    <div class="label">Root cause</div>
+    A construct gets built as part of a feature — a utility class, a service, a helper — and six months later nobody remembers it exists. The next agent or developer building a new feature creates a duplicate because they had no way to know it was there. The spec that captured it is a feature-level snapshot. There is no system-level index of what exists and what it does.
+  </div>
+
+  <p>The solution is not more feature-level documentation. It is a <strong>construct registry</strong> — a living index of every significant construct in the system, indexed by <em>what it does</em>, maintained by every skill, and queryable before any new construct is created.</p>
+
+  <p>And alongside that: a <strong>decision record layer</strong> that captures why things were built the way they were — at the moment the decision was made, with the full options table and the active constraints — so that six months later a developer doesn't re-derive a decision and come to a different conclusion.</p>
+</div>
+
+<!-- PRINCIPLES -->
+<div class="section" id="principles">
+  <h2><span class="sec-num">02</span> Design principles</h2>
+
+  <h3>Construct-centric, not feature-centric or file-centric</h3>
+  <p>Features are a way of organising work — they come and go. File locations are framework conventions (<code>src/pages/</code>, <code>src/services/</code>, <code>src/utils/</code>) — they reflect layer, not capability. The construct is what persists. It is the right indexing unit.</p>
+
+  <h3>Capability search, not path search</h3>
+  <p>"Does something that handles JWT validation already exist?" must be answerable without reading source code. The registry is indexed by what constructs <em>do</em>, in a "Does" column that is searched before any new construct is proposed.</p>
+
+  <h3>Cross-layer feature view</h3>
+  <p>"Show me everything about auth" must traverse all layers: which pages, which API endpoints, which services, which models, which infra resources. A Feature Cross-Reference table in the L0 index provides this in one read.</p>
+
+  <h3>FR per construct. NFR + patterns per ADR.</h3>
+  <p>Functional Requirements are specific, per-construct, and provable. They live on the construct file. Non-Functional Requirements (performance, security, reliability) are cross-cutting system-level decisions. They live in ADRs with full context, constraints, and revisit conditions.</p>
+
+  <h3>Every skill reads before it acts, writes after it acts</h3>
+  <p>The registry is not maintained by doc-maintainer alone. init, plan, explore, task-executor, and /adr all read and write it. doc-maintainer is the consistency guardian — not the sole writer.</p>
+
+  <h3>Progressive disclosure</h3>
+  <p>A duplicate check costs 2 reads at 5 features and 2 reads at 200 features. Source code is only read when the registry has a Known Gap. The read cost scales with task scope, not codebase size.</p>
+
+  <h3>Bidirectional traceability, agent-maintained</h3>
+  <p>Impossible for a human to keep in sync at scale. Mechanical for an agent running daily. doc-maintainer owns link reconciliation.</p>
+</div>
+
+<!-- LIFECYCLE -->
+<div class="section" id="lifecycle">
+  <h2><span class="sec-num">03</span> Construct lifecycle</h2>
+
+  <p>Every construct in the registry has a state. The state tracks the gap between what was planned and what was actually built and verified.</p>
+
+  <div class="lifecycle">
+    <div class="lc-cell">
+      <div class="lc-state">Planned</div>
+      <div class="lc-who">Written by: plan</div>
+      <div class="lc-desc">Spec approved. Construct described but not yet built. FR list established. Planned interface documented.</div>
+    </div>
+    <div class="lc-cell">
+      <div class="lc-state">Built</div>
+      <div class="lc-who">Written by: task-executor</div>
+      <div class="lc-desc">Implemented and committed. Real file location, real interface, real dependencies. FRs not yet verified.</div>
+    </div>
+    <div class="lc-cell">
+      <div class="lc-state">Verified</div>
+      <div class="lc-who">Written by: post-hook validator</div>
+      <div class="lc-desc">All FRs passed. Human checklist completed. Future: automated test confirms it. Proof block written.</div>
+    </div>
+    <div class="lc-cell">
+      <div class="lc-state">Diverged</div>
+      <div class="lc-who">Written by: /adr</div>
+      <div class="lc-desc">Implementation diverged from spec. ADR written capturing why. New contract documented. Not failure — honest record of reality.</div>
+    </div>
+  </div>
+
+  <div class="lc-arrow">planned → built → verified (or diverged)</div>
+
+  <div class="callout">
+    <strong>The critical transition:</strong> <code>built → verified</code> requires proof against FRs. <code>built → diverged</code> requires an ADR before the next task-executor task can run. This is the moment decisions get captured — not reconstructed six months later.
+  </div>
+
+  <h3>Proof methods (in order of maturity)</h3>
+  <p>Right now: <strong>human verifiable</strong> — a checklist derived from the FR list that a developer can walk through in under 5 minutes. Future: <strong>automated test</strong> pointing to a test file. Further future: <strong>unit test generated</strong> from the FR list automatically. All three slot into the same <code>proof</code> block on the construct file.</p>
+
+  <h3>NFRs are ADR-only</h3>
+  <p>Performance targets, security requirements, reliability SLAs — these are cross-cutting decisions with context and history. They belong in ADRs, not on individual construct files. An ADR captures the NFR, the constraint that drove it, and the condition under which it should be revisited.</p>
+</div>
+
+<!-- REGISTRY -->
+<div class="section" id="registry">
+  <h2><span class="sec-num">04</span> Registry structure</h2>
+
+  <div class="registry-tree"><pre>
+docs/registry/
+│
+├── <span class="hl-gold">index.md</span>                     <span class="hl-dim"># L0 — the capability search surface (hard limit: 80 lines)</span>
+│                                <span class="hl-dim">#   "Does" column — search this before creating anything</span>
+│                                <span class="hl-dim">#   Feature cross-reference — auth touches these 4 constructs</span>
+│                                <span class="hl-dim">#   Known gaps — areas not yet registered</span>
+│
+├── <span class="hl-blue">constructs/</span>
+│   ├── <span class="hl-blue">UserAuthService.md</span>          <span class="hl-dim"># one file per construct, no size limit</span>
+│   ├── <span class="hl-blue">LoginPage.md</span>                <span class="hl-dim">#   status: planned | built | verified | diverged</span>
+│   ├── <span class="hl-blue">SessionRepository.md</span>        <span class="hl-dim">#   FR list + proof block</span>
+│   ├── <span class="hl-blue">formatCurrency.md</span>           <span class="hl-dim">#   interface, dependencies, decisions, patterns applied</span>
+│   └── <span class="hl-blue">...</span>                         <span class="hl-dim">#   back-link to spec that planned it</span>
+│
+├── <span class="hl-green">patterns.md</span>                      <span class="hl-dim"># cross-cutting conventions</span>
+│                                <span class="hl-dim">#   written by /adr when a decision establishes a pattern</span>
+│                                <span class="hl-dim">#   soft-delete, auth approach, API envelope, anti-patterns</span>
+│                                <span class="hl-dim">#   each entry links to its ADR and implementing constructs</span>
+│
+└── <span class="hl-orange">decisions/</span>
+    ├── <span class="hl-orange">index.md</span>                    <span class="hl-dim"># id | date | status | decision | affects</span>
+    ├── <span class="hl-orange">001-stack-rationale.md</span>      <span class="hl-dim"># ADR-001: always written by init</span>
+    ├── <span class="hl-orange">003-jwt-vs-sessions.md</span>      <span class="hl-dim"># MADR format: context, options table, NFRs,</span>
+    └── <span class="hl-orange">007-functions-vs-servicebus.md</span> <span class="hl-dim">#   consequences, revisit conditions</span></pre></div>
+
+  <h3>Why not domain directories or layer directories?</h3>
+  <p>The codebase is organised by framework convention — <code>src/services/</code>, <code>src/pages/</code>, <code>src/utils/</code> — not by domain. And "auth" as a concept spans all layers. Imposing a domain structure on the registry that doesn't match the source tree creates a permanent translation problem. The flat <code>constructs/</code> directory plus the L0 Feature Cross-Reference table gives you both capability search and cross-layer feature view without requiring the source to be domain-organised.</p>
+
+  <h3>L0 index — the only file always read</h3>
+  <p>Hard limit: 80 lines. Contains the construct table with a <strong>"Does" column</strong> — a one-line capability description written to be searched, not just read. Before any skill proposes a new construct, it searches this column. "Formats numbers" → finds <code>formatCurrency</code>. Duplicate prevented.</p>
+</div>
+
+<!-- SCALE -->
+<div class="section" id="scale">
+  <h2><span class="sec-num">05</span> Scale behaviour</h2>
+
+  <table class="scale-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>5 features</th>
+        <th>50 features</th>
+        <th>200 features</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>"Does X exist?" — duplicate check</td>
+        <td><strong>1 read</strong> (L0)</td>
+        <td><strong>1 read</strong> (L0)</td>
+        <td><strong>1 read</strong> (L0)</td>
+      </tr>
+      <tr>
+        <td>"What does auth touch?" — feature view</td>
+        <td><strong>1 read</strong> (L0 cross-ref)</td>
+        <td><strong>1 read</strong> (L0 cross-ref)</td>
+        <td><strong>1 read</strong> (L0 cross-ref)</td>
+      </tr>
+      <tr>
+        <td>Full construct detail</td>
+        <td><strong>2 reads</strong> (L0 + construct file)</td>
+        <td><strong>2 reads</strong></td>
+        <td><strong>2 reads</strong></td>
+      </tr>
+      <tr>
+        <td>Add a new construct</td>
+        <td>1 new file + 1 row appended to L0</td>
+        <td>1 new file + 1 row appended to L0</td>
+        <td>1 new file + 1 row appended to L0</td>
+      </tr>
+      <tr>
+        <td>Source code reads to orient</td>
+        <td>0 (if registry current)</td>
+        <td>0 (if registry current)</td>
+        <td>0 (if registry current)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout green">
+    <strong>The 80-line L0 limit is what makes this work.</strong> If L0 grows past 80 lines, doc-maintainer flags it. The Feature Cross-Reference section moves to a separate file. The construct table remains. The read cost never grows.
+  </div>
+</div>
+
+<!-- SKILLS -->
+<div class="section" id="skills">
+  <h2><span class="sec-num">06</span> Skills redesign</h2>
+
+  <div class="skills-grid">
+
+    <div class="skill-card" style="--sc: #2a6b8a">
+      <div class="sk-name">init</div>
+      <div class="sk-role">Project scaffolder</div>
+      <div class="sk-body">Greenfield: creates registry skeleton + ADR-001. Brownfield: new <code>brownfield-migrate</code> mode seeds registry from existing specs + source tree. Injects agent nav protocol into CLAUDE.md.</div>
+      <span class="sk-tag sk-changed">Changed</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #b85c2a">
+      <div class="sk-name">plan</div>
+      <div class="sk-role">Feature planner</div>
+      <div class="sk-body">Before designing: searches L0 "Does" column + Feature Cross-Reference. After approval: writes construct files with <code>status: planned</code>, FR list, planned interface. Invokes explore only for Known Gap areas.</div>
+      <span class="sk-tag sk-changed">Changed</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #4a7c45">
+      <div class="sk-name">explore</div>
+      <div class="sk-role">Codebase investigator · Haiku</div>
+      <div class="sk-body">New Tier 1: reads L0 first. If registry covers focus area → sufficiency gate passes, no source read. If Known Gap → scoped source read for that area only. After: writes new construct stubs, updates L0.</div>
+      <span class="sk-tag sk-changed">Changed</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #7a3a8a">
+      <div class="sk-name">task-executor</div>
+      <div class="sk-role">Autonomous cron executor</div>
+      <div class="sk-body">Mandatory pre-task: read L0, search for constructs about to be created. Mandatory post-task: write/update construct file (<code>planned→built</code>), update L0 row. Triggers post-hook validator after each commit.</div>
+      <span class="sk-tag sk-changed">Changed</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #8a6a2a">
+      <div class="sk-name">doc-maintainer</div>
+      <div class="sk-role">Consistency guardian · cron</div>
+      <div class="sk-body">Role shifts from primary writer to consistency guardian. Enforces bidirectional links. Reconciles cross-domain back-links. Verifies stubs (3/run). Fills Known Gaps (1/run). Enforces L0 size limit.</div>
+      <span class="sk-tag sk-changed">Changed</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #9a2a4a">
+      <div class="sk-name">/adr</div>
+      <div class="sk-role">Decision recorder · new skill</div>
+      <div class="sk-body">Captures decisions at the moment they're made. MADR format with full options table, active constraints, NFRs, and revisit conditions. If decision establishes a pattern → also writes to patterns.md. Triggered by developer or auto-triggered by validator on divergence.</div>
+      <span class="sk-tag sk-new">New</span>
+    </div>
+
+    <div class="skill-card" style="--sc: #5a3a9a">
+      <div class="sk-name">post-hook validator</div>
+      <div class="sk-role">FR verifier · new skill</div>
+      <div class="sk-body">Runs after every task-executor commit. Generates human FR checklist from construct file. Developer marks pass/fail. All pass → <code>verified</code>. Divergence detected → blocks next task until /adr is written. Future: replaced by automated test runner.</div>
+      <span class="sk-tag sk-new-validator">New</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- VALIDATOR -->
+<div class="section" id="validator">
+  <h2><span class="sec-num">07</span> Post-hook validator flow</h2>
+
+  <p>Runs automatically after every task-executor commit. This is the mechanism that moves constructs from <code>built</code> to <code>verified</code> or <code>diverged</code>.</p>
+
+  <div class="validator-flow">
+    <div class="vf-step">
+      <div class="vf-num">1</div>
+      <div class="vf-content">Read construct files for all constructs touched in the commit.</div>
+    </div>
+    <div class="vf-step">
+      <div class="vf-num">2</div>
+      <div class="vf-content">For each construct: does the file exist at the documented path?
+        <div class="vf-outcome">
+          <span class="vf-yes">Yes — continue</span>
+          <span class="vf-no">No — flag as incomplete, keep status: built</span>
+        </div>
+      </div>
+    </div>
+    <div class="vf-step">
+      <div class="vf-num">3</div>
+      <div class="vf-content">Generate human FR checklist from the construct's FR list. Present to developer:
+        <br><br>
+        <code style="display:block;background:var(--paper2);padding:0.6rem;font-size:0.68rem;line-height:1.7">
+          UserAuthService — 4 FRs to verify:<br>
+          [ ] User authenticates with valid email + password → session token returned<br>
+          [ ] Invalid credentials → 401, never 500<br>
+          [ ] Expired tokens rejected, session cleaned up<br>
+          [ ] Max 5 concurrent sessions per user enforced
+        </code>
+      </div>
+    </div>
+    <div class="vf-step">
+      <div class="vf-num">4</div>
+      <div class="vf-content">Developer marks each FR.
+        <div class="vf-outcome">
+          <span class="vf-yes">All pass → status: verified, proof block written</span>
+          <span class="vf-no">Any fail → keep status: built, flag FR as failing</span>
+        </div>
+      </div>
+    </div>
+    <div class="vf-step">
+      <div class="vf-num">5</div>
+      <div class="vf-content">Developer signals divergence (implementation changed from plan).
+        <div class="vf-outcome">
+          <span class="vf-no">Diverged → /adr triggered. Next task blocked until ADR is written and status: diverged is set.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout purple">
+    <strong>Why block the next task on divergence?</strong> Because the decision — "we changed the approach because of X" — must be captured at the moment it's made. If the next task runs first, the context is lost. The developer is still in the problem space. The ADR takes 5 minutes. Six months from now it saves hours.
+  </div>
+</div>
+
+<!-- ADR SKILL -->
+<div class="section" id="adr">
+  <h2><span class="sec-num">08</span> /adr skill</h2>
+
+  <p>The <code>/adr</code> skill captures decisions at the moment they are made — not reconstructed later. It has two triggers: explicit invocation by the developer, and automatic triggering by the post-hook validator on divergence detection.</p>
+
+  <p>It asks 6 questions in sequence, then generates the MADR file:</p>
+
+  <div class="validator-flow">
+    <div class="vf-step"><div class="vf-num">1</div><div class="vf-content">"What did you decide?" — one sentence.</div></div>
+    <div class="vf-step"><div class="vf-num">2</div><div class="vf-content">"What alternatives did you consider?" — builds the options table.</div></div>
+    <div class="vf-step"><div class="vf-num">3</div><div class="vf-content">"What constraints were active?" — team size, cost, timeline, compliance, scale expectations. These explain the choice to future readers.</div></div>
+    <div class="vf-step"><div class="vf-num">4</div><div class="vf-content">"Does this establish a cross-cutting pattern?" — if yes, also writes to patterns.md with ADR link.</div></div>
+    <div class="vf-step"><div class="vf-num">5</div><div class="vf-content">"What NFRs does this decision enforce?" — performance targets, security requirements, reliability SLAs. These live here, not on constructs.</div></div>
+    <div class="vf-step"><div class="vf-num">6</div><div class="vf-content">"What should trigger a revisit?" — specific conditions, not vague. "If order volume exceeds 5,000/day" not "if we need to scale".</div></div>
+  </div>
+
+  <p>After confirmation: writes <code>decisions/NNN-title.md</code>, appends to <code>decisions/index.md</code>, adds Key Decisions links to affected construct files, and (if pattern) appends to <code>patterns.md</code>.</p>
+</div>
+
+<!-- Q&A RESOLVED -->
+<div class="section" id="q1">
+  <h2><span class="sec-num">09</span> All 6 decisions resolved</h2>
+
+  <div class="qa-block">
+    <div class="qa-q"><span class="qa-num">Q1</span> Domain boundaries on brownfield — how should init classify the existing codebase?</div>
+    <div class="qa-a">
+      <strong>Domain classification is the wrong model entirely.</strong> Most codebases are organised by framework layer (<code>src/services/</code>, <code>src/pages/</code>, <code>src/utils/</code>) not by domain — and that's correct per framework conventions. The registry doesn't impose a domain structure that doesn't exist. Instead: a flat <code>constructs/</code> directory, indexed by capability. The L0 "Does" column is the search surface. The Feature Cross-Reference table gives the cross-layer view. No domain boundaries required.
+    </div>
+  </div>
+
+  <div class="qa-block" id="q2">
+    <div class="qa-q"><span class="qa-num">Q2</span> Stubs — should plan write speculative entries before code exists?</div>
+    <div class="qa-a">
+      <strong>Yes, but the validator is the enforcement mechanism.</strong> Plan writes construct files with <code>status: planned</code> and an FR list. The post-hook validator is what catches divergence — not careful stub design. This means a parallel feature planning the same construct will see it in L0 before either is built. Duplicate prevention works even during the planning phase, before a single line of code is written.
+    </div>
+  </div>
+
+  <div class="qa-block" id="q3">
+    <div class="qa-q"><span class="qa-num">Q3</span> Cross-domain back-links — who writes "Called by" entries?</div>
+    <div class="qa-a">
+      <strong>Hybrid — task-executor writes forward links, doc-maintainer reconciles back-links.</strong> task-executor writes <code>Calls: UserAuthService</code> in the orders construct file. doc-maintainer reads that on its next cron run and writes <code>Called by: OrderService</code> in the auth construct file. Clean separation: task-executor stays focused on its domain, doc-maintainer handles cross-domain consistency.
+    </div>
+  </div>
+
+  <div class="qa-block" id="q4">
+    <div class="qa-q"><span class="qa-num">Q4</span> patterns.md ownership — who writes it and when?</div>
+    <div class="qa-a">
+      <strong>/adr writes it when a decision establishes a cross-cutting pattern.</strong> Not doc-maintainer inferring from code. Not a manually-maintained file. When a developer captures a decision with /adr and marks it as pattern-establishing, /adr writes the pattern entry with a link back to the ADR. Patterns are documented at decision time, with full context, not reverse-engineered later.
+    </div>
+  </div>
+
+  <div class="qa-block" id="q5">
+    <div class="qa-q"><span class="qa-num">Q5</span> Bidirectional traceability — spec ↔ registry — is it maintainable?</div>
+    <div class="qa-a">
+      <strong>Yes, because agents maintain it, not humans.</strong> Every spec links forward to its construct files. Every construct file links back to the spec that planned it. doc-maintainer's daily cron run checks and repairs these links mechanically. Broken links surface in Known Gaps. A human maintainer keeping these in sync at scale is impossible. An agent doing it daily is trivial.
+    </div>
+  </div>
+
+  <div class="qa-block" id="q6">
+    <div class="qa-q"><span class="qa-num">Q6</span> Phased vs. all-at-once implementation?</div>
+    <div class="qa-a">
+      <strong>Phased.</strong> All-at-once means nothing works until everything works. Each phase delivers independent value. Phase 1 (foundation + /adr + doc-maintainer + init) can be used immediately on any repo. Phase 2 adds planning integration. Phase 3 adds the full verified/diverged loop. Phase 4 replaces human checklists with automated tests.
+    </div>
+  </div>
+</div>
+
+<!-- PHASES -->
+<div class="section" id="phases">
+  <h2><span class="sec-num">10</span> 4 implementation phases</h2>
+
+  <table class="phase-table">
+    <thead>
+      <tr>
+        <th>Phase</th>
+        <th>What ships</th>
+        <th>Value delivered</th>
+        <th>Skills changed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="ph-num">1 — Foundation</td>
+        <td>Registry structure · /adr skill · doc-maintainer consistency pass · init greenfield + brownfield-migrate · patterns.md · ADR format</td>
+        <td>Decisions captured at decision time. Patterns explicit. Bidirectional links enforced. Any repo can adopt immediately.</td>
+        <td>init (changed), doc-maintainer (changed), /adr (new)</td>
+      </tr>
+      <tr>
+        <td class="ph-num">2 — Planning</td>
+        <td>plan reads L0 before designing · plan writes stubs after approval · explore uses registry as Tier 1 · Feature Cross-Reference maintained</td>
+        <td>Duplicate prevention during planning. explore invoked only for Known Gaps. Token cost of "Extends existing" path drops ~60%.</td>
+        <td>plan (changed), explore (changed)</td>
+      </tr>
+      <tr>
+        <td class="ph-num">3 — Execution</td>
+        <td>task-executor pre/post task registry reads/writes · post-hook validator (FR checklist) · /adr auto-triggered on divergence · verified/diverged loop complete</td>
+        <td>Full lifecycle tracked. Every construct goes planned→built→verified or diverged. Decisions captured at pivot moment. Nothing silently drifts.</td>
+        <td>task-executor (changed), post-hook validator (new)</td>
+      </tr>
+      <tr>
+        <td class="ph-num">4 — Automated proof</td>
+        <td>Unit test generator from FR list · automated test runner · status: verified set by test, not human</td>
+        <td>Human checklist becomes optional. Verification is continuous. FR regression detection on every commit.</td>
+        <td>New test-generator skill</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MIGRATION -->
+<div class="section" id="migration">
+  <h2><span class="sec-num">11</span> Brownfield migration path</h2>
+
+  <p>For repos that have already used the kit — existing specs, C4 docs, running code. Migration is non-destructive. No existing files are touched until the agent has verified what's there.</p>
+
+  <ul class="migration-steps">
+    <li>Read all existing <code>specs/*/overview.md</code> — extract constructs from Implementation Order sections. Create construct files with <code>status: planned</code>.</li>
+    <li>Walk <code>src/</code> — match files against planned construct locations. Matches → promote to <code>status: built</code> (unverified). No match → keep as <code>planned</code> (never built, or path changed).</li>
+    <li>Read schema file once → register all data models as <code>built</code> (unverified).</li>
+    <li>Grep IaC files → register all infra resources as <code>built</code> (unverified).</li>
+    <li>Run <code>git log --name-only -20</code> → highest-churn files get priority stub entries in Known Gaps.</li>
+    <li>Generate migration report: N planned, N built (unverified), N still planned (not found), N data models, N infra resources, N known gaps.</li>
+    <li>doc-maintainer takes over. Each cron run fills 1 Known Gap, verifies 3 stubs. Registry becomes complete over time without a big-bang migration event.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Hard limit during seeding:</strong> 5 source file reads total. The migration report is generated from structure analysis, not deep code reading. Completeness comes from doc-maintainer's incremental runs, not from the init pass trying to do everything at once.
+  </div>
+</div>
+
+<!-- REMAINING -->
+<div class="section" id="remaining">
+  <h2><span class="sec-num">12</span> Remaining implementation questions</h2>
+
+  <p>Design is resolved. These are implementation-level questions for the task-executor planning phase:</p>
+
+  <div class="qa-block">
+    <div class="qa-q"><span class="qa-num">I1</span> ORM detection breadth for brownfield migration</div>
+    <div class="qa-a">Data model seeding is straightforward for Prisma (single schema file). Should v1 also detect TypeORM (<code>src/entities/*.ts</code>), SQLAlchemy, Django models — or mark non-Prisma repos as a Known Gap?</div>
+  </div>
+
+  <div class="qa-block">
+    <div class="qa-q"><span class="qa-num">I2</span> Parallel session safety on L0 append</div>
+    <div class="qa-a">If plan and task-executor both append to L0 in the same session (planning one feature while executing another), is file-level append safe? Or do we need a simple lock file convention?</div>
+  </div>
+
+  <div class="qa-block">
+    <div class="qa-q"><span class="qa-num">I3</span> FR extraction from existing specs</div>
+    <div class="qa-a">Existing spec files use Implementation Order sections, not explicit FR lists. The brownfield migration needs a heuristic to extract FRs, or it prompts the developer to confirm. Which is better for v1?</div>
+  </div>
+
+  <div style="margin-top:2rem;font-size:0.7rem;color:var(--dim);line-height:1.8">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;color:var(--ink);margin-bottom:0.4rem">Next step</div>
+    Design is complete. Resolve I1–I3 as implementation decisions during task-executor planning.<br>
+    Spec: <code>specs/architecture-registry/overview.md</code> — ready for task decomposition.
+  </div>
+</div>
+
+</main>
+
+<script>
+const sections = document.querySelectorAll('[id]');
+const links = document.querySelectorAll('nav a');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
