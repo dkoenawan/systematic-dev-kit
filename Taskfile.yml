@@ -1,0 +1,225 @@
+version: '3'
+
+vars:
+  PLUGIN_NAME: systematic-dev-kit
+  PLUGIN_REF: "{{.PLUGIN_NAME}}@{{.PLUGIN_NAME}}"
+  PLUGIN_JSON: .claude-plugin/plugin.json
+  LOCK_FILE: .plugin-lock
+  BUMP: patch
+
+tasks:
+
+  # ── INSTALL ──────────────────────────────────────────────────────────────
+  install:
+    desc: "First-time setup — register marketplace, install plugin, wire git hook"
+    cmds:
+      - task: _install-marketplace
+      - task: _install-plugin
+      - task: _install-hook
+      - cmd: |
+          echo ""
+          echo "✔  systematic-dev-kit installed"
+          echo ""
+          claude plugin list | grep {{.PLUGIN_NAME}}
+
+  _install-marketplace:
+    internal: true
+    cmds:
+      - cmd: |
+          REPO_PATH="$(pwd)"
+          EXISTING=$(claude plugin marketplace list 2>/dev/null | grep "{{.PLUGIN_NAME}}" || true)
+          if [[ -n "$EXISTING" ]]; then
+            echo "→ marketplace already registered, skipping"
+          else
+            claude plugin marketplace add "$REPO_PATH"
+            echo "→ marketplace registered: $REPO_PATH"
+          fi
+
+  _install-plugin:
+    internal: true
+    cmds:
+      - cmd: |
+          EXISTING=$(claude plugin list 2>/dev/null | grep "{{.PLUGIN_NAME}}" || true)
+          if [[ -n "$EXISTING" ]]; then
+            echo "→ plugin already installed, skipping"
+          else
+            claude plugin install {{.PLUGIN_REF}}
+            echo "→ plugin installed"
+          fi
+
+  _install-hook:
+    internal: true
+    cmds:
+      - cmd: |
+          HOOK_SRC="$(pwd)/hooks/post-commit"
+          HOOK_DST="$(pwd)/.git/hooks/post-commit"
+          if [[ -L "$HOOK_DST" && "$(readlink "$HOOK_DST")" == "$HOOK_SRC" ]]; then
+            echo "→ post-commit hook already wired, skipping"
+          else
+            ln -sf "$HOOK_SRC" "$HOOK_DST"
+            echo "→ post-commit hook installed: $HOOK_DST"
+          fi
+
+  # ── RELEASE ──────────────────────────────────────────────────────────────
+  release:
+    desc: "Bump version, tag, push, and refresh plugin cache. Usage: task release BUMP=patch|minor|major"
+    cmds:
+      - task: _bump-version
+      - task: _tag-and-push
+      - task: _update-cache
+      - cmd: |
+          NEW_VERSION=$(grep '"version"' {{.PLUGIN_JSON}} | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+          echo ""
+          echo "✔  Released v$NEW_VERSION"
+          echo "   Restart Claude to activate the new version."
+          echo ""
+
+  _bump-version:
+    internal: true
+    cmds:
+      - cmd: |
+          CURRENT=$(grep '"version"' {{.PLUGIN_JSON}} | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+
+          case "{{.BUMP}}" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            *)
+              echo "error: BUMP must be patch, minor, or major (got '{{.BUMP}}')"
+              exit 1
+              ;;
+          esac
+
+          NEW="$MAJOR.$MINOR.$PATCH"
+          # portable in-place sed (works on both Linux and macOS)
+          sed -i.bak "s/\"version\": \"$CURRENT\"/\"version\": \"$NEW\"/" {{.PLUGIN_JSON}}
+          rm -f {{.PLUGIN_JSON}}.bak
+
+          git add {{.PLUGIN_JSON}}
+          git commit -m "chore: bump to v$NEW"
+          echo "→ bumped $CURRENT → $NEW"
+
+  _tag-and-push:
+    internal: true
+    cmds:
+      - cmd: |
+          claude plugin tag
+          git push origin HEAD --tags
+          echo "→ tagged and pushed"
+
+  _update-cache:
+    internal: true
+    cmds:
+      - cmd: |
+          claude plugin update {{.PLUGIN_REF}}
+          echo "→ plugin cache refreshed"
+
+  # ── CHECK-UPGRADE ─────────────────────────────────────────────────────────
+  check-upgrade:
+    desc: "Check whether the installed plugin cache is behind the current repo"
+    cmds:
+      - cmd: |
+          INSTALLED_SHA=$(python3 -c "
+          import json, sys
+          try:
+            data = json.load(open('$HOME/.claude/plugins/installed_plugins.json'))
+            entries = data.get('plugins', {}).get('{{.PLUGIN_REF}}', [])
+            if entries:
+              print(entries[-1].get('gitCommitSha', '')[:7])
+          except Exception as e:
+            sys.exit(0)
+          " 2>/dev/null)
+
+          CURRENT_SHA=$(git rev-parse --short HEAD)
+          CURRENT_VERSION=$(grep '"version"' {{.PLUGIN_JSON}} | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+
+          echo ""
+          echo "  Plugin:    {{.PLUGIN_NAME}}"
+          echo "  Installed: ${INSTALLED_SHA:-unknown}"
+          echo "  Current:   $CURRENT_SHA  (v$CURRENT_VERSION)"
+          echo ""
+
+          if [[ -z "$INSTALLED_SHA" ]]; then
+            echo "  ⚠  Could not read installed SHA — is the plugin installed?"
+            echo "     Run: task install"
+          elif [[ "$INSTALLED_SHA" == "$CURRENT_SHA" ]]; then
+            echo "  ✔  Cache is up to date"
+          else
+            BEHIND=$(git log "${INSTALLED_SHA}..HEAD" --oneline 2>/dev/null | wc -l | tr -d ' ')
+            echo "  ⚠  Cache is $BEHIND commit(s) behind HEAD"
+            echo "     Run: task release BUMP=patch   to publish and refresh"
+          fi
+          echo ""
+
+  # ── LOCK ─────────────────────────────────────────────────────────────────
+  lock:
+    desc: "Pin, unpin, or show version lock. Usage: task lock PIN=<tag|sha>  /  task lock UNPIN=true  /  task lock (status)"
+    cmds:
+      - cmd: |
+          if [[ -n "{{.UNPIN}}" ]]; then
+            # Unpin: return to main and remove lock file
+            git checkout main
+            rm -f {{.LOCK_FILE}}
+            claude plugin update {{.PLUGIN_REF}}
+            echo "✔  Unpinned — back on main branch, cache refreshed"
+            echo "   Restart Claude to activate."
+
+          elif [[ -n "{{.PIN}}" ]]; then
+            # Pin to a specific tag or SHA
+            REF="{{.PIN}}"
+            git fetch --tags --quiet
+            git checkout "$REF"
+
+            SHA=$(git rev-parse --short HEAD)
+            VERSION=$(grep '"version"' {{.PLUGIN_JSON}} | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+
+            # Write lock file
+            cat > {{.LOCK_FILE}} <<EOF
+          {
+            "systematic-dev-kit": {
+              "ref": "$REF",
+              "version": "$VERSION",
+              "sha": "$(git rev-parse HEAD)"
+            }
+          }
+          EOF
+
+            claude plugin update {{.PLUGIN_REF}}
+            echo ""
+            echo "✔  Locked to $REF (v$VERSION @ $SHA)"
+            echo "   Restart Claude to activate."
+            echo ""
+
+          else
+            # Status
+            echo ""
+            if [[ -f {{.LOCK_FILE}} ]]; then
+              echo "  Lock file: {{.LOCK_FILE}}"
+              cat {{.LOCK_FILE}}
+            else
+              echo "  No lock file — tracking current working directory"
+            fi
+
+            INSTALLED_SHA=$(python3 -c "
+          import json, sys
+          try:
+            data = json.load(open('$HOME/.claude/plugins/installed_plugins.json'))
+            entries = data.get('plugins', {}).get('{{.PLUGIN_REF}}', [])
+            if entries:
+              print(entries[-1].get('gitCommitSha', '')[:7])
+          except:
+            pass
+          " 2>/dev/null)
+
+            VERSION=$(grep '"version"' {{.PLUGIN_JSON}} | sed 's/.*"version": *"\([^"]*\)".*/\1/')
+            echo ""
+            echo "  Installed cache: ${INSTALLED_SHA:-unknown}  (v$VERSION)"
+            echo "  Working dir HEAD: $(git rev-parse --short HEAD)"
+            echo ""
+          fi
+    vars:
+      PIN: '{{default "" .PIN}}'
+      UNPIN: '{{default "" .UNPIN}}'

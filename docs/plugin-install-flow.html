@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>systematic-dev-kit — Install & Update Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg:        #080b10;
+    --surface:   #0d1117;
+    --surface2:  #131922;
+    --border:    #1e2a38;
+    --border-hi: #2a3f58;
+    --accent:    #6eb5ff;
+    --accent-bg: #091524;
+    --green:     #7dd9a8;
+    --green-bg:  #091a11;
+    --amber:     #e8d5a3;
+    --amber-bg:  #1a160a;
+    --purple:    #c89dff;
+    --purple-bg: #130b1f;
+    --red:       #ff6b6b;
+    --red-bg:    #1a0909;
+    --orange:    #ff8f6b;
+    --orange-bg: #1a0e08;
+    --text:      #c9d4e0;
+    --text-dim:  #5a6a7a;
+    --text-hi:   #eef2f6;
+    --font-display: 'Syne', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 14px; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(110,181,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(110,181,255,0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    z-index: 1;
+    border-bottom: 1px solid var(--border);
+    padding: 24px 20px 20px;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 20px; right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .header-label {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 5vw, 1.7rem);
+    font-weight: 700;
+    color: var(--text-hi);
+    line-height: 1.2;
+  }
+  h1 span { color: var(--accent); }
+  .header-sub {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  /* ── MAIN ── */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 16px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .section-badge {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 2px solid;
+  }
+  .badge-green  { border-color: var(--green);  color: var(--green);  background: var(--green-bg); }
+  .badge-blue   { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .badge-amber  { border-color: var(--amber);  color: var(--amber);  background: var(--amber-bg); }
+  .badge-purple { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+    font-weight: 700;
+    color: var(--text-hi);
+  }
+  .section-desc {
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border-hi), transparent);
+    margin-bottom: 56px;
+  }
+
+  /* ── FLOW ── */
+  .flow { display: flex; flex-direction: column; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0 16px;
+  }
+  .step-spine {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border-hi);
+    background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .step-line {
+    width: 1px;
+    flex: 1;
+    min-height: 16px;
+    background: var(--border);
+  }
+  .step:last-child .step-line { display: none; }
+
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .step-tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .tag-user   { color: var(--green);  background: var(--green-bg);  border-color: rgba(125,217,168,0.2); }
+  .tag-system { color: var(--accent); background: var(--accent-bg); border-color: rgba(110,181,255,0.2); }
+  .tag-verify { color: var(--amber);  background: var(--amber-bg);  border-color: rgba(232,213,163,0.2); }
+  .tag-warn   { color: var(--orange); background: var(--orange-bg); border-color: rgba(255,143,107,0.2); }
+  .tag-gate   { color: var(--purple); background: var(--purple-bg); border-color: rgba(200,157,255,0.2); }
+  .tag-error  { color: var(--red);    background: var(--red-bg);    border-color: rgba(255,107,107,0.2); }
+
+  .step-name {
+    font-family: var(--font-display);
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--text-hi);
+  }
+  .step-body {
+    font-size: 0.74rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .step-note {
+    margin-top: 8px;
+    font-size: 0.69rem;
+    color: var(--text-dim);
+    padding: 7px 10px;
+    background: var(--surface2);
+    border-radius: 4px;
+    border-left: 2px solid var(--border-hi);
+    line-height: 1.55;
+  }
+
+  /* dot accent colours */
+  .dot-green  { border-color: var(--green);  color: var(--green); }
+  .dot-blue   { border-color: var(--accent); color: var(--accent); }
+  .dot-amber  { border-color: var(--amber);  color: var(--amber); }
+  .dot-purple { border-color: var(--purple); color: var(--purple); }
+  .dot-orange { border-color: var(--orange); color: var(--orange); }
+
+  /* ── CODE ── */
+  .cmd-block {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 2.4vw, 0.71rem);
+    color: var(--accent);
+    background: #050d18;
+    border: 1px solid rgba(110,181,255,0.12);
+    border-left: 2px solid var(--accent);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 8px 0 4px;
+    white-space: pre;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    line-height: 1.65;
+  }
+  .cmd-block .c { color: var(--text-dim); }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid rgba(110,181,255,0.15);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.74rem;
+    line-height: 1.65;
+    margin: 16px 0;
+    border: 1px solid;
+  }
+  .callout strong { color: var(--text-hi); }
+  .callout-info   { background: var(--accent-bg); border-color: rgba(110,181,255,0.2); }
+  .callout-warn   { background: var(--amber-bg);  border-color: rgba(232,213,163,0.2); }
+  .callout-ok     { background: var(--green-bg);  border-color: rgba(125,217,168,0.2); }
+
+  /* ── STATE ROW ── */
+  .state-row {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 20px;
+    flex-wrap: wrap;
+  }
+  .state-box {
+    flex: 1;
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .state-title {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .state-val {
+    font-size: 0.74rem;
+    color: var(--text-hi);
+    line-height: 1.5;
+  }
+
+  /* ── DECISION ── */
+  .decision {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 0 16px;
+  }
+  .decision-card {
+    background: var(--surface2);
+    border: 1px dashed var(--border-hi);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+  .decision-label {
+    font-size: 0.73rem;
+    color: var(--amber);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .branches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .branch {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .branch-yes { border-left: 2px solid var(--green); }
+  .branch-no  { border-left: 2px solid var(--red); }
+  .branch-alt { border-left: 2px solid var(--purple); }
+  .branch strong { color: var(--text-hi); display: block; margin-bottom: 3px; }
+
+  /* ── SUB-LABEL ── */
+  .sub-label {
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin: 28px 0 12px;
+    padding-left: 40px;
+    position: relative;
+  }
+  .sub-label::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 32px; height: 1px;
+    background: var(--border-hi);
+  }
+
+  /* ── COMPAT TABLE ── */
+  .compat-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 0 20px; }
+  .compat-table {
+    width: 100%;
+    min-width: 540px;
+    border-collapse: collapse;
+    font-size: 0.73rem;
+  }
+  .compat-table th {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    white-space: nowrap;
+  }
+  .compat-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .compat-table tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .pill-ok    { background: rgba(125,217,168,0.12); color: var(--green);  border: 1px solid rgba(125,217,168,0.25); }
+  .pill-warn  { background: rgba(232,213,163,0.12); color: var(--amber);  border: 1px solid rgba(232,213,163,0.25); }
+  .pill-break { background: rgba(255,107,107,0.12); color: var(--red);    border: 1px solid rgba(255,107,107,0.25); }
+
+  /* ── VLOCK GRID ── */
+  .vlock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 0 0 20px;
+  }
+  .vlock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .vlock-title {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-hi);
+    margin-bottom: 6px;
+  }
+  .vlock-body {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  /* ── DESKTOP ── */
+  @media (min-width: 600px) {
+    header { padding: 28px 32px 24px; }
+    header::after { left: 32px; right: 32px; }
+    main { padding: 40px 40px; }
+    .step { gap: 0 20px; }
+    .decision { gap: 0 20px; }
+    .branches { flex-direction: row; }
+  }
+  @media (min-width: 768px) {
+    header { padding: 32px 48px 28px; }
+    header::after { left: 48px; right: 48px; }
+    main { padding: 48px 56px; }
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">systematic-dev-kit · plugin lifecycle</div>
+  <h1>Install <span>&amp;</span> Update Flow</h1>
+  <div class="header-sub">How the plugin reaches a developer machine — and how it stays current</div>
+</header>
+
+<main>
+
+<!-- ══════════════════════════════ 1. NEW VM -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-badge badge-green">1</div>
+    <div class="section-title">New VM — Fresh Install</div>
+  </div>
+  <div class="section-desc">One-time setup on a brand-new machine. Goal: every skill auto-loads on every <code>claude</code> session with no per-project flags.</div>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-green">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-user">user</span>
+          <span class="step-name">Clone the repository</span>
+        </div>
+        <div class="step-body">
+          Pick a permanent home — this directory is the live source of truth.
+          <span class="cmd-block">git clone https://github.com/dkoenawan/systematic-dev-kit.git ~/dev/systematic-dev-kit</span>
+        </div>
+        <div class="step-note">The path you clone to is registered as the local marketplace. Move it later and you must re-run step 2.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-green">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-system">system</span>
+          <span class="step-name">Register as a local marketplace</span>
+        </div>
+        <div class="step-body">
+          Tells Claude Code where to resolve <code>systematic-dev-kit</code> plugin names.
+          <span class="cmd-block">claude plugin marketplace add ~/dev/systematic-dev-kit</span>
+          Writes into <code>~/.claude/settings.json</code> → <code>extraKnownMarketplaces</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-green">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-system">system</span>
+          <span class="step-name">Install the plugin</span>
+        </div>
+        <div class="step-body">
+          Snapshots the current working tree into the plugin cache.
+          <span class="cmd-block">claude plugin install systematic-dev-kit@systematic-dev-kit</span>
+          Creates a versioned copy at:
+          <br><code>~/.claude/plugins/cache/systematic-dev-kit/systematic-dev-kit/&lt;version&gt;/</code>
+        </div>
+        <div class="step-note"><strong style="color:var(--amber)">Important:</strong> Claude loads from the cache, not the working directory. Changes to the repo do not take effect until you run <code>claude plugin update</code>.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-green">4</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-verify">verify</span>
+          <span class="step-name">Confirm it loaded</span>
+        </div>
+        <div class="step-body">
+          <span class="cmd-block">claude plugin list
+<span class="c"># systematic-dev-kit@systematic-dev-kit  Status: ✔ enabled</span></span>
+          Then open a new Claude session and test a skill:
+          <span class="cmd-block">/systematic-dev-kit:explore</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-orange">!</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-warn">known gap</span>
+          <span class="step-name">No install script exists today</span>
+        </div>
+        <div class="step-body">
+          The four steps above are manual. A single <code>scripts/install.sh</code> should wrap them — idempotent, safe to re-run.
+          <span class="cmd-block"><span class="c"># scripts/install.sh  (to be built)</span>
+check if marketplace already registered → skip if yes
+claude plugin marketplace add "$(pwd)"
+claude plugin install systematic-dev-kit@systematic-dev-kit
+claude plugin list | grep systematic-dev-kit</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-green">✓</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-verify">done</span>
+          <span class="step-name">Skills available in every session</span>
+        </div>
+        <div class="step-body">
+          No <code>--plugin-dir</code> flag needed. To update later, see section 2 below.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Session-only mode (no install):</strong> Run <code>claude --plugin-dir /path/to/systematic-dev-kit</code>. Nothing is written. Skills vanish when the session ends.
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════════════════════ 2. RELEASING AN UPDATE -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-badge badge-blue">2</div>
+    <div class="section-title">Releasing an Update</div>
+  </div>
+  <div class="section-desc">How a change in the working directory becomes active. The cache is what Claude reads — it must be refreshed explicitly. A restart is required to load the new cache.</div>
+
+  <div class="state-row">
+    <div class="state-box">
+      <div class="state-title">Working directory</div>
+      <div class="state-val"><code>~/dev/systematic-dev-kit/</code><br>Your editable source. Git-tracked.</div>
+    </div>
+    <div class="state-box">
+      <div class="state-title">Plugin cache (what Claude reads)</div>
+      <div class="state-val"><code>~/.claude/plugins/cache/.../&lt;version&gt;/</code><br>Snapshot from install time.</div>
+    </div>
+    <div class="state-box">
+      <div class="state-title">Stale gap</div>
+      <div class="state-val">Cache ≠ working dir after any edit. No warning. You silently run old skills.</div>
+    </div>
+  </div>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-blue">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-user">user</span>
+          <span class="step-name">Edit skill files in the working directory</span>
+        </div>
+        <div class="step-body">
+          Modify <code>skills/*/SKILL.md</code>, add a new skill directory, or fix hooks. Changes are not live yet — Claude still runs the cached version.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-blue">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-user">user</span>
+          <span class="step-name">Bump version in plugin.json</span>
+        </div>
+        <div class="step-body">
+          Follows semver. The version string is the cache key — if it doesn't change, the old snapshot is reused.
+          <span class="cmd-block"><span class="c"># .claude-plugin/plugin.json</span>
+"version": "0.5.1"  <span class="c">← patch: bug fix / doc tweak</span>
+"version": "0.6.0"  <span class="c">← minor: new skill added</span>
+"version": "1.0.0"  <span class="c">← major: breaking interface change</span></span>
+        </div>
+        <div class="step-note"><strong style="color:var(--orange)">Known gap:</strong> Nothing enforces this. A <code>post-commit</code> hook should warn when skill files changed but version is unchanged.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-blue">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-user">user</span>
+          <span class="step-name">Commit and tag the release</span>
+        </div>
+        <div class="step-body">
+          <span class="cmd-block">git add .claude-plugin/plugin.json
+git commit -m "chore: bump to v0.6.0"
+claude plugin tag          <span class="c"># validates + creates git tag</span>
+git push origin main --tags</span>
+          <code>claude plugin tag</code> validates that <code>plugin.json</code> version and marketplace entry agree, then creates a <code>systematic-dev-kit--v0.6.0</code> tag.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-blue">4</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-system">system</span>
+          <span class="step-name">Refresh the local cache</span>
+        </div>
+        <div class="step-body">
+          Re-snapshots from the working directory into a new versioned cache folder.
+          <span class="cmd-block">claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+        </div>
+        <div class="step-note">For other developers: they <code>git pull</code> the repo then run the same <code>claude plugin update</code> command.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-blue">5</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-system">system</span>
+          <span class="step-name">Restart Claude</span>
+        </div>
+        <div class="step-body">
+          The running process holds the old cache in memory. A full restart is required.
+          <span class="cmd-block">claude plugin list
+<span class="c"># Version: 0.6.0  Status: ✔ enabled</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-orange">!</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-warn">known gap</span>
+          <span class="step-name">No release script exists today</span>
+        </div>
+        <div class="step-body">
+          Steps 2–4 are manual and easily forgotten. A <code>scripts/release.sh</code> should automate the sequence.
+          <span class="cmd-block"><span class="c"># scripts/release.sh patch|minor|major  (to be built)</span>
+read current version from plugin.json
+compute next version (semver bump)
+update plugin.json
+git add + commit "chore: bump to vX.Y.Z"
+claude plugin tag
+git push origin main --tags
+claude plugin update systematic-dev-kit@systematic-dev-kit
+echo "Restart Claude to activate vX.Y.Z"</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>Stale cache is silent.</strong> If you skip the version bump, <code>claude plugin update</code> overwrites the same version folder — but the running session won't pick it up until you restart. Always restart after any update.
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════════════════════ 3. BACKWARDS COMPAT -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-badge badge-amber">3</div>
+    <div class="section-title">Backwards Compatibility</div>
+  </div>
+  <div class="section-desc">What kinds of changes break existing users. Because skills are loaded by name, renames and removed skills are the main breakage vectors.</div>
+
+  <div class="compat-wrap">
+    <table class="compat-table">
+      <thead>
+        <tr>
+          <th>Change type</th>
+          <th>Semver</th>
+          <th>Impact</th>
+          <th>Safe migration path</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Improve skill instructions / prose</td>
+          <td><span class="pill pill-ok">patch</span></td>
+          <td>None — same invocation, better output</td>
+          <td>Just ship it.</td>
+        </tr>
+        <tr>
+          <td>Add a new skill</td>
+          <td><span class="pill pill-ok">minor</span></td>
+          <td>None — additive only</td>
+          <td>Just ship it. New slash command appears.</td>
+        </tr>
+        <tr>
+          <td>Add optional flag / phase to existing skill</td>
+          <td><span class="pill pill-ok">minor</span></td>
+          <td>None — existing invocation unchanged</td>
+          <td>Just ship it. Default behaviour must be preserved.</td>
+        </tr>
+        <tr>
+          <td>Rename a skill</td>
+          <td><span class="pill pill-break">major</span></td>
+          <td><strong style="color:var(--red)">Breaking.</strong> Old slash command stops working.</td>
+          <td>Keep old skill as a redirect stub for one major version before removing.</td>
+        </tr>
+        <tr>
+          <td>Remove a skill</td>
+          <td><span class="pill pill-break">major</span></td>
+          <td><strong style="color:var(--red)">Breaking.</strong> "Skill not found" error for existing users.</td>
+          <td>Deprecation stub for one major version. Note in changelog.</td>
+        </tr>
+        <tr>
+          <td>Change output file path convention</td>
+          <td><span class="pill pill-warn">minor/major</span></td>
+          <td>Cron jobs and scripts referencing old paths break.</td>
+          <td>Detect old path and migrate in the skill, or note in release docs.</td>
+        </tr>
+        <tr>
+          <td>Change cron script signature</td>
+          <td><span class="pill pill-break">major</span></td>
+          <td>Existing cron jobs with old args may fail silently.</td>
+          <td>Version the script (e.g. <code>install-schedule-v2.sh</code>) or add a migration notice.</td>
+        </tr>
+        <tr>
+          <td>Update hooks in hooks.json</td>
+          <td><span class="pill pill-warn">minor</span></td>
+          <td>Hook runs on user machine — unexpected side effects possible.</td>
+          <td>Announce in changelog. Keep hooks non-destructive and idempotent.</td>
+        </tr>
+        <tr>
+          <td>Rename plugin.json fields</td>
+          <td><span class="pill pill-break">major</span></td>
+          <td>CLI may fail to parse the manifest.</td>
+          <td>Follow the official plugin schema. Validate with <code>claude plugin validate .</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sub-label">Deprecation lifecycle</div>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-amber">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-warn">deprecate</span>
+          <span class="step-name">Mark skill as deprecated in SKILL.md</span>
+        </div>
+        <div class="step-body">
+          <span class="cmd-block">---
+name: old-skill-name
+description: "[DEPRECATED — use /systematic-dev-kit:new-name] ..."
+---
+
+> **Deprecated.** Removed in next major version.
+> Use `/systematic-dev-kit:new-name` instead.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-amber">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-warn">deprecate</span>
+          <span class="step-name">Ship the deprecation as a minor release</span>
+        </div>
+        <div class="step-body">
+          Both old and new skill exist simultaneously. Users migrate at their own pace. The deprecated description surfaces in <code>claude plugin details</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-amber">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-error">remove</span>
+          <span class="step-name">Remove in the next major release</span>
+        </div>
+        <div class="step-body">
+          Delete the directory, bump to the next major, document in the changelog.
+        </div>
+        <div class="step-note">The <code>bootstrap-new-project</code> skill is currently in this state — deprecated in favour of <code>init</code>, but the directory still exists. Should be removed in v1.0.0.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-ok">
+    <strong>Rule of thumb:</strong> Same slash command, same result or better → minor/patch. Same slash command, different result or error → major.
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ══════════════════════════════ 4. VERSION LOCK -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-badge badge-purple">4</div>
+    <div class="section-title">Version Lock</div>
+  </div>
+  <div class="section-desc">Mechanisms to pin a specific version — for reproducibility, CI environments, or staying on a known-good release while upstream moves forward.</div>
+
+  <div class="callout callout-warn">
+    <strong>Current limitation:</strong> The directory marketplace has no native version pin — <code>claude plugin update</code> always installs from the current working directory. To lock, control what the working directory contains via git.
+  </div>
+
+  <div class="sub-label">Strategies</div>
+
+  <div class="vlock-grid">
+    <div class="vlock-card">
+      <div class="vlock-title">Git tag checkout</div>
+      <div class="vlock-body">Check out a release tag. The snapshot taken by <code>plugin install</code> corresponds to that exact release.</div>
+      <span class="cmd-block">cd ~/dev/systematic-dev-kit
+git fetch --tags
+git checkout systematic-dev-kit--v0.5.0
+claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+    </div>
+    <div class="vlock-card">
+      <div class="vlock-title">Git commit SHA pin</div>
+      <div class="vlock-body">Exact reproducibility. Pin to a specific commit rather than a tag. Useful in CI or shared team environments.</div>
+      <span class="cmd-block">git checkout 5b61555
+claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+    </div>
+    <div class="vlock-card">
+      <div class="vlock-title">Separate clone per version</div>
+      <div class="vlock-body">Keep multiple clones at different versions registered as separate marketplaces. Allows side-by-side testing.</div>
+      <span class="cmd-block">git clone ... ~/dev/sdk-stable  <span class="c"># v0.5.0</span>
+git clone ... ~/dev/sdk-next    <span class="c"># main</span>
+claude plugin marketplace add ~/dev/sdk-stable
+claude plugin marketplace add ~/dev/sdk-next</span>
+    </div>
+    <div class="vlock-card">
+      <div class="vlock-title">Disable auto-update</div>
+      <div class="vlock-body">Don't run <code>claude plugin update</code>. The installed cache stays frozen at the version you last installed.</div>
+      <span class="cmd-block"><span class="c"># confirm currently locked version</span>
+claude plugin list
+<span class="c"># Version: 0.5.0  ← stays here</span></span>
+    </div>
+  </div>
+
+  <div class="sub-label">Version state machine</div>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-purple">A</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-gate">state</span>
+          <span class="step-name">Installed at v0.5.0 — locked</span>
+        </div>
+        <div class="step-body">
+          Working directory may be ahead of cache. Claude runs v0.5.0 from cache. No change until you explicitly act.
+        </div>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="step-spine">
+        <div class="step-dot dot-purple" style="font-size:0.55rem">?</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="decision-card">
+        <div class="decision-label">Decision — do you want to update?</div>
+        <div class="branches">
+          <div class="branch branch-yes">
+            <strong>Yes — update to latest</strong>
+            <code>git pull && claude plugin update</code><br>
+            Moves to whatever version is in <code>plugin.json</code>. Restart required.
+          </div>
+          <div class="branch branch-no">
+            <strong>No — stay locked</strong>
+            Do nothing. Cache stays at v0.5.0 indefinitely.
+          </div>
+          <div class="branch branch-alt">
+            <strong>Pin to specific tag</strong>
+            <code>git checkout v0.5.1 && claude plugin update</code><br>
+            Update to a chosen release, not latest.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-spine">
+        <div class="step-dot dot-purple">B</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-card">
+        <div class="step-header">
+          <span class="step-tag tag-verify">verify</span>
+          <span class="step-name">Confirm active version after any change</span>
+        </div>
+        <div class="step-body">
+          <span class="cmd-block">claude plugin list
+<span class="c"># Check Version: field matches what you expect</span>
+
+cat ~/.claude/plugins/installed_plugins.json | python3 -m json.tool
+<span class="c"># "gitCommitSha" shows exactly what commit was snapshotted</span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Future: <code>.plugin-lock</code> file.</strong> A project-level lockfile (like <code>package-lock.json</code>) could record the exact commit SHA, so any developer can reproduce the cached state with one command. Not yet supported by the CLI — would require a custom <code>scripts/install.sh</code> that reads it.
+    <span class="cmd-block"><span class="c"># .plugin-lock  (proposed format)</span>
+{
+  "systematic-dev-kit": {
+    "version": "0.5.0",
+    "sha": "5b61555ea40eb4642c433dd6669090b935e171b"
+  }
+}</span>
+  </div>
+</div>
+
+</main>
+</body>
+</html>
