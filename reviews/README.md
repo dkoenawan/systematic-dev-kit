@@ -36,6 +36,8 @@ Before editing a `SKILL.md` file:
 | File | Skill | Date | Outcome | Notes |
 |------|-------|------|---------|-------|
 | [reviews/plan/20260309_weekly-assessment.md](plan/20260309_weekly-assessment.md) | plan | 2026-03-09 | Failed — stopped after explore | Skill stopped after explore returned; never asked Q3 or wrote spec |
+| [reviews/adr/20260628_mithrilledger-category-management-postmortem.md](adr/20260628_mithrilledger-category-management-postmortem.md) | adr | 2026-06-28 | Failed — never entered Phase 1 | Skill assumed docs/registry/ exists; no fallback branch when registry absent; model pivoted to wrong output format |
+| [reviews/task-executor/20260628_mithrilledger-category-management-false-completion.md](task-executor/20260628_mithrilledger-category-management-false-completion.md) | task-executor | 2026-06-28 | Failed — false completion | All 9 tasks marked complete; DB empty, migrate-xlsx never run, upload flow never wired to DB, TSV/DB split unresolved |
 
 ---
 
@@ -58,6 +60,18 @@ Before editing a `SKILL.md` file:
 **Why it happens**: Descriptive instructions ("create the file") read as documentation to the LLM — something to acknowledge. Only evaluative gates ("this skill is not complete until the file exists on disk") create enforcement pressure.
 
 **Fix**: Add a `SKILL COMPLETION GATE` checklist at the end of the skill. Each item must be a binary verifiable condition, not a description. Frame it as a blocking condition: "if any item is unchecked, you are not done."
+
+---
+
+### 4. No Verification Gate (code written ≠ feature working)
+
+**What it looks like**: The task-executor marks tasks `[x]` when the code exists — a migration is written, an endpoint is defined, a script is created. It does not verify that the system behaves as the spec described when the code runs against real data.
+
+**Why it happens**: Tasks are phrased as deliverables ("implement X", "add Y") rather than observable outcomes ("X works: confirmed by Z"). The task-executor has no mechanism to distinguish "I wrote the code" from "I ran it and it worked." When `test_command: null`, there is no forcing function.
+
+**Consequences**: Features appear complete in tasks.md but are broken or empty at runtime. The divergence is only discovered when a human manually exercises the system — potentially long after the task-executor run. Recovery work (re-seeding, re-wiring) must be done manually.
+
+**Fix**: Require each task that touches a data flow to include a verifiable observable outcome. Mark tasks `[~]` (partial) when code is written but runtime verification is blocked. Treat `test_command: null` as a warning for features with DB or API surface.
 
 ---
 
