@@ -36,8 +36,8 @@ Before editing a `SKILL.md` file:
 | File | Skill | Date | Outcome | Notes |
 |------|-------|------|---------|-------|
 | [reviews/plan/20260309_weekly-assessment.md](plan/20260309_weekly-assessment.md) | plan | 2026-03-09 | Failed — stopped after explore | Skill stopped after explore returned; never asked Q3 or wrote spec |
-| [reviews/adr/20260628_mithrilledger-category-management-postmortem.md](adr/20260628_mithrilledger-category-management-postmortem.md) | adr | 2026-06-28 | Failed — never entered Phase 1 | Skill assumed docs/registry/ exists; no fallback branch when registry absent; model pivoted to wrong output format |
-| [reviews/task-executor/20260628_mithrilledger-category-management-false-completion.md](task-executor/20260628_mithrilledger-category-management-false-completion.md) | task-executor | 2026-06-28 | Failed — false completion | All 9 tasks marked complete; DB empty, migrate-xlsx never run, upload flow never wired to DB, TSV/DB split unresolved |
+| [reviews/adr/20260628_category-management-postmortem.md](adr/20260628_category-management-postmortem.md) | adr | 2026-06-28 | Failed — never entered Phase 1 | Skill assumed docs/registry/ exists; no fallback branch when registry absent; model pivoted to wrong output format |
+| [reviews/task-executor/20260628_category-management-false-completion.md](task-executor/20260628_category-management-false-completion.md) | task-executor | 2026-06-28 | Failed — false completion | All 9 tasks marked complete; DB empty, import step never run, upload flow never wired to DB, legacy-file/DB split unresolved |
 
 ---
 

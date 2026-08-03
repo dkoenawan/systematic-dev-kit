@@ -1,8 +1,8 @@
-# Skill Review: adr — MithrilLedger category-management post-mortem
+# Skill Review: adr — category-management post-mortem
 
 **Date**: 2026-06-28
 **Skill**: `adr`
-**File**: `reviews/adr/20260628_mithrilledger-category-management-postmortem.md`
+**File**: `reviews/adr/20260628_category-management-postmortem.md`
 
 ---
 
@@ -34,7 +34,7 @@ Read the registry to understand what exists:
 
 **Steps that completed**:
 - [x] Skill loaded and instructions read
-- [x] Attempted to read `docs/registry/index.md` in MithrilLedger
+- [x] Attempted to read `docs/registry/index.md` in the target project
 - [ ] Phase 1 — Decision Statement (never reached)
 - [ ] Phase 2–9 (never reached)
 - [ ] Any file written
@@ -42,7 +42,7 @@ Read the registry to understand what exists:
 **Where it stopped / broke**:
 
 > The skill's "Before Starting" block instructed the model to read `docs/registry/index.md`
-> and `docs/registry/decisions/index.md`. Neither file exists in MithrilLedger — the project
+> and `docs/registry/decisions/index.md`. Neither file exists in the target project — it
 > uses a flat `docs/` layout with no registry subdirectory. The model correctly identified
 > this, reported it to the user, and then stopped — pivoting to write a `clarity-log.md`
 > entry instead. The user interrupted and redirected to write the review manually here.
