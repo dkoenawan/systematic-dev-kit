@@ -360,9 +360,9 @@ If YES → run **Step 2.L3** for the first ⬜ domain (top of table order), then
 
 **Priority 3 — Session fold-back**
 
-Check: is there any unfolded session under `docs/sessions/*/` (a directory without a `.folded` marker file)?
+Check: is there any unfolded session under `docs/sessions/*/` that is eligible to fold — i.e. its `tasks.md` is missing, or present with frontmatter `status: complete`? (An unfolded session whose `tasks.md` status is still in-progress is not eligible and does not trigger this priority.)
 
-If YES → run **Step 2.S1** for the oldest unfolded session (by directory name, which sorts chronologically since sessions are named `<date>-<feature-slug>`), then done.
+If YES → run **Step 2.S1**, which selects the oldest eligible session (by directory name, which sorts chronologically since sessions are named `<date>-<feature-slug>`), then done.
 
 **Priority 4 — Accuracy patch for stale docs**
 
@@ -490,11 +490,11 @@ Print:
 
 Reconciles one completed `docs/sessions/<session>/` into the durable Diataxis tree (`docs/how-to/`, `docs/reference/`, `docs/explanation/`), per [ADR-001](../../docs/registry/decisions/001-diataxis-docs-restructure.md). Bounded to **one session per run**, matching the "one unit of work" discipline used everywhere else in maintain mode.
 
-1. **Select the session.** Take the oldest directory under `docs/sessions/*/` that does not yet contain a `.folded` marker file.
+1. **Select the session.** Scan directories under `docs/sessions/*/` in chronological order (by directory name, which sorts chronologically since sessions are named `<date>-<feature-slug>`), skipping any that already contain a `.folded` marker file. Select the first (oldest) one that is eligible: its `tasks.md` is missing, or its `tasks.md` frontmatter `status` is `complete`. Pass over — leave unfolded and unmarked — any candidate whose `tasks.md` status is still in-progress, and continue the scan to the next candidate. (Priority 3 in Step 2.2 already guarantees at least one eligible session exists before this step runs.)
 
 2. **Read the session.** Read `<session>/overview.md` (the feature spec) in full. Read `<session>/tasks.md` if present — note any `- [!] ... (failed ...: <reason>)` entries, which often contain durable gotchas.
 
-3. **Only fold back completed sessions.** If `<session>/tasks.md` exists and its frontmatter `status` is not `complete`, skip folding — print `[doc-maintainer] S1: session <session> is still in-progress — skipped.` and fall through to Priority 4 in the same run (do not count this as the unit of work).
+3. **Fold back the selected session.** Because selection in step 1 already filters to eligible sessions (no `tasks.md`, or `tasks.md` status `complete`), the selected session is always safe to fold — proceed directly to step 4. (In-progress sessions were already passed over during selection, not encountered here.)
 
 4. **Extract fold-back candidates** from the session content:
    - **How-to candidate**: if the session's Implementation Order or tasks.md contains a non-obvious multi-step procedure a future contributor would need to repeat (e.g., "how to add a new X"), it's a how-to candidate.
