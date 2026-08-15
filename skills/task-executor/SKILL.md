@@ -60,13 +60,21 @@ If branch exists, ask whether to reuse it or choose a different name.
 
 ### Phase 4 — Design Spec Resolution
 
-Check whether `docs/sessions/<date>-<feature-name>/overview.md` exists. If not, invoke `/systematic-dev-kit:plan` to produce it. The plan skill writes to `docs/sessions/<date>-<feature-name>/overview.md`.
+Resolve the session directory by globbing for an existing session, not by constructing it from today's date — the spec may have been written by `/plan` on an earlier day:
 
-If it exists, read it and summarise the Implementation Order section to the user.
+```bash
+ls -d docs/sessions/*-<feature-name>/ 2>/dev/null
+```
+
+- **Exactly one match** → that is `SESSION_DIR`. Read `$SESSION_DIR/overview.md` and summarise the Implementation Order section to the user.
+- **No match** → mint a new one: `SESSION_DIR=docs/sessions/<today>-<feature-name>/`, then invoke `/systematic-dev-kit:plan` to produce it. The plan skill writes to `$SESSION_DIR/overview.md`.
+- **Multiple matches** → ask the user which session directory to use, then set `SESSION_DIR` to their choice.
+
+Every later phase in Plan Mode refers to `$SESSION_DIR` (or "the session dir") rather than re-deriving `docs/sessions/<date>-<feature-name>/`.
 
 ### Phase 5 — Hour-Sized Decomposition
 
-Read `docs/sessions/<date>-<feature-name>/overview.md` Implementation Order. Decompose each item into hour-sized tasks (≈ one focused commit, ~30–90 min agent work). Apply dependency annotations using 1-based task indices.
+Read `$SESSION_DIR/overview.md` Implementation Order. Decompose each item into hour-sized tasks (≈ one focused commit, ~30–90 min agent work). Apply dependency annotations using 1-based task indices.
 
 Present as a numbered checklist with dependencies annotated. Example:
 
@@ -102,7 +110,7 @@ Warn if crontab clash detected in Phase 1.
 Show summary:
 ```
 Branch:       feat/<feature-name>
-Plan file:    docs/sessions/<date>-<feature-name>/tasks.md
+Plan file:    $SESSION_DIR/tasks.md
 Tasks:        <N> tasks, <M> with dependencies
 Test command: <cmd>
 Schedule:     every 6h (cron: 0 */6 * * *)
@@ -115,15 +123,15 @@ On `adjust`: re-enter the relevant phase. On `rethink`: start over from Phase 2.
 
 ### Phase 9 — Commit
 
-1. Write `docs/sessions/<date>-<feature-name>/tasks.md` (see **Plan File Format** below)
+1. Write `$SESSION_DIR/tasks.md` (see **Plan File Format** below)
 2. Create branch: `git checkout -b feat/<feature-name>`
-3. Commit: `git add docs/sessions/<date>-<feature-name>/tasks.md && git commit -m "feat(<feature-name>): initialise task-executor plan"`
+3. Commit: `git add $SESSION_DIR/tasks.md && git commit -m "feat(<feature-name>): initialise task-executor plan"`
 4. Push: `git push -u origin feat/<feature-name>`
 5. Install cron: `scripts/install-schedule.sh <repo> [--every Nh]`
 6. Comment on issue:
 
 ```bash
-scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/systematic-dev-kit:task-executor\`. Plan: \`docs/sessions/<date>-<feature-name>/tasks.md\`."
+scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/systematic-dev-kit:task-executor\`. Plan: \`$SESSION_DIR/tasks.md\`."
 ```
 
 ---
@@ -417,7 +425,7 @@ If `none`: "No active plan. Run `/systematic-dev-kit:task-executor plan <issue-n
 Otherwise read the plan file and display:
 
 ```
-Active plan:  docs/sessions/<date>-<feature-name>/tasks.md
+Active plan:  <PLAN>
 Issue:        #<N>
 Branch:       feat/<feature-name>
 Status:       in-progress
@@ -461,7 +469,7 @@ PLAN="$(scripts/find-active-plan.sh <repo>)"  # also matches status: paused
 
 ## Plan File Format
 
-`docs/sessions/<date>-<feature-name>/tasks.md`:
+`$SESSION_DIR/tasks.md` (written in Plan Mode Phase 9, e.g. `docs/sessions/<date>-<feature-name>/tasks.md`):
 
 ```yaml
 ---
