@@ -358,7 +358,13 @@ Check: is there any domain in `ALL_DOMAINS` with status ⬜ (no `docs/explanatio
 
 If YES → run **Step 2.L3** for the first ⬜ domain (top of table order), then done.
 
-**Priority 3 — Accuracy patch for stale docs**
+**Priority 3 — Session fold-back**
+
+Check: is there any unfolded session under `docs/sessions/*/` (a directory without a `.folded` marker file)?
+
+If YES → run **Step 2.S1** for the oldest unfolded session (by directory name, which sorts chronologically since sessions are named `<date>-<feature-slug>`), then done.
+
+**Priority 4 — Accuracy patch for stale docs**
 
 Run the stale-detection script:
 
@@ -370,9 +376,9 @@ Read the environment variable `DOC_MAINTAIN_BATCH` (default: `1`). Take the firs
 
 If any stale docs found → run **Step 2.4** for those docs, then done.
 
-**Priority 4 — Clarity review**
+**Priority 5 — Clarity review**
 
-Always reached when Priorities 1–3 do not apply. Run **Step 2.6**.
+Always reached when Priorities 1–4 do not apply. Run **Step 2.6**.
 
 There is no "nothing to do" exit path. Maintain mode always produces exactly one improvement per run.
 
@@ -480,9 +486,43 @@ Print:
 
 ---
 
+### Step 2.S1 — Session Fold-Back
+
+Reconciles one completed `docs/sessions/<session>/` into the durable Diataxis tree (`docs/how-to/`, `docs/reference/`, `docs/explanation/`), per [ADR-001](../../docs/registry/decisions/001-diataxis-docs-restructure.md). Bounded to **one session per run**, matching the "one unit of work" discipline used everywhere else in maintain mode.
+
+1. **Select the session.** Take the oldest directory under `docs/sessions/*/` that does not yet contain a `.folded` marker file.
+
+2. **Read the session.** Read `<session>/overview.md` (the feature spec) in full. Read `<session>/tasks.md` if present — note any `- [!] ... (failed ...: <reason>)` entries, which often contain durable gotchas.
+
+3. **Only fold back completed sessions.** If `<session>/tasks.md` exists and its frontmatter `status` is not `complete`, skip folding — print `[doc-maintainer] S1: session <session> is still in-progress — skipped.` and fall through to Priority 4 in the same run (do not count this as the unit of work).
+
+4. **Extract fold-back candidates** from the session content:
+   - **How-to candidate**: if the session's Implementation Order or tasks.md contains a non-obvious multi-step procedure a future contributor would need to repeat (e.g., "how to add a new X"), it's a how-to candidate.
+   - **Reference candidate**: the spec's Backend Layer (API endpoints/shapes) and Frontend Layer (pages/components) sections are reference candidates — these belong in `docs/reference/api/` and construct files respectively (construct files are typically already written by `plan`/`task-executor`, so this is usually just a link, not new content).
+   - **Explanation candidate**: any architectural decision embedded in the spec that isn't already captured as an ADR is an explanation candidate — note it, but do NOT write a new ADR from doc-maintainer; instead flag it for the developer (see step 7).
+   - **Gotchas**: any failed-task reasons or edge cases discovered during the session are candidates for the owning domain's `docs/explanation/<domain>/overview.md` Gotchas section.
+
+5. **Write the fold-back content** (skip any category with nothing to fold):
+   - How-to candidates → new file `docs/how-to/<feature-slug>.md`, plain task-oriented guide (numbered steps, no spec-speak). Add a row to `docs/how-to/index.md`.
+   - Reference candidates → if `docs/reference/api/` should have an entry for this feature's endpoints and doesn't yet, write `docs/reference/api/<feature-slug>.md` summarizing the API shape from the spec. Update `docs/reference/api/index.md`.
+   - Gotchas → append to the relevant domain's Gotchas section in `docs/explanation/<domain>/overview.md`, one bullet per gotcha, each ending with `(from session <session-name>)`.
+   - Feature index → write or update `docs/explanation/features/<feature-slug>.md` from the `_template.md` skeleton, filling FR/NFR (from the spec and registry Feature Cross-Reference), Pages, API Specs, and Technical Architecture links. Add a row to `docs/explanation/features/index.md`.
+
+6. **Mark the session folded.** Write `docs/sessions/<session>/.folded` containing one line: `<today YYYY-MM-DD> — folded by doc-maintainer`. Do not delete the session directory — it remains as historical record.
+
+7. **If an explanation candidate (undocumented architectural decision) was found**, do not silently drop it — note it in the fold-back commit body: `possible undocumented decision: <one-line summary> — consider /systematic-dev-kit:adr`. Do not invoke `/adr` automatically; that requires human judgment.
+
+Print:
+
+```
+[doc-maintainer] S1: folded session <session-name> — <N> how-to, <M> reference, <K> gotchas written.
+```
+
+---
+
 ### Step 2.4 — Accuracy patch for stale docs
 
-For each stale doc path (from Priority 3 check):
+For each stale doc path (from Priority 4 check):
 
 1. Read the current `docs/explanation/<domain>/overview.md` to understand its existing content, frontmatter, and `last_updated` date.
 2. Identify the `source_path` from the frontmatter.
@@ -850,6 +890,7 @@ Otherwise, commit with the appropriate message:
 | init | `docs: init` |
 | maintain (L2 generated) | `docs: add container architecture` |
 | maintain (L3 generated) | `docs: add <domain> overview` |
+| maintain (session folded) | `docs: fold back session <session-name>` |
 | maintain (accuracy patch) | `docs: accuracy patch <domain> <YYYY-MM-DD>` |
 | maintain (clarity review) | `docs: clarity review <YYYY-MM-DD>` |
 | maintain (registry passes only — no C4 work) | `docs: registry consistency passes <YYYY-MM-DD>` |
@@ -921,7 +962,7 @@ Do not consider this skill complete until ALL of the following are true:
 - [ ] Phase 0 ran completely: dirty-tree check, branch recorded, fetch attempted, on `chore/claude-maintain`.
 - [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented reason.
 - [ ] **Init**: `docs/explanation/solution-design.md` was written (L1 only — no overviews, no containers.md).
-- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist); AND `docs/index.html` was regenerated (Pass R6) or skipped for the same reason.
+- [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one session fold-back, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist); AND `docs/index.html` was regenerated (Pass R6) or skipped for the same reason.
 - [ ] **Refresh**: all in-scope docs were rewritten.
 - [ ] Post-Write Size Check ran on every file written; any file >500 lines was split.
 - [ ] `git add docs/`, `git commit`, and `git push` ran (or "nothing to commit" was printed).
