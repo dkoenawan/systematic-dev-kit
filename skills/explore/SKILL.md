@@ -39,7 +39,7 @@ Check whether `docs/registry/index.md` exists.
 
 1. Read `docs/registry/index.md` — extract the Constructs table (`Name`, `Does`, `Layer`, `Status`) and Feature Cross-Reference table and Known Gaps list.
 2. Filter constructs relevant to the investigation focus (keyword match on `Name` and `Does` columns).
-3. For each relevant construct with `status: built` or `status: verified`, read its construct file at `docs/registry/constructs/<Name>.md` (hard limit: 5 construct files maximum).
+3. For each relevant construct with `status: built` or `status: verified`, read its construct file at `docs/reference/constructs/<Name>.md` (hard limit: 5 construct files maximum).
 
 **Sufficiency gate**: After reading relevant construct files, ask: Does the registry fully describe the focus area **and** the Known Gaps list has no entry for this focus area?
 
@@ -95,7 +95,7 @@ After completing the investigation (any tier above 0), check whether `docs/regis
 **For each newly discovered construct** (entity, service, command, query, component, model):
 
 1. Check the registry Constructs table — skip if already present.
-2. Write `docs/registry/constructs/<Name>.md` with `status: planned` (use the construct template structure: frontmatter + Does + Functional Requirements + Proof + Interface + Dependencies + Patterns Applied + Key Decisions). Fill in what was learned during investigation; leave unknowns as `null` or `(none)`.
+2. Write `docs/reference/constructs/<Name>.md` with `status: planned` (use the construct template structure: frontmatter + Does + Functional Requirements + Proof + Interface + Dependencies + Patterns Applied + Key Decisions). Fill in what was learned during investigation; leave unknowns as `null` or `(none)`.
 3. Append a row to the Constructs table in `docs/registry/index.md`.
 4. Add the focus area to the Known Gaps list if the investigation found it was undocumented.
 5. Remove the focus area from Known Gaps if the investigation resolved it.

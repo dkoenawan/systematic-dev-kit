@@ -60,13 +60,21 @@ If branch exists, ask whether to reuse it or choose a different name.
 
 ### Phase 4 — Design Spec Resolution
 
-Check whether `specs/<feature-name>/overview.md` exists. If not, invoke `/systematic-dev-kit:plan` to produce it. The plan skill writes to `specs/<feature-name>/overview.md`.
+Resolve the session directory by globbing for an existing session, not by constructing it from today's date — the spec may have been written by `/plan` on an earlier day:
 
-If it exists, read it and summarise the Implementation Order section to the user.
+```bash
+ls -d docs/sessions/*-<feature-name>/ 2>/dev/null
+```
+
+- **Exactly one match** → that is `SESSION_DIR`. Read `$SESSION_DIR/overview.md` and summarise the Implementation Order section to the user.
+- **No match** → mint a new one: `SESSION_DIR=docs/sessions/<today>-<feature-name>/`, then invoke `/systematic-dev-kit:plan` to produce it. The plan skill writes to `$SESSION_DIR/overview.md`.
+- **Multiple matches** → ask the user which session directory to use, then set `SESSION_DIR` to their choice.
+
+Every later phase in Plan Mode refers to `$SESSION_DIR` (or "the session dir") rather than re-deriving `docs/sessions/<date>-<feature-name>/`.
 
 ### Phase 5 — Hour-Sized Decomposition
 
-Read `specs/<feature-name>/overview.md` Implementation Order. Decompose each item into hour-sized tasks (≈ one focused commit, ~30–90 min agent work). Apply dependency annotations using 1-based task indices.
+Read `$SESSION_DIR/overview.md` Implementation Order. Decompose each item into hour-sized tasks (≈ one focused commit, ~30–90 min agent work). Apply dependency annotations using 1-based task indices.
 
 Present as a numbered checklist with dependencies annotated. Example:
 
@@ -102,7 +110,7 @@ Warn if crontab clash detected in Phase 1.
 Show summary:
 ```
 Branch:       feat/<feature-name>
-Plan file:    specs/<feature-name>/tasks.md
+Plan file:    $SESSION_DIR/tasks.md
 Tasks:        <N> tasks, <M> with dependencies
 Test command: <cmd>
 Schedule:     every 6h (cron: 0 */6 * * *)
@@ -115,15 +123,15 @@ On `adjust`: re-enter the relevant phase. On `rethink`: start over from Phase 2.
 
 ### Phase 9 — Commit
 
-1. Write `specs/<feature-name>/tasks.md` (see **Plan File Format** below)
+1. Write `$SESSION_DIR/tasks.md` (see **Plan File Format** below)
 2. Create branch: `git checkout -b feat/<feature-name>`
-3. Commit: `git add specs/<feature-name>/tasks.md && git commit -m "feat(<feature-name>): initialise task-executor plan"`
+3. Commit: `git add $SESSION_DIR/tasks.md && git commit -m "feat(<feature-name>): initialise task-executor plan"`
 4. Push: `git push -u origin feat/<feature-name>`
 5. Install cron: `scripts/install-schedule.sh <repo> [--every Nh]`
 6. Comment on issue:
 
 ```bash
-scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/systematic-dev-kit:task-executor\`. Plan: \`specs/<feature-name>/tasks.md\`."
+scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/systematic-dev-kit:task-executor\`. Plan: \`$SESSION_DIR/tasks.md\`."
 ```
 
 ---
@@ -162,10 +170,11 @@ On `error:concurrency_conflict` → E14.
 
 Read `status` from plan frontmatter. If `complete` → exit clean (cron already uninstalled; this is a no-op).
 
-**Validation block check** (runs before task selection):
+**Validation block check** (runs before task selection). The session directory is `$(dirname <plan-file>)`, where `<plan-file>` is the path resolved by Phase 1's `find-active-plan.sh`:
 
 ```bash
-[ -f "specs/<feature-name>/.validation-blocked" ] && cat "specs/<feature-name>/.validation-blocked"
+SESSION_DIR="$(dirname "<plan-file>")"
+[ -f "$SESSION_DIR/.validation-blocked" ] && cat "$SESSION_DIR/.validation-blocked"
 ```
 
 If the lockfile exists: halt the run with:
@@ -203,11 +212,11 @@ Check whether `docs/registry/index.md` exists in the repository root.
 
 3. **Construct search**: Scan the `Name` and `Does` columns for keyword overlap with the extracted keywords. Consider a construct relevant if its name or Does text shares a keyword with the task description.
 
-4. **For each relevant construct found** (status: `built` or `verified`): read its file at `docs/registry/constructs/<Name>.md`. Hard limit: 3 construct files per pre-task check.
+4. **For each relevant construct found** (status: `built` or `verified`): read its file at `docs/reference/constructs/<Name>.md`. Hard limit: 3 construct files per pre-task check.
 
 5. **Known Gap fallback**: If no constructs matched but the task domain (derived from keywords) appears in the Known Gaps list:
    ```bash
-   ls docs/registry/constructs/ 2>/dev/null | grep -i "<domain-keyword>"
+   ls docs/reference/constructs/ 2>/dev/null | grep -i "<domain-keyword>"
    ```
    Read any matching construct files found (max 2).
 
@@ -260,7 +269,7 @@ Determine what was built or modified in the task. Use the task description and t
 
 **Case A — Task matched a `planned` construct in Step 0:**
 
-Update the construct file at `docs/registry/constructs/<Name>.md`:
+Update the construct file at `docs/reference/constructs/<Name>.md`:
 
 1. Change `status: planned` → `status: built`
 2. Set `last_verified: null` (verification is the post-hook validator's job)
@@ -277,7 +286,7 @@ Then update `docs/registry/index.md`:
 
 Determine: type (Service | Component | Repository | Model | Resource | Utility | Middleware | Hook), layer (Backend | Frontend | Database | Infra | Shared), PascalCase name, file path.
 
-Write `docs/registry/constructs/<Name>.md` with `status: built`:
+Write `docs/reference/constructs/<Name>.md` with `status: built`:
 
 ```markdown
 ---
@@ -416,7 +425,7 @@ If `none`: "No active plan. Run `/systematic-dev-kit:task-executor plan <issue-n
 Otherwise read the plan file and display:
 
 ```
-Active plan:  specs/<feature-name>/tasks.md
+Active plan:  <PLAN>
 Issue:        #<N>
 Branch:       feat/<feature-name>
 Status:       in-progress
@@ -460,7 +469,7 @@ PLAN="$(scripts/find-active-plan.sh <repo>)"  # also matches status: paused
 
 ## Plan File Format
 
-`specs/<feature-name>/tasks.md`:
+`$SESSION_DIR/tasks.md` (written in Plan Mode Phase 9, e.g. `docs/sessions/<date>-<feature-name>/tasks.md`):
 
 ```yaml
 ---

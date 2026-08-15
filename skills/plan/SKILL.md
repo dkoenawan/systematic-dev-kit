@@ -355,9 +355,8 @@ Use AskUserQuestion:
 
 ### Generate the Spec File
 
-1. Create the spec file at `specs/{feature-name}/overview.md` in the project root (create the `specs/{feature-name}/` directory if it doesn't exist)
-2. Use kebab-case for the directory name (e.g., `specs/user-management/overview.md`, `specs/order-processing/overview.md`)
-3. Fill in the [template.md](template.md) structure with all synthesized content
+1. Create the spec file at `docs/sessions/{date}-{feature-name}/overview.md` in the project root (create the `docs/sessions/{date}-{feature-name}/` directory if it doesn't exist). Use today's date in `YYYY-MM-DD` format and kebab-case for the feature slug (e.g., `docs/sessions/2026-08-15-user-management/overview.md`, `docs/sessions/2026-08-15-order-processing/overview.md`)
+2. Fill in the [template.md](template.md) structure with all synthesized content
 
 ### Write Construct Stubs to Registry (if registry exists)
 
@@ -368,8 +367,8 @@ After writing the spec file, check whether `docs/registry/index.md` exists. If i
 1. Determine the `type` (Service | Component | Repository | Model | Resource | Utility | Middleware | Hook)
 2. Determine the `layer` (Backend | Frontend | Database | Infra | Shared)
 3. Derive a PascalCase `Name` and a kebab-case `file` path (use the proposed path from the spec if available)
-4. Create the domain directory if it doesn't exist: `docs/registry/constructs/`
-5. Write `docs/registry/constructs/<Name>.md` using this exact structure:
+4. Create the domain directory if it doesn't exist: `docs/reference/constructs/`
+5. Write `docs/reference/constructs/<Name>.md` using this exact structure:
 
 ```markdown
 ---
@@ -378,7 +377,7 @@ type: <type>
 layer: <layer>
 file: <path>
 status: planned
-planned_in: specs/<feature-name>/overview.md
+planned_in: docs/sessions/<date>-<feature-name>/overview.md
 last_verified: null
 ---
 
@@ -436,7 +435,7 @@ After generating the file and writing registry stubs, present:
 1. **File created** — the full path to the spec file
 
 2. **Registry updated** — list the construct stubs written (or "Registry not found — skipped"):
-   - `docs/registry/constructs/<Name>.md` (planned)
+   - `docs/reference/constructs/<Name>.md` (planned)
    - ...
 
 3. **Implementation order** — concrete steps:
@@ -448,9 +447,9 @@ After generating the file and writing registry stubs, present:
 
    > To implement this feature, reference the spec in your prompts:
    >
-   > - "Read `specs/{feature-name}/overview.md` and implement the Database Layer section"
-   > - "Read `specs/{feature-name}/overview.md` and implement the Backend Layer section"
-   > - "Read `specs/{feature-name}/overview.md` and implement the Frontend Layer section"
+   > - "Read `docs/sessions/{date}-{feature-name}/overview.md` and implement the Database Layer section"
+   > - "Read `docs/sessions/{date}-{feature-name}/overview.md` and implement the Backend Layer section"
+   > - "Read `docs/sessions/{date}-{feature-name}/overview.md` and implement the Frontend Layer section"
    >
    > Each section has enough detail to implement without re-scanning the codebase.
 
@@ -488,7 +487,7 @@ Resolve before continuing to synthesis.
 
 > **SKILL COMPLETION GATE** — Do not consider this skill complete until ALL of the following are true:
 >
-> - [ ] The spec file exists at `specs/{feature-name}/overview.md` on disk (created with Write tool)
+> - [ ] The spec file exists at `docs/sessions/{date}-{feature-name}/overview.md` on disk (created with Write tool)
 > - [ ] The file contains all sections from `template.md`, filled with real content (no placeholder text)
 > - [ ] The implementation order section lists concrete numbered steps: DB → Backend → Frontend
 > - [ ] The handoff message with the full file path has been presented to the user

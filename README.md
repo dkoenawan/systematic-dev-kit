@@ -206,7 +206,7 @@ Systematic feature planning through structured discovery — generates detailed 
 
 | File | Description |
 |------|-------------|
-| `specs/{feature-name}.md` | Complete feature spec with Prisma models, CQRS commands/queries, API shapes, routes, and implementation order |
+| `docs/sessions/{date}-{feature-name}/overview.md` | Complete feature spec with Prisma models, CQRS commands/queries, API shapes, routes, and implementation order |
 
 **Usage:**
 ```bash
@@ -237,20 +237,23 @@ Builds and maintains a **C4-layered documentation tree** that grows incrementall
 
 | Level | File | What it answers | When to read |
 |-------|------|-----------------|--------------|
-| L1 | `docs/solution-design.md` | What is this system, who uses it, what external systems does it touch? | Always — it's the entry point |
-| L2 | `docs/containers.md` | What services run, how do they communicate, how is it deployed? | When you need infrastructure context |
-| L3 | `docs/<domain>/overview.md` | What is this domain, how does it work end-to-end, which files touch it? | When working in a specific domain |
+| L1 | `docs/explanation/solution-design.md` | What is this system, who uses it, what external systems does it touch? | Always — it's the entry point |
+| L2 | `docs/explanation/containers.md` | What services run, how do they communicate, how is it deployed? | When you need infrastructure context |
+| L3 | `docs/explanation/<domain>/overview.md` | What is this domain, how does it work end-to-end, which files touch it? | When working in a specific domain |
 
-**Key principle:** `init` generates L1 only. Each subsequent `maintain` run adds or improves exactly one file — L2 first, then one L3 domain per run, then daily clarity reviews. Token cost scales with task scope.
+**Key principle:** `init` generates L1 only. Each subsequent `maintain` run adds or improves exactly one file — L2 first, then one L3 domain per run, then session fold-back, then accuracy patches, then daily clarity reviews. Token cost scales with task scope.
+
+The C4 tree lives under `docs/explanation/` as part of the plugin's [Diataxis](https://diataxis.fr/) documentation structure — see [ADR-001](docs/registry/decisions/001-diataxis-docs-restructure.md). Sibling top-level folders: `docs/tutorials/`, `docs/how-to/`, `docs/reference/` (registry constructs + API specs), and `docs/sessions/` (session-scoped specs, folded back by `doc-maintainer` on completion).
 
 **What it produces:**
 
 | File | Description |
 |------|-------------|
-| `docs/solution-design.md` | L1 system context: purpose, users, external systems, domain map with drill-down links |
-| `docs/containers.md` | L2 container architecture: deployable units, data flows, deployment model |
-| `docs/<domain>/overview.md` | L3 per-domain: object lifecycle, core entities, code map, gotchas |
-| `docs/clarity-log.md` | Running log of daily clarity reviews — one entry per run |
+| `docs/explanation/solution-design.md` | L1 system context: purpose, users, external systems, domain map with drill-down links |
+| `docs/explanation/containers.md` | L2 container architecture: deployable units, data flows, deployment model |
+| `docs/explanation/<domain>/overview.md` | L3 per-domain: object lifecycle, core entities, code map, gotchas |
+| `docs/explanation/clarity-log.md` | Running log of daily clarity reviews — one entry per run |
+| `docs/how-to/*.md`, `docs/reference/*.md` | Task guides and reference material folded back from completed `docs/sessions/` |
 
 **Usage:**
 ```bash
@@ -263,10 +266,11 @@ Builds and maintains a **C4-layered documentation tree** that grows incrementall
 
 **How maintain mode prioritises work (one per run):**
 
-1. Generate `docs/containers.md` (L2) if missing
-2. Generate the next missing `docs/<domain>/overview.md` (L3), oldest-discovered domain first
-3. Accuracy-patch the most stale existing doc (>30 days old)
-4. Clarity review — improve prose quality of the oldest-reviewed doc
+1. Generate `docs/explanation/containers.md` (L2) if missing
+2. Generate the next missing `docs/explanation/<domain>/overview.md` (L3), oldest-discovered domain first
+3. Fold back the oldest unfolded `docs/sessions/<session>/` into `docs/how-to/`, `docs/reference/`, and `docs/explanation/`
+4. Accuracy-patch the most stale existing doc (>30 days old)
+5. Clarity review — improve prose quality of the oldest-reviewed doc
 
 **Scheduling (unattended daily runs):**
 ```bash
@@ -283,8 +287,9 @@ bash skills/doc-maintainer/scripts/uninstall-schedule.sh /path/to/repo
 crontab -l | grep doc-maintainer
 ```
 
-**File size discipline:** Any doc that grows beyond 500 lines is automatically split into a subfolder (`docs/<domain>/index.md` + sub-files) so no single file ever needs to be read in full to get oriented.
-**Future direction — feature-tracing (L4):** The current C4 tree is architecture-first (system → containers → domains). A natural complement is use-case-first documentation: given a named feature (e.g. "weekly reconciliation", "assessment upload"), trace the end-to-end path it takes through the stack — frontend → backend → domain → adapter → database — naming the specific objects, files, and state transitions at each layer. This would live as `docs/features/<feature-name>.md` and be generated on-demand rather than scheduled. Not yet implemented; noted here for future development.
+**File size discipline:** Any doc that grows beyond 500 lines is automatically split into a subfolder (`docs/explanation/<domain>/index.md` + sub-files) so no single file ever needs to be read in full to get oriented.
+
+**Feature tracing:** `docs/explanation/features/<feature-name>.md` traces a named feature end-to-end — FR/NFR → Pages → API specs → Technical architecture — generated on-demand during session fold-back rather than scheduled. See [ADR-001](docs/registry/decisions/001-diataxis-docs-restructure.md).
 
 
 ---
@@ -301,7 +306,7 @@ Runs large GitHub issues autonomously via cron over multiple days. An interactiv
 
 | Artifact | Description |
 |----------|-------------|
-| `specs/<feature-name>/tasks.md` | Plan file with frontmatter (issue, branch, test command, retry counts) + dependency-annotated checklist |
+| `docs/sessions/<date>-<feature-name>/tasks.md` | Plan file with frontmatter (issue, branch, test command, retry counts) + dependency-annotated checklist |
 | `feat/<feature-name>` branch | One commit per completed task, conventional-commit format |
 | GitHub PR | Opened automatically on completion, linked to the issue |
 
