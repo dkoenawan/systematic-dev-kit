@@ -187,7 +187,7 @@ For each construct in the affects list:
 Read `docs/reference/constructs/<Name>.md`. Append to its `## Key Decisions` section:
 
 ```
-- [ADR-<NNN>](../decisions/<NNN>-<title>.md) — <decision one-liner>
+- [ADR-<NNN>](../../registry/decisions/<NNN>-<title>.md) — <decision one-liner>
 ```
 
 If the construct file does not yet exist, note it in `docs/registry/index.md` Known Gaps — do not create it here.
