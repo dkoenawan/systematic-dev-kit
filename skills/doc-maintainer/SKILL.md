@@ -9,9 +9,9 @@ You are a precise, conservative documentation maintainer. Your job is to produce
 
 The doc tree has three levels:
 
-- **L1 `docs/solution-design.md`** — system context: what the system is, who uses it, what external systems it touches. The entry point. Always short (<100 lines).
-- **L2 `docs/containers.md`** — container architecture: deployable units, data flows, deployment model. Read when you need infrastructure context.
-- **L3 `docs/<domain>/overview.md`** — one per domain: what it is, how it works end-to-end, which code touches it. Read when you need to work in a specific domain.
+- **L1 `docs/explanation/solution-design.md`** — system context: what the system is, who uses it, what external systems it touches. The entry point. Always short (<100 lines).
+- **L2 `docs/explanation/containers.md`** — container architecture: deployable units, data flows, deployment model. Read when you need infrastructure context.
+- **L3 `docs/explanation/<domain>/overview.md`** — one per domain: what it is, how it works end-to-end, which code touches it. Read when you need to work in a specific domain.
 
 **The key principle:** an agent can read L1 to orient, then drill into only the specific L2 or L3 file it needs. Token cost scales with task scope. Never read more than you need.
 
@@ -86,7 +86,7 @@ cron does not source the user's shell profile, so `~/.local/bin` (where `claude`
 - [examples/solution-design.md](examples/solution-design.md) — realistic L1 example
 - [examples/containers.md](examples/containers.md) — realistic L2 example
 - [examples/domain-overview.md](examples/domain-overview.md) — realistic L3 example
-- [scripts/find-stale-domains.sh](scripts/find-stale-domains.sh) — prints `docs/*/overview.md` paths whose `last_updated` is >30 days old
+- [scripts/find-stale-domains.sh](scripts/find-stale-domains.sh) — prints `docs/explanation/*/overview.md` paths whose `last_updated` is >30 days old
 - [scripts/maintain.sh](scripts/maintain.sh) — wrapper called by cron; handles logging and claude invocation
 - [scripts/install-schedule.sh](scripts/install-schedule.sh) — installs a daily cron job for a target repo
 - [scripts/uninstall-schedule.sh](scripts/uninstall-schedule.sh) — removes the cron job for a target repo
@@ -99,11 +99,11 @@ Dispatch on the first word of the skill's argument string:
 
 | Invocation | Mode | Behaviour |
 | --- | --- | --- |
-| `/systematic-dev-kit:doc-maintainer` (no arg) | auto-detect | If `docs/solution-design.md` is absent on `chore/claude-maintain`: run init. Otherwise: run maintain. |
-| `/systematic-dev-kit:doc-maintainer init` | init | Whole-system exploration → write L1 `docs/solution-design.md` only. |
+| `/systematic-dev-kit:doc-maintainer` (no arg) | auto-detect | If `docs/explanation/solution-design.md` is absent on `chore/claude-maintain`: run init. Otherwise: run maintain. |
+| `/systematic-dev-kit:doc-maintainer init` | init | Whole-system exploration → write L1 `docs/explanation/solution-design.md` only. |
 | `/systematic-dev-kit:doc-maintainer maintain` | maintain | Priority-queue dispatch: generate next missing L2/L3, patch stale docs, or run clarity review — one file per run. |
 | `/systematic-dev-kit:doc-maintainer refresh` | refresh | Full re-exploration and rewrite of all docs. |
-| `/systematic-dev-kit:doc-maintainer refresh <domain>` | refresh-one | Full rewrite of one named domain's `docs/<domain>/overview.md` only. |
+| `/systematic-dev-kit:doc-maintainer refresh <domain>` | refresh-one | Full rewrite of one named domain's `docs/explanation/<domain>/overview.md` only. |
 
 **Flag:** `--force` may be appended to any invocation to bypass the dirty-tree guard. Do not use it yourself unless the user explicitly passed it.
 
@@ -218,7 +218,7 @@ After Phase 0 completes, proceed to the phase for the selected mode. All phases 
 
 ## Phase 1 — Init Mode
 
-Use this phase when the mode is `init`, or when auto-detect determines that `docs/solution-design.md` does not exist on `chore/claude-maintain`.
+Use this phase when the mode is `init`, or when auto-detect determines that `docs/explanation/solution-design.md` does not exist on `chore/claude-maintain`.
 
 **Init generates L1 only.** Domain deep-dives and container architecture are generated incrementally by subsequent maintain runs.
 
@@ -294,9 +294,9 @@ If `DOMAINS` is empty, print:
 
 Restore the original branch and exit cleanly.
 
-### Step 1.3 — Write `docs/solution-design.md` (L1 only)
+### Step 1.3 — Write `docs/explanation/solution-design.md` (L1 only)
 
-Create `docs/solution-design.md` using [template-solution-design.md](template-solution-design.md). Fill every section using `SYSTEM_SUMMARY`:
+Create `docs/explanation/solution-design.md` using [template-solution-design.md](template-solution-design.md). Fill every section using `SYSTEM_SUMMARY`:
 
 - **Section 1 (System Context)**:
   - What It Does: from `SYSTEM_SUMMARY.A`. 2–3 sentences.
@@ -312,31 +312,31 @@ Create `docs/solution-design.md` using [template-solution-design.md](template-so
 
 - Set `last_updated` in frontmatter to today's date.
 
-**Do not write `docs/containers.md` or any `docs/<domain>/overview.md` during init.** Those are generated by subsequent maintain runs.
+**Do not write `docs/explanation/containers.md` or any `docs/explanation/<domain>/overview.md` during init.** Those are generated by subsequent maintain runs.
 
 Print on completion:
 
 ```
-[doc-maintainer] Init complete. L1 written to docs/solution-design.md.
+[doc-maintainer] Init complete. L1 written to docs/explanation/solution-design.md.
 Next: run 'maintain' daily — each run generates or improves one document.
 Domains queued: <comma-separated domain names>
 ```
 
 ---
 
-After Phase 1 completes, run the Post-Write Size Check on `docs/solution-design.md`, then Commit and Restore.
+After Phase 1 completes, run the Post-Write Size Check on `docs/explanation/solution-design.md`, then Commit and Restore.
 
 ---
 
 ## Phase 2 — Maintain Mode
 
-Use this phase when the mode is `maintain`, or when auto-detect determines that `docs/solution-design.md` already exists on `chore/claude-maintain`.
+Use this phase when the mode is `maintain`, or when auto-detect determines that `docs/explanation/solution-design.md` already exists on `chore/claude-maintain`.
 
 **Each maintain run does exactly one unit of work**, chosen from a priority queue. This keeps runs fast, predictable, and token-efficient.
 
-### Step 2.1 — Read `docs/solution-design.md`
+### Step 2.1 — Read `docs/explanation/solution-design.md`
 
-Read the current `docs/solution-design.md` to extract:
+Read the current `docs/explanation/solution-design.md` to extract:
 - The domain map table (domain names, types, statuses)
 - `last_updated` frontmatter date
 
@@ -348,13 +348,13 @@ Evaluate the following checks **in order**. Execute the first that applies, then
 
 **Priority 1 — Generate L2 (containers.md)**
 
-Check: does `docs/containers.md` exist? (Also accept `docs/containers/index.md` if it was previously split.)
+Check: does `docs/explanation/containers.md` exist? (Also accept `docs/explanation/containers/index.md` if it was previously split.)
 
 If NO → run **Step 2.L2**, then done.
 
 **Priority 2 — Generate next missing L3 domain overview**
 
-Check: is there any domain in `ALL_DOMAINS` with status ⬜ (no `docs/<domain>/overview.md`)?
+Check: is there any domain in `ALL_DOMAINS` with status ⬜ (no `docs/explanation/<domain>/overview.md`)?
 
 If YES → run **Step 2.L3** for the first ⬜ domain (top of table order), then done.
 
@@ -380,7 +380,7 @@ There is no "nothing to do" exit path. Maintain mode always produces exactly one
 
 ---
 
-### Step 2.L2 — Generate `docs/containers.md`
+### Step 2.L2 — Generate `docs/explanation/containers.md`
 
 Spawn a focused **Explore subagent**:
 
@@ -398,20 +398,20 @@ Investigate this repository to describe its runtime topology.
 Read at most 6 files. Be concrete — name actual service and process names.
 ```
 
-Write `docs/containers.md` using [template-containers.md](template-containers.md):
+Write `docs/explanation/containers.md` using [template-containers.md](template-containers.md):
 - ASCII container diagram (deployable units + labelled connections)
 - Services table: name | type | tech | purpose
 - Primary data flows (2–4 flows, one or two sentences each)
 - Deployment model
-- Links back to `docs/solution-design.md` and forward to each generated domain overview
+- Links back to `docs/explanation/solution-design.md` and forward to each generated domain overview
 - Changelog: `- <today>: L2 container architecture generated by doc-maintainer.`
 
-Update `docs/solution-design.md` Section 2 (Domain Map): change the containers.md status row from ⬜ to 📄 and make the link active.
+Update `docs/explanation/solution-design.md` Section 2 (Domain Map): change the containers.md status row from ⬜ to 📄 and make the link active.
 
 Print:
 
 ```
-[doc-maintainer] Generated docs/containers.md (L2 container architecture).
+[doc-maintainer] Generated docs/explanation/containers.md (L2 container architecture).
 ```
 
 ---
@@ -459,7 +459,7 @@ Read at most 8 files. Do not read test files. Do not follow imports outside this
 Be concrete: name actual file paths and class/function names when relevant.
 ```
 
-Write `docs/<domain>/overview.md` using [template.md](template.md). Follow the section guidance below:
+Write `docs/explanation/<domain>/overview.md` using [template.md](template.md). Follow the section guidance below:
 
 - **What Is <Domain Name>?**: 2–4 sentences. Name the primary object. Frame from product perspective.
 - **How It Works**: end-to-end narrative of the lifecycle. Minimum 3 sentences. Must read as a story.
@@ -470,12 +470,12 @@ Write `docs/<domain>/overview.md` using [template.md](template.md). Follow the s
 - **Gotchas**: at least one bullet. Write "None identified at time of writing." if none found.
 - **Changelog**: `- <today>: Initial documentation generated by doc-maintainer.`
 
-Update `docs/solution-design.md` Section 2 (Domain Map): change the domain's status from ⬜ to 📄 and make the link active.
+Update `docs/explanation/solution-design.md` Section 2 (Domain Map): change the domain's status from ⬜ to 📄 and make the link active.
 
 Print:
 
 ```
-[doc-maintainer] Generated docs/<domain>/overview.md (L3 domain overview).
+[doc-maintainer] Generated docs/explanation/<domain>/overview.md (L3 domain overview).
 ```
 
 ---
@@ -484,7 +484,7 @@ Print:
 
 For each stale doc path (from Priority 3 check):
 
-1. Read the current `docs/<domain>/overview.md` to understand its existing content, frontmatter, and `last_updated` date.
+1. Read the current `docs/explanation/<domain>/overview.md` to understand its existing content, frontmatter, and `last_updated` date.
 2. Identify the `source_path` from the frontmatter.
 3. Spawn an **Explore subagent**:
 
@@ -509,7 +509,7 @@ For each stale doc path (from Priority 3 check):
 Print:
 
 ```
-[doc-maintainer] Accuracy patch: updated docs/<domain>/overview.md
+[doc-maintainer] Accuracy patch: updated docs/explanation/<domain>/overview.md
 ```
 
 ---
@@ -518,9 +518,9 @@ Print:
 
 One file per run. Improves prose quality of the oldest-reviewed doc, independent of accuracy patching.
 
-1. Walk `docs/**/*.md` recursively. Exclude `docs/clarity-log.md` itself.
+1. Walk `docs/explanation/**/*.md` recursively (the C4 tree doc-maintainer owns). Exclude `docs/explanation/clarity-log.md` itself.
 
-2. Read `docs/clarity-log.md` (create the file if it does not exist). Each entry format:
+2. Read `docs/explanation/clarity-log.md` (create the file if it does not exist). Each entry format:
    ```
    YYYY-MM-DD | path/to/file.md | One sentence describing what was improved
    ```
@@ -537,7 +537,7 @@ One file per run. Improves prose quality of the oldest-reviewed doc, independent
 
 6. Write the improved file back.
 
-7. Append to `docs/clarity-log.md`:
+7. Append to `docs/explanation/clarity-log.md`:
    ```
    <today> | <path/to/file.md> | <One sentence describing what was improved>
    ```
@@ -572,9 +572,9 @@ Print: `[doc-maintainer] R1: L0 is {N} lines — {trimmed to 80 | within limit, 
 #### Pass R2 — Bidirectional Link Enforcement
 
 For each row in the `docs/registry/index.md` Constructs table:
-1. Derive the construct file path: `docs/registry/constructs/{Name}.md`.
+1. Derive the construct file path: `docs/reference/constructs/{Name}.md`.
 2. Check whether it exists. If it does not → create a minimal stub using the construct template (same format as brownfield-migrate stubs). Print: `[doc-maintainer] R2: created missing stub for {Name}.`
-3. Read the construct file. Check the `planned_in:` frontmatter field. If it points to a spec file (e.g., `specs/feature/overview.md`), verify that file exists. If not → set `planned_in: null` and add a comment in the Key Decisions section: `- planned_in spec file no longer exists — review provenance.` Print: `[doc-maintainer] R2: cleared stale planned_in for {Name}.`
+3. Read the construct file. Check the `planned_in:` frontmatter field. If it points to a session spec file (e.g., `docs/sessions/2026-08-15-feature/overview.md`, or a legacy `specs/feature/overview.md`), verify that file exists. If not → set `planned_in: null` and add a comment in the Key Decisions section: `- planned_in spec file no longer exists — review provenance.` Print: `[doc-maintainer] R2: cleared stale planned_in for {Name}.`
 
 Cap: process at most **5 rows per run**. Start from the first row not yet processed in this run. Rows already having a valid construct file and valid `planned_in` (or null) are skipped instantly (they count toward the 5-row cap only if a check was needed).
 
@@ -582,7 +582,7 @@ Print summary: `[doc-maintainer] R2: checked {N} construct links — {M} issues 
 
 #### Pass R3 — Back-Link Reconciliation
 
-For each construct file in `docs/registry/constructs/`:
+For each construct file in `docs/reference/constructs/`:
 1. Read its `planned_in:` field. If `planned_in` is non-null, check that the spec file contains at least one mention of the construct name.
 2. If the spec exists but does not mention the construct → append a note to the spec file's Known Gaps or Notes section (create one if absent): `<!-- construct {Name} claims this spec as its origin — verify and add cross-reference -->`
 3. If the spec does not exist → already handled by R2; skip.
@@ -593,7 +593,7 @@ Print summary: `[doc-maintainer] R3: back-link check on {N} constructs — {M} s
 
 #### Pass R4 — Stub Verification Prompts
 
-Identify up to **3 construct stubs** (files in `docs/registry/constructs/` where `status: planned` or `status: built` but `last_verified: null`). For each:
+Identify up to **3 construct stubs** (files in `docs/reference/constructs/` where `status: planned` or `status: built` but `last_verified: null`). For each:
 1. Read the construct file.
 2. Check if the `file:` field is non-null and the referenced source file exists:
    ```bash
@@ -634,12 +634,12 @@ The generated HTML is a **single self-contained file** — no external CDN depen
 
 ```
 docs/index.html
-├── Section 1  — System Context         (from docs/solution-design.md if it exists)
+├── Section 1  — System Context         (from docs/explanation/solution-design.md if it exists)
 ├── Section 2  — Construct Registry     (from docs/registry/index.md — searchable table)
 ├── Section 3  — Feature Cross-Reference (from registry index.md Feature Cross-Reference table)
 ├── Section 4  — Architecture Decisions  (ADR viewer — from docs/registry/decisions/)
 ├── Section 5  — Patterns               (from docs/registry/patterns.md)
-├── Section 6  — Domain Docs            (links to each docs/<domain>/overview.md)
+├── Section 6  — Domain Docs            (links to each docs/explanation/<domain>/overview.md)
 └── Section 7  — Worked Examples        (inline example stubs from construct files)
 ```
 
@@ -647,12 +647,12 @@ docs/index.html
 
 | Section | Source | Behaviour |
 |---------|--------|-----------|
-| System Context | `docs/solution-design.md` | Render the "What It Does" paragraph and system context diagram (pre-formatted ASCII). Omit section if file absent. |
+| System Context | `docs/explanation/solution-design.md` | Render the "What It Does" paragraph and system context diagram (pre-formatted ASCII). Omit section if file absent. |
 | Construct Registry | `docs/registry/index.md` Constructs table | Render as an HTML `<table>` with a live `<input>` filter that searches Name, Does, Layer, and Status columns in real time (vanilla JS, no libraries). Each Name cell links to the construct file path. |
 | Feature Cross-Reference | `docs/registry/index.md` Feature Cross-Reference table | Render as a collapsible HTML table. Each Feature row expands to show its constructs. |
 | ADR Viewer | All `docs/registry/decisions/*.md` (excluding `index.md`) | Render each ADR as a collapsible `<details>` block. Show ID, date, status badge (colour-coded: Accepted=green, Proposed=yellow, Deprecated=grey, Superseded=red), and the full ADR body converted to simple HTML (headings, paragraphs, tables). Sort by ID descending (newest first). |
 | Patterns | `docs/registry/patterns.md` | Render as static HTML. Convert markdown headings, lists, and tables. |
-| Domain Docs | Scan for `docs/*/overview.md` | Render a grid of cards, one per domain. Each card: domain name as heading, first paragraph of the overview as excerpt, link to the overview file. Omit section if no domain overviews exist. |
+| Domain Docs | Scan for `docs/explanation/*/overview.md` | Render a grid of cards, one per domain. Each card: domain name as heading, first paragraph of the overview as excerpt, link to the overview file. Omit section if no domain overviews exist. |
 | Worked Examples | First 3 construct files whose `status: verified` | Render the Does, Interface, and Key Decisions sections as inline examples. Omit section if fewer than 1 verified construct exists. |
 
 **HTML generation approach** — do not invoke a markdown parser library. Write the HTML directly using this minimal markdown-to-HTML mapping:
@@ -731,10 +731,10 @@ Use this phase when the mode is `refresh` or `refresh-one`.
 
 **For `refresh`:** all files under `docs/` (every `overview.md` plus `solution-design.md` and `containers.md` if it exists).
 
-**For `refresh-one <domain>`:** the single named domain. Verify `docs/<domain>/overview.md` exists; if not, print an error and abort:
+**For `refresh-one <domain>`:** the single named domain. Verify `docs/explanation/<domain>/overview.md` exists; if not, print an error and abort:
 
 ```
-[doc-maintainer] Error: docs/<domain>/overview.md not found. Check the domain name.
+[doc-maintainer] Error: docs/explanation/<domain>/overview.md not found. Check the domain name.
 ```
 
 ### Step 3.2 — Preserve Changelog
@@ -749,15 +749,15 @@ Before overwriting any file, read and store its Changelog section. These entries
 
 ### Step 3.4 — Rewrite files
 
-**For `refresh`:** rewrite `docs/solution-design.md` (Phase 1 Step 1.3), `docs/containers.md` (Step 2.L2), and all per-domain overviews (Step 2.L3). Carry forward all Changelog entries. Append: `- <today>: Full refresh via doc-maintainer.`
+**For `refresh`:** rewrite `docs/explanation/solution-design.md` (Phase 1 Step 1.3), `docs/explanation/containers.md` (Step 2.L2), and all per-domain overviews (Step 2.L3). Carry forward all Changelog entries. Append: `- <today>: Full refresh via doc-maintainer.`
 
-**For `refresh-one <domain>`:** rewrite only `docs/<domain>/overview.md`. Carry forward Changelog. Append: `- <today>: Full refresh via doc-maintainer.` Set `last_updated` to today.
+**For `refresh-one <domain>`:** rewrite only `docs/explanation/<domain>/overview.md`. Carry forward Changelog. Append: `- <today>: Full refresh via doc-maintainer.` Set `last_updated` to today.
 
 ---
 
 ## Domain Classification Reference
 
-Use this when classifying domains in Phase 1 Step 1.2 and whenever writing domain sections in `docs/solution-design.md`.
+Use this when classifying domains in Phase 1 Step 1.2 and whenever writing domain sections in `docs/explanation/solution-design.md`.
 
 **Hard-classified as Auxiliary (match on directory name):**
 
@@ -791,31 +791,31 @@ wc -l <filepath>
 
 If the file exceeds **500 lines**, split it into a folder of smaller files:
 
-**For `docs/<domain>/overview.md`** → split into:
-- `docs/<domain>/index.md` — frontmatter + one-paragraph intro + table of contents linking to sub-files
-- `docs/<domain>/lifecycle.md` — "How It Works" narrative + Core Objects table
-- `docs/<domain>/code-map.md` — Code Map section + Internal Architecture section
-- `docs/<domain>/decisions.md` — Dependencies + Gotchas
-- `docs/<domain>/changelog.md` — Changelog only
+**For `docs/explanation/<domain>/overview.md`** → split into:
+- `docs/explanation/<domain>/index.md` — frontmatter + one-paragraph intro + table of contents linking to sub-files
+- `docs/explanation/<domain>/lifecycle.md` — "How It Works" narrative + Core Objects table
+- `docs/explanation/<domain>/code-map.md` — Code Map section + Internal Architecture section
+- `docs/explanation/<domain>/decisions.md` — Dependencies + Gotchas
+- `docs/explanation/<domain>/changelog.md` — Changelog only
 
-**For `docs/solution-design.md`** → split into:
-- `docs/solution-design/index.md` — frontmatter + intro + domain map table + links
-- `docs/solution-design/context.md` — System Context section (diagram + external systems)
-- `docs/solution-design/decisions.md` — Key Architectural Decisions
-- `docs/solution-design/changelog.md` — Changelog only
+**For `docs/explanation/solution-design.md`** → split into:
+- `docs/explanation/solution-design/index.md` — frontmatter + intro + domain map table + links
+- `docs/explanation/solution-design/context.md` — System Context section (diagram + external systems)
+- `docs/explanation/solution-design/decisions.md` — Key Architectural Decisions
+- `docs/explanation/solution-design/changelog.md` — Changelog only
 
-**For `docs/containers.md`** → split into:
-- `docs/containers/index.md` — frontmatter + intro + services table + links
-- `docs/containers/diagram.md` — ASCII container diagram
-- `docs/containers/flows.md` — Primary Data Flows + Deployment Model
-- `docs/containers/changelog.md` — Changelog only
+**For `docs/explanation/containers.md`** → split into:
+- `docs/explanation/containers/index.md` — frontmatter + intro + services table + links
+- `docs/explanation/containers/diagram.md` — ASCII container diagram
+- `docs/explanation/containers/flows.md` — Primary Data Flows + Deployment Model
+- `docs/explanation/containers/changelog.md` — Changelog only
 
 After splitting:
 1. Delete the original single file.
-2. Update any cross-references in other doc files that linked to the old path (e.g., `solution-design.md` links to `docs/<domain>/overview.md` → update to `docs/<domain>/index.md`).
+2. Update any cross-references in other doc files that linked to the old path (e.g., `solution-design.md` links to `docs/explanation/<domain>/overview.md` → update to `docs/explanation/<domain>/index.md`).
 3. Print: `[doc-maintainer] Split <file> into <folder>/ (exceeded 500 lines).`
 
-**The clarity review step (Step 2.6) walks `docs/**/*.md` recursively**, so it handles split folder structures automatically without any special handling.
+**The clarity review step (Step 2.6) walks `docs/explanation/**/*.md` recursively**, so it handles split folder structures automatically without any special handling.
 
 ---
 
@@ -893,10 +893,10 @@ If restore fails:
 ### git rebase fails
 Print the error, abort with `git rebase --abort`, restore original branch, and exit without modifying any docs.
 
-### `docs/solution-design.md` already exists on init
+### `docs/explanation/solution-design.md` already exists on init
 Print:
 ```
-[doc-maintainer] docs/solution-design.md already exists. Run 'maintain' to continue building docs or 'refresh' for a full rewrite.
+[doc-maintainer] docs/explanation/solution-design.md already exists. Run 'maintain' to continue building docs or 'refresh' for a full rewrite.
 ```
 Restore original branch and exit without writing anything.
 
@@ -920,7 +920,7 @@ Do not consider this skill complete until ALL of the following are true:
 
 - [ ] Phase 0 ran completely: dirty-tree check, branch recorded, fetch attempted, on `chore/claude-maintain`.
 - [ ] The appropriate phase (1, 2, or 3) ran to completion or exited with a documented reason.
-- [ ] **Init**: `docs/solution-design.md` was written (L1 only — no overviews, no containers.md).
+- [ ] **Init**: `docs/explanation/solution-design.md` was written (L1 only — no overviews, no containers.md).
 - [ ] **Maintain**: exactly one unit of work was completed (L2, one L3, one accuracy patch, or one clarity review); AND Step 2.R registry consistency passes ran (or were skipped because `docs/registry/index.md` does not exist); AND `docs/index.html` was regenerated (Pass R6) or skipped for the same reason.
 - [ ] **Refresh**: all in-scope docs were rewritten.
 - [ ] Post-Write Size Check ran on every file written; any file >500 lines was split.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # find-stale-domains.sh
-# Walks docs/*/overview.md in the current directory.
+# Walks docs/explanation/*/overview.md in the current directory.
 # For each file, reads last_updated from YAML frontmatter (falls back to mtime).
 # Prints paths whose age exceeds the threshold to stdout, sorted oldest-first.
 # Exits 0 always — no stale docs is not an error.
@@ -29,7 +29,7 @@ usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME [--days N]
 
-Walks docs/*/overview.md in the current working directory.
+Walks docs/explanation/*/overview.md in the current working directory.
 Prints the path of any overview.md whose last_updated date (from YAML
 frontmatter) is more than N days ago (default: $STALE_THRESHOLD_DAYS).
 
@@ -121,7 +121,7 @@ THRESHOLD_SECONDS=$(( STALE_THRESHOLD_DAYS * 86400 ))
 
 declare -a RESULTS=()
 
-for overview_file in docs/*/overview.md; do
+for overview_file in docs/explanation/*/overview.md; do
   [[ -e "$overview_file" ]] || continue
 
   last_updated=$(extract_last_updated "$overview_file")
