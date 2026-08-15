@@ -259,7 +259,7 @@ After Phase 5 summary, always bootstrap the architecture registry for the new pr
 In the target project directory, create:
 
 ```bash
-mkdir -p {target-directory}/docs/registry/constructs
+mkdir -p {target-directory}/docs/reference/constructs
 mkdir -p {target-directory}/docs/registry/decisions
 ```
 
@@ -393,7 +393,7 @@ Before designing or building anything in this codebase, always:
 1. Read `docs/registry/index.md` — search the "Does" column for capabilities that already exist
 2. Check the Feature Cross-Reference for related constructs across all layers
 3. If the registry has Known Gaps in the relevant area — read source only for those specific areas
-4. After any implementation: write or update the construct file in `docs/registry/constructs/`
+4. After any implementation: write or update the construct file in `docs/reference/constructs/`
 
 This prevents duplicate work and keeps the registry as the single source of truth for what exists.
 
@@ -456,7 +456,7 @@ Use this priority order. Each item costs one read from the budget of 5. Stop the
 
 | Priority | Source | What to extract |
 |----------|--------|-----------------|
-| 1 | `specs/*/overview.md` (read the first match) | Feature names, planned constructs, Implementation Order items — yields `status: planned` stubs |
+| 1 | `docs/sessions/*/overview.md` (read the first match); if none found, fall back to `specs/*/overview.md` (legacy convention, read the first match) | Feature names, planned constructs, Implementation Order items — yields `status: planned` stubs |
 | 2 | `src/` directory listing (one `ls -R` or `Glob("src/**")`) | Service files, component files, repository files — yields `status: built` stubs |
 | 3 | Schema file — first of: `prisma/schema.prisma`, `schema.sql`, `db/schema.rb`, `models.py` | Model names and fields — yields `type: Model` stubs |
 | 4 | IaC — first of: `docker-compose.yml`, `terraform/`, `k8s/`, `infrastructure/` (one file read) | Resource names (services, queues, buckets) — yields `type: Resource` stubs |
@@ -489,13 +489,13 @@ Layer mapping heuristics:
 ### Step 4: Deduplicate and rank
 
 After source reads are complete:
-1. Deduplicate: if the same logical name appears in both `specs/*/overview.md` (planned) and `src/` (built), keep one entry with `status: built`.
+1. Deduplicate: if the same logical name appears in both `docs/sessions/*/overview.md`/`specs/*/overview.md` (planned) and `src/` (built), keep one entry with `status: built`.
 2. Rank by confidence: constructs with explicit file paths > inferred from directory names > guessed from package names.
 3. Cap at 25 construct stubs total — if more were found, keep the 25 highest-confidence ones and note the rest as Known Gaps.
 
 ### Step 5: Write construct stubs
 
-For each extracted construct, write `{target-directory}/docs/registry/constructs/{ConstructName}.md`:
+For each extracted construct, write `{target-directory}/docs/reference/constructs/{ConstructName}.md`:
 
 ```markdown
 ---
@@ -504,7 +504,7 @@ type: {Type}
 layer: {Layer}
 file: {relative-path-to-source-file or null if inferred}
 status: {planned | built}
-planned_in: {source-file-path if from specs/, else null}
+planned_in: {source-file-path if from docs/sessions/ or specs/, else null}
 last_verified: null
 ---
 
@@ -515,7 +515,7 @@ Seeded automatically by brownfield-migrate — verify and expand this descriptio
 
 ## Functional Requirements
 
-- [ ] (not yet captured — fill in from specs/ or source code review)
+- [ ] (not yet captured — fill in from docs/sessions/, specs/, or source code review)
 
 ## Proof
 
@@ -639,7 +639,7 @@ If the directory is not a git repo, skip the commit and note it in the report.
 Brownfield migration complete
 ─────────────────────────────────────────────────
 Sources read ({N}/5 budget used):
-  ✓ specs/your-feature/overview.md   → 4 planned constructs
+  ✓ docs/sessions/your-feature/overview.md → 4 planned constructs
   ✓ src/ tree                        → 12 built constructs
   ✓ prisma/schema.prisma             → 3 Model constructs
   ✗ IaC (budget exhausted)
@@ -647,7 +647,7 @@ Sources read ({N}/5 budget used):
 
 Registry written:
   docs/registry/index.md             ({total} constructs indexed)
-  docs/registry/constructs/          ({total} stub files)
+  docs/reference/constructs/         ({total} stub files)
   docs/registry/decisions/002-...md  (migration ADR)
   CLAUDE.md                          (agent nav protocol injected)
 
@@ -659,7 +659,7 @@ Summary:
   Known Gaps:            {N areas not surveyed}
 
 Next steps:
-  1. Review each stub in docs/registry/constructs/ — fix inferred descriptions
+  1. Review each stub in docs/reference/constructs/ — fix inferred descriptions
   2. Run /systematic-dev-kit:explore to fill Known Gaps one area at a time
   3. Run /systematic-dev-kit:plan — it will now read the registry before designing
 ```
