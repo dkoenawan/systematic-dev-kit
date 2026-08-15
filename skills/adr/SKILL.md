@@ -184,7 +184,7 @@ Update the `last_updated` and `adr_count` in the frontmatter.
 
 For each construct in the affects list:
 
-Read `docs/registry/constructs/<Name>.md`. Append to its `## Key Decisions` section:
+Read `docs/reference/constructs/<Name>.md`. Append to its `## Key Decisions` section:
 
 ```
 - [ADR-<NNN>](../decisions/<NNN>-<title>.md) — <decision one-liner>

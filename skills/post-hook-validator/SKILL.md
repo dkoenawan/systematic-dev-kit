@@ -18,7 +18,7 @@ This skill is always invoked after a task-executor commit that updated a constru
 If `construct-name` is omitted, derive it from the most recent task-executor commit:
 1. Run `git log -1 --pretty=format:"%s"` to get the last commit subject.
 2. Extract the feature name from `feat(<feature-name>): ...`.
-3. Look for recently modified construct files: `git diff HEAD~1 --name-only | grep docs/registry/constructs/`.
+3. Look for recently modified construct files: `git diff HEAD~1 --name-only | grep docs/reference/constructs/`.
 4. If exactly one construct file was modified, use it. If multiple, list them and ask the developer which to validate.
 
 If no construct file was modified in the last commit → exit with: "No construct files were updated in the last commit — nothing to validate. Run this skill manually with a construct name if needed."
@@ -29,7 +29,7 @@ If no construct file was modified in the last commit → exit with: "No construc
 
 1. Verify `docs/registry/index.md` exists. If not: "No architecture registry found — post-hook validation requires a registry. Run `/systematic-dev-kit:init` to create one, or skip validation."
 
-2. Read the construct file at `docs/registry/constructs/<Name>.md`.
+2. Read the construct file at `docs/reference/constructs/<Name>.md`.
    - If `status: verified`: "Construct `<Name>` is already verified. No action needed."
    - If `status: planned`: "Construct `<Name>` has not been built yet (status: planned). Run task-executor to implement it first."
    - If `status: diverged`: Note this — the developer is re-validating after a divergence. Proceed normally; a new pass will clear the diverged status.
@@ -108,7 +108,7 @@ Ask: "Confirm these results? (yes / adjust)"
 
    ```
    Construct <Name> is now verified.
-   docs/registry/constructs/<Name>.md — status: verified
+   docs/reference/constructs/<Name>.md — status: verified
    docs/registry/index.md — updated
    ```
 
@@ -138,9 +138,9 @@ Ask: "Confirm these results? (yes / adjust)"
    git add docs/registry/ && git commit -m "chore(<feature-name>): mark <Name> diverged — FR <N> failed"
    ```
 
-4. **Block next task-executor run** by writing a lockfile:
+4. **Block next task-executor run** by writing a lockfile in the feature's session directory (`docs/sessions/<date>-<feature-name>/`, found via `find-active-plan.sh` or by matching `docs/sessions/*-<feature-name>/`):
    ```bash
-   echo "<Name>:<date>" >> specs/<feature-name>/.validation-blocked
+   echo "<Name>:<date>" >> docs/sessions/<date>-<feature-name>/.validation-blocked
    ```
    The task-executor checks for this lockfile before selecting the next task (see **Integration with Task-Executor** below).
 
@@ -162,7 +162,7 @@ Ask: "Confirm these results? (yes / adjust)"
 
 6. After the ADR is written, clear the lockfile:
    ```bash
-   rm specs/<feature-name>/.validation-blocked
+   rm docs/sessions/<date>-<feature-name>/.validation-blocked
    ```
 
 ### All FRs partial (no hard failures)
@@ -180,7 +180,8 @@ Treat as **pass with follow-up**:
 The task-executor **checks for a validation block before selecting each task**. The check is:
 
 ```bash
-[ -f specs/<feature-name>/.validation-blocked ] && cat specs/<feature-name>/.validation-blocked
+SESSION_DIR="$(dirname "<plan-file>")"
+[ -f "$SESSION_DIR/.validation-blocked" ] && cat "$SESSION_DIR/.validation-blocked"
 ```
 
 If this file exists, the task-executor halts the run with:
@@ -198,7 +199,7 @@ The lockfile is cleared by the post-hook validator after the ADR is written (see
 
 | Situation | Action |
 |-----------|--------|
-| Construct file not found | "Construct file `docs/registry/constructs/<Name>.md` does not exist. Was the task-executor registry write step skipped?" |
+| Construct file not found | "Construct file `docs/reference/constructs/<Name>.md` does not exist. Was the task-executor registry write step skipped?" |
 | FRs section empty | Tell developer to add FRs to the construct file before validating |
 | ADR skill unavailable | Write the divergence record, set lockfile, tell developer to run `/adr` manually |
 | Developer cancels mid-checklist | Save partial results, leave status as `built`, note "validation incomplete" in construct Key Decisions |
@@ -211,6 +212,6 @@ The lockfile is cleared by the post-hook validator after the ADR is written (see
 - [ ] Construct file `status` has been updated to `verified`, `diverged`, or left `built` (partial) — never left unchanged after a completed checklist
 - [ ] `docs/registry/index.md` Status column updated to match
 - [ ] Registry changes committed
-- [ ] If diverged: lockfile written at `specs/<feature-name>/.validation-blocked`
+- [ ] If diverged: lockfile written at `docs/sessions/<date>-<feature-name>/.validation-blocked`
 - [ ] If diverged: `/systematic-dev-kit:adr` was invoked and the developer was walked through it
 - [ ] If ADR written: lockfile cleared, construct status updated to `verified`

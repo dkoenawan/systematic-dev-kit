@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # validate-spec.sh
 # PostToolUse hook for the Write tool.
-# Reads JSON input from stdin. If the written file is under specs/, validates
-# that it contains all required spec sections. Exits 2 (blocking) on failure.
+# Reads JSON input from stdin. If the written file is a session overview.md
+# under docs/sessions/, validates that it contains all required spec
+# sections. Exits 2 (blocking) on failure.
 
 set -euo pipefail
 
@@ -12,7 +13,7 @@ input=$(cat)
 # Extract the file_path from the Write tool input
 file_path=$(echo "$input" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
-# Skip validation if file_path is empty or not under specs/
+# Skip validation if file_path is empty or not a session overview.md
 if [[ -z "$file_path" ]]; then
   exit 0
 fi
@@ -20,8 +21,8 @@ fi
 # Normalize path — strip leading ./ if present
 file_path="${file_path#./}"
 
-# Only validate files under the specs/ directory
-if [[ "$file_path" != specs/* ]]; then
+# Only validate overview.md files under docs/sessions/<session>/
+if [[ "$file_path" != docs/sessions/*/overview.md ]]; then
   exit 0
 fi
 
