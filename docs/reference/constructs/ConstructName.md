@@ -4,7 +4,7 @@ type: Service          # Service | Component | Repository | Model | Resource | U
 layer: Backend         # Backend | Frontend | Database | Infra | Shared
 file: src/services/construct-name.ts
 status: planned        # planned | built | verified | diverged
-planned_in: specs/<feature>/overview.md
+planned_in: docs/sessions/<date>-<feature>/overview.md
 last_verified: null    # YYYY-MM-DD when status last confirmed
 ---
 
