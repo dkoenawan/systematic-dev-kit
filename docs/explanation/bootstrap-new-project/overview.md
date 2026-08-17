@@ -8,7 +8,7 @@ source_path: skills/bootstrap-new-project
 
 > → [System overview](../solution-design.md) | → [Container architecture](../containers.md)
 
-> **This skill is deprecated.** All new project creation should use `/systematic-dev-kit:init` instead, which clones a maintained template repository rather than generating files from inline templates. This overview is preserved for historical reference.
+> **This skill is deprecated.** All new project creation should use `/compass:init` instead, which clones a maintained template repository rather than generating files from inline templates. This overview is preserved for historical reference.
 
 ## What Is Bootstrap New Project?
 
@@ -35,9 +35,9 @@ Optionally, `git init` and an initial commit were performed, and `npm install` r
 ## Code Map — Which Code Touches This
 
 - **Business Logic + Templates**: `skills/bootstrap-new-project/SKILL.md` — five-phase workflow and all generated file contents inline (TypeScript configs, package.json dependency lists, docker-compose structure, OpenAPI spec skeleton, Express server boilerplate, Vite config)
-- **Interface**: Invoked as `/systematic-dev-kit:bootstrap-new-project`; interactive prompts for project name, directory, git, and npm preferences
+- **Interface**: Invoked as `/compass:bootstrap-new-project`; interactive prompts for project name, directory, git, and npm preferences
 - **Persistence**: Writes all files directly to the target directory; no template repository dependency (unlike `init`)
-- **External callers**: Superseded by `systematic-dev-kit:init`; no other skills call into this domain
+- **External callers**: Superseded by `compass-labs:init`; no other skills call into this domain
 
 ## Internal Architecture
 

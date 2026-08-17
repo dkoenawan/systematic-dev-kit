@@ -27,7 +27,7 @@ Skills are organized by development domain:
 - **Backend skills**: API design, business logic, authentication
 - **Frontend skills**: UI components, state management, routing
 
-Each skill is namespaced as `/systematic-dev-kit:skill-name` when invoked.
+Each skill is namespaced as `/compass:skill-name` when invoked.
 
 ## Key Constraints
 
@@ -51,7 +51,7 @@ Skill instructions here...
 ### Plugin Manifest
 
 The `plugin.json` must contain at minimum:
-- `name`: "systematic-dev-kit"
+- `name`: "compass-labs"
 - `description`: Plugin description
 - `version`: Semantic version (e.g., "1.0.0")
 - `author`: Author information
@@ -61,7 +61,7 @@ The `plugin.json` must contain at minimum:
 ### Testing the Plugin Locally
 
 ```bash
-claude --plugin-dir /home/su-sentinel/private/systematic-dev-kit
+claude --plugin-dir /home/su-sentinel/private/compass-labs
 ```
 
 ### Adding New Skills

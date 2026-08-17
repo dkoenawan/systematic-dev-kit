@@ -39,7 +39,7 @@ After every mode, the skill stages `docs/`, commits with a mode-specific message
 
 - **Templates (data shapes)**: `skills/doc-maintainer/template.md` (L3 structure), `skills/doc-maintainer/template-solution-design.md` (L1 structure), `skills/doc-maintainer/template-containers.md` (L2 structure)
 - **Business Logic**: `skills/doc-maintainer/SKILL.md` — the master specification defining all three modes and their phases, Phase 0 git safety routine, domain classification rules, priority queue dispatch logic, and post-write size check (split files >500 lines)
-- **Cron Interface**: `skills/doc-maintainer/scripts/maintain.sh` — wrapper that invokes `claude -p "/systematic-dev-kit:doc-maintainer maintain"` non-interactively and logs output to `<repo>/logs/doc-maintainer/YYYY-MM-DD.log`
+- **Cron Interface**: `skills/doc-maintainer/scripts/maintain.sh` — wrapper that invokes `claude -p "/compass:doc-maintainer maintain"` non-interactively and logs output to `<repo>/logs/doc-maintainer/YYYY-MM-DD.log`
 - **Scheduler**: `skills/doc-maintainer/scripts/install-schedule.sh` / `uninstall-schedule.sh` — manage the user's crontab entry (accepts `--time HH:MM`, `--days`, `--stale-days` options)
 - **Staleness Detection**: `skills/doc-maintainer/scripts/find-stale-domains.sh` — reads `last_updated` from YAML frontmatter of every `docs/*/overview.md`, prints paths older than the threshold, sorted oldest-first
 - **Examples**: `skills/doc-maintainer/examples/` — realistic L1, L2, and L3 reference implementations used as quality bar
@@ -60,7 +60,7 @@ After every mode, the skill stages `docs/`, commits with a mode-specific message
 
 ## Dependencies
 
-- **Internal**: `systematic-dev-kit:explore` — spawned as subagents during all three modes to perform codebase investigation
+- **Internal**: `compass-labs:explore` — spawned as subagents during all three modes to perform codebase investigation
 - **External**: `git` (all branch operations); `bash`/coreutils (`date`, `stat`, `sort`, `grep`, `sed`) for staleness detection and scheduling scripts; `cron` for scheduled maintenance; Claude Code CLI (`claude` binary) called by `maintain.sh`
 
 ## Gotchas

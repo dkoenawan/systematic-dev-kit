@@ -1,16 +1,16 @@
 ---
 name: bootstrap-new-project
-description: "[DEPRECATED] Bootstrap a new full-stack project - use /systematic-dev-kit:init instead"
+description: "[DEPRECATED] Bootstrap a new full-stack project - use /compass:init instead"
 ---
 
 # Bootstrap New Project Skill
 
-> **DEPRECATED**: This skill is deprecated in favor of `/systematic-dev-kit:init`.
+> **DEPRECATED**: This skill is deprecated in favor of `/compass:init`.
 >
 > The new `init` skill is more token-efficient (clones a template instead of generating files)
 > and offers simple opt-out component selection.
 >
-> **Migration**: Use `/systematic-dev-kit:init` instead of this skill.
+> **Migration**: Use `/compass:init` instead of this skill.
 
 ---
 
@@ -125,7 +125,7 @@ project-root/
 Invoke this skill when starting a new full-stack project:
 
 ```bash
-/systematic-dev-kit:bootstrap-new-project
+/compass:bootstrap-new-project
 ```
 
 The skill will interactively prompt for:
@@ -234,7 +234,7 @@ When this skill is invoked:
    ```bash
    git init
    git add .
-   git commit -m "feat: bootstrap project with systematic-dev-kit"
+   git commit -m "feat: bootstrap project with compass-labs"
    ```
 
 10. **Install dependencies** (if requested):

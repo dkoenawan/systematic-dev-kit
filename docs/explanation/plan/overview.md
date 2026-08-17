@@ -14,7 +14,7 @@ Plan is a systematic feature specification generator that transforms a developer
 
 ## How It Works
 
-A FeatureSpec moves through five mandatory sequential phases. The developer invokes `/systematic-dev-kit:plan` and describes what they want to build in natural language. The skill asks whether this is a new feature or extends existing code, and prompts selection of complexity signals (new DB tables, auth, real-time, file uploads, external integrations, complex state, high overall complexity). The count of selected signals locks the **adaptive depth** for all subsequent questions: 0–1 signals = shallow (1 question per layer), 2–3 = moderate, 4+ = deep plus tradeoff surfacing.
+A FeatureSpec moves through five mandatory sequential phases. The developer invokes `/compass:plan` and describes what they want to build in natural language. The skill asks whether this is a new feature or extends existing code, and prompts selection of complexity signals (new DB tables, auth, real-time, file uploads, external integrations, complex state, high overall complexity). The count of selected signals locks the **adaptive depth** for all subsequent questions: 0–1 signals = shallow (1 question per layer), 2–3 = moderate, 4+ = deep plus tradeoff surfacing.
 
 If the developer selects "Extends existing", the `explore` subskill is immediately invoked to scan related code. Its report is summarized in three bullets, and Phase 2 planning questions begin in the same response — the skill must not pause between the explore return and Q3 (a known failure mode documented in `reviews/plan/`).
 
@@ -41,9 +41,9 @@ Phase 5 writes `specs/<feature-name>.md` to the project root (kebab-case filenam
 - **Business Logic**: `skills/plan/SKILL.md` — complete five-phase workflow, adaptive depth calculation, six tradeoff detection patterns, CQRS naming conventions, approval gate logic, and the Mandatory Continuation Point after explore invocation
 - **FeatureSpec Template**: `skills/plan/template.md` — FeatureSpec markdown structure with all required sections (Summary, Complexity Profile, Database Layer, Backend Layer, Frontend Layer, Implementation Order, Open Questions)
 - **Reference example**: `skills/plan/examples/user-management/feature-spec.md` — complete worked example showing a User Management spec (User, Role, UserRole, UserProfile models; admin/self-only auth; CRUD + search; cache-and-revalidate strategy)
-- **Interface**: Invoked as `/systematic-dev-kit:plan`; `AskUserQuestion` components for multi-select (complexity signals) and single-select (feature type, boundary) prompts
+- **Interface**: Invoked as `/compass:plan`; `AskUserQuestion` components for multi-select (complexity signals) and single-select (feature type, boundary) prompts
 - **Persistence**: Writes `specs/<feature-name>.md` to the project root after Phase 4 approval
-- **External callers**: `skills/plan/SKILL.md` invokes `systematic-dev-kit:explore` when user selects "Extends existing" in Phase 1
+- **External callers**: `skills/plan/SKILL.md` invokes `compass-labs:explore` when user selects "Extends existing" in Phase 1
 
 ## Internal Architecture
 
@@ -59,7 +59,7 @@ Phase 5 writes `specs/<feature-name>.md` to the project root (kebab-case filenam
 
 ## Dependencies
 
-- **Internal**: `systematic-dev-kit:explore` — invoked conditionally in Phase 1 when the user selects "Extends existing"; provides targeted codebase context before planning begins
+- **Internal**: `compass-labs:explore` — invoked conditionally in Phase 1 when the user selects "Extends existing"; provides targeted codebase context before planning begins
 - **External**: Prisma (generated model syntax with decorators); REST conventions (Express-style API endpoint notation); TypeScript (request/response interface shapes); React + hooks pattern (component hierarchy and `use{Entity}` hook naming); no runtime packages — plan produces specification artifacts only
 
 ## Gotchas

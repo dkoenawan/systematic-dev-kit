@@ -3,7 +3,7 @@ id: 001
 date: 2026-08-15
 status: Proposed
 affects: [doc-maintainer, plan, task-executor, adr]
-issue: https://github.com/dkoenawan/systematic-dev-kit/issues/16
+issue: https://github.com/dkoenawan/compass-labs/issues/16
 ---
 
 # ADR-001: Diataxis-based docs/ restructure with docs/sessions/ fold-back

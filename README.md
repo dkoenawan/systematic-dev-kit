@@ -15,32 +15,32 @@ Installs the plugin so it loads automatically on every `claude` session — no f
 **Step 1 — Clone the repo**
 
 ```bash
-git clone https://github.com/dkoenawan/systematic-dev-kit.git
+git clone https://github.com/dkoenawan/compass-labs.git
 ```
 
 **Step 2 — Register as a local marketplace**
 
 ```bash
-claude plugin marketplace add /path/to/systematic-dev-kit
+claude plugin marketplace add /path/to/compass-labs
 ```
 
 **Step 3 — Install the plugin**
 
 ```bash
-claude plugin install systematic-dev-kit@systematic-dev-kit
+claude plugin install compass-labs@compass-labs
 ```
 
 **Step 4 — Verify**
 
 ```bash
 claude plugin list
-# systematic-dev-kit@systematic-dev-kit should show Status: ✔ enabled
+# compass-labs@compass-labs should show Status: ✔ enabled
 ```
 
 All skills are now available in every `claude` session. To update later:
 
 ```bash
-claude plugin update systematic-dev-kit@systematic-dev-kit
+claude plugin update compass-labs@compass-labs
 ```
 
 ---
@@ -50,7 +50,7 @@ claude plugin update systematic-dev-kit@systematic-dev-kit
 Loads the plugin for the current session only. Nothing is written to your user config.
 
 ```bash
-claude --plugin-dir /path/to/systematic-dev-kit
+claude --plugin-dir /path/to/compass-labs
 ```
 
 ---
@@ -58,8 +58,8 @@ claude --plugin-dir /path/to/systematic-dev-kit
 ### Option 3: Clone and load session-only
 
 ```bash
-git clone https://github.com/dkoenawan/systematic-dev-kit.git
-cd systematic-dev-kit
+git clone https://github.com/dkoenawan/compass-labs.git
+cd compass-labs
 claude --plugin-dir .
 ```
 
@@ -68,7 +68,7 @@ claude --plugin-dir .
 This plugin follows the Claude Code plugin architecture:
 
 ```
-systematic-dev-kit/
+compass-labs/
 ├── .claude-plugin/
 │   └── plugin.json                    # Plugin manifest
 ├── skills/                            # Agent-based skills
@@ -97,7 +97,7 @@ systematic-dev-kit/
 
 ### Project Initialization
 
-#### `/systematic-dev-kit:init` (Recommended)
+#### `/compass:init` (Recommended)
 
 Initialize a new full-stack project from a template repository with opt-out component selection.
 
@@ -112,7 +112,7 @@ Initialize a new full-stack project from a template repository with opt-out comp
 
 **Usage:**
 ```bash
-/systematic-dev-kit:init
+/compass:init
 ```
 
 **How it works:**
@@ -137,7 +137,7 @@ Initialize a new full-stack project from a template repository with opt-out comp
 
 ### Brand Design
 
-#### `/systematic-dev-kit:brand-designer`
+#### `/compass:brand-designer`
 
 Design a distinctive brand identity through systematic emotional discovery — generates brand guidelines, CSS custom properties, and optional Tailwind config.
 
@@ -151,7 +151,7 @@ Design a distinctive brand identity through systematic emotional discovery — g
 
 **Usage:**
 ```bash
-/systematic-dev-kit:brand-designer
+/compass:brand-designer
 ```
 
 **How it works (6 phases):**
@@ -169,7 +169,7 @@ Design a distinctive brand identity through systematic emotional discovery — g
 
 ### Codebase Investigation
 
-#### `/systematic-dev-kit:explore`
+#### `/compass:explore`
 
 Token-efficient codebase investigation — reads docs before code, stops when context is sufficient.
 
@@ -179,7 +179,7 @@ A structured Investigation Report covering tech stack, data models, backend stru
 
 **Usage:**
 ```bash
-/systematic-dev-kit:explore
+/compass:explore
 ```
 
 **How it works (3 tiers, stops early):**
@@ -198,7 +198,7 @@ A structured Investigation Report covering tech stack, data models, backend stru
 
 ### Feature Planning
 
-#### `/systematic-dev-kit:plan`
+#### `/compass:plan`
 
 Systematic feature planning through structured discovery — generates detailed specs (DB → Backend → Frontend) that eliminate re-scanning and token waste in future implementation prompts.
 
@@ -210,7 +210,7 @@ Systematic feature planning through structured discovery — generates detailed 
 
 **Usage:**
 ```bash
-/systematic-dev-kit:plan
+/compass:plan
 ```
 
 **How it works (5 phases):**
@@ -229,7 +229,7 @@ Systematic feature planning through structured discovery — generates detailed 
 
 ### Documentation Maintenance
 
-#### `/systematic-dev-kit:doc-maintainer`
+#### `/compass:doc-maintainer`
 
 Builds and maintains a **C4-layered documentation tree** that grows incrementally — one file per run. Designed so both humans and agents can navigate to exactly the information they need without reading everything.
 
@@ -257,11 +257,11 @@ The C4 tree lives under `docs/explanation/` as part of the plugin's [Diataxis](h
 
 **Usage:**
 ```bash
-/systematic-dev-kit:doc-maintainer          # auto-detect: init if docs/ absent, else maintain
-/systematic-dev-kit:doc-maintainer init     # generate L1 (solution-design.md) only
-/systematic-dev-kit:doc-maintainer maintain # one unit of work: next missing doc, stale patch, or clarity review
-/systematic-dev-kit:doc-maintainer refresh  # full rewrite of all docs
-/systematic-dev-kit:doc-maintainer refresh <domain>  # full rewrite of one named domain
+/compass:doc-maintainer          # auto-detect: init if docs/ absent, else maintain
+/compass:doc-maintainer init     # generate L1 (solution-design.md) only
+/compass:doc-maintainer maintain # one unit of work: next missing doc, stale patch, or clarity review
+/compass:doc-maintainer refresh  # full rewrite of all docs
+/compass:doc-maintainer refresh <domain>  # full rewrite of one named domain
 ```
 
 **How maintain mode prioritises work (one per run):**
@@ -296,7 +296,7 @@ crontab -l | grep doc-maintainer
 
 ### Autonomous Task Execution
 
-#### `/systematic-dev-kit:task-executor`
+#### `/compass:task-executor`
 
 Runs large GitHub issues autonomously via cron over multiple days. An interactive planning conversation decomposes an issue into hour-sized tasks, then executes up to 3 per scheduled run — rebasing, implementing, testing, committing, and opening a PR on completion.
 
@@ -312,11 +312,11 @@ Runs large GitHub issues autonomously via cron over multiple days. An interactiv
 
 **Usage:**
 ```bash
-/systematic-dev-kit:task-executor                    # auto: show status or start planning
-/systematic-dev-kit:task-executor plan <issue-number> # interactive planning conversation
-/systematic-dev-kit:task-executor status             # show active plan summary
-/systematic-dev-kit:task-executor stop               # pause (preserves branch + plan)
-/systematic-dev-kit:task-executor resume             # resume a paused plan
+/compass:task-executor                    # auto: show status or start planning
+/compass:task-executor plan <issue-number> # interactive planning conversation
+/compass:task-executor status             # show active plan summary
+/compass:task-executor stop               # pause (preserves branch + plan)
+/compass:task-executor resume             # resume a paused plan
 ```
 
 **Typical workflow:**
@@ -334,9 +334,9 @@ Runs large GitHub issues autonomously via cron over multiple days. An interactiv
 
 ---
 
-#### `/systematic-dev-kit:bootstrap-new-project` (Deprecated)
+#### `/compass:bootstrap-new-project` (Deprecated)
 
-> **Deprecated**: Use `/systematic-dev-kit:init` instead. This skill generates files directly which is less token-efficient.
+> **Deprecated**: Use `/compass:init` instead. This skill generates files directly which is less token-efficient.
 
 Bootstrap a complete full-stack project with systematic structure and best practices.
 
@@ -359,7 +359,7 @@ Bootstrap a complete full-stack project with systematic structure and best pract
 
 **Usage:**
 ```bash
-/systematic-dev-kit:bootstrap-new-project
+/compass:bootstrap-new-project
 ```
 
 **Interactive prompts:**

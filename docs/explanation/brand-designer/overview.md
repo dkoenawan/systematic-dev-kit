@@ -14,7 +14,7 @@ Brand Designer is a six-phase, emotionally-grounded brand identity generation sy
 
 ## How It Works
 
-A developer invokes `/systematic-dev-kit:brand-designer`. Phases 1–3 are pure discovery across ten structured questions. Phase 1 (Brand Soul) asks for the brand's story, its three-year aspirational vision, and which archetype it embodies (Sage, Creator, Explorer, Caregiver, Rebel, or Magician). Phase 2 (Emotional Mapping) — the critical phase — extracts three specific core emotions, a sensory space metaphor (e.g., "Tokyo coffee bar"), and anti-inspirations (what the brand must never feel like). Phase 3 (Visual Direction) gathers reference materials from any industry, the current brand situation (fresh start, evolution, or rebrand), technical implementation target (Tailwind, CSS, or both), and visual intensity level. No files are touched during Phases 1–3.
+A developer invokes `/compass:brand-designer`. Phases 1–3 are pure discovery across ten structured questions. Phase 1 (Brand Soul) asks for the brand's story, its three-year aspirational vision, and which archetype it embodies (Sage, Creator, Explorer, Caregiver, Rebel, or Magician). Phase 2 (Emotional Mapping) — the critical phase — extracts three specific core emotions, a sensory space metaphor (e.g., "Tokyo coffee bar"), and anti-inspirations (what the brand must never feel like). Phase 3 (Visual Direction) gathers reference materials from any industry, the current brand situation (fresh start, evolution, or rebrand), technical implementation target (Tailwind, CSS, or both), and visual intensity level. No files are touched during Phases 1–3.
 
 In Phase 4, the skill synthesizes all discovery into a **Creative Direction Brief** — a narrative document mapping emotions to color philosophy, typography personality, spatial philosophy, component character, and a signature Visual Expression Strategy. The brief is presented to the user for approval: "This nails it," "Adjust," or "Rethink." No files are written without explicit approval; iterating the brief is cheaper than regenerating five output files.
 
@@ -39,7 +39,7 @@ Phase 5 generates all brand assets into the `brand/` directory: `brand-guideline
 - **Brief Template**: `skills/brand-designer/template.md` — Creative Direction Brief skeleton with 7 sections used in Phase 4 synthesis
 - **Validation**: `skills/brand-designer/scripts/validate.sh` — 10-point binary quality gate checking completeness, HSL validity, WCAG contrast (AA: 4.5:1 body, 3:1 large), Google Font availability, Tailwind syntax, and showcase self-containment
 - **Reference examples**: `skills/brand-designer/examples/tidepool/` (bioluminescent data concept) and `skills/brand-designer/examples/mithril-ledger/` (runic channels concept) — complete real-world brand systems showing the expected output format and quality bar
-- **External callers**: Invoked standalone; no other systematic-dev-kit skills call into brand-designer programmatically
+- **External callers**: Invoked standalone; no other compass-labs skills call into brand-designer programmatically
 
 ## Internal Architecture
 
@@ -55,7 +55,7 @@ Phase 5 generates all brand assets into the `brand/` directory: `brand-guideline
 
 ## Dependencies
 
-- **Internal**: None — brand-designer is a standalone skill with no programmatic calls to other systematic-dev-kit domains
+- **Internal**: None — brand-designer is a standalone skill with no programmatic calls to other compass-labs domains
 - **External**: Google Fonts (font name validation via HTTP in Phase 6 only); CSS Custom Properties (core output mechanism); Tailwind CSS (optional, if selected in Q9); no npm packages or runtime services required
 
 ## Gotchas

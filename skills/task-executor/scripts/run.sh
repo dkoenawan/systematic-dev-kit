@@ -2,7 +2,7 @@
 # Wrapper for the task-executor cron job.
 # Logs start/end timestamps and exit code so missed or broken runs are visible.
 
-LOG_DIR="/home/su-sentinel/private/systematic-dev-kit/logs/task-executor"
+LOG_DIR="/home/su-sentinel/private/compass-labs/logs/task-executor"
 LOG_FILE="$LOG_DIR/$(date +%Y-%m-%d).log"
 
 mkdir -p "$LOG_DIR"
