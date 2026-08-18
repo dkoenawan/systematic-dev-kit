@@ -25,7 +25,7 @@ Full-stack developers using Claude Code (Anthropic's CLI/IDE plugin) who want sy
 
 | System | Purpose |
 | ------ | ------- |
-| `dev-kit-scaffolding` GitHub repo | Source template cloned by the `init` skill to bootstrap new projects |
+| `compass-scaffolding` GitHub repo | Source template cloned by the `init` skill to bootstrap new projects |
 | Google Fonts | Validated by `brand-designer` to confirm chosen font names are real and currently available |
 
 ### System Context Diagram
@@ -42,7 +42,7 @@ Full-stack developers using Claude Code (Anthropic's CLI/IDE plugin) who want sy
         |                    |
         | git clone          | font validation (brand-designer only)
         v                    v
- [dev-kit-scaffolding]  [Google Fonts]
+ [compass-scaffolding]  [Google Fonts]
    GitHub template repo
 ```
 

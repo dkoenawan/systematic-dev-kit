@@ -138,12 +138,12 @@ After collecting all answers, execute the following steps:
 #### Step 1: Clone Template Repository
 
 ```bash
-git clone --depth 1 git@github.com:dkoenawan/dev-kit-scaffolding.git {target-directory}
+git clone --depth 1 git@github.com:dkoenawan/compass-scaffolding.git {target-directory}
 ```
 
 If clone fails (e.g., SSH not configured), try HTTPS:
 ```bash
-git clone --depth 1 https://github.com/dkoenawan/dev-kit-scaffolding.git {target-directory}
+git clone --depth 1 https://github.com/dkoenawan/compass-scaffolding.git {target-directory}
 ```
 
 #### Step 2: Remove Template Git History

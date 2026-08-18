@@ -116,7 +116,7 @@ Initialize a new full-stack project from a template repository with opt-out comp
 ```
 
 **How it works:**
-1. Clones the [dev-kit-scaffolding](https://github.com/dkoenawan/dev-kit-scaffolding) template
+1. Clones the [compass-scaffolding](https://github.com/dkoenawan/compass-scaffolding) template
 2. Asks which components to EXCLUDE (opt-out approach)
 3. Removes unwanted components and updates configs
 4. Optionally initializes git and installs dependencies
