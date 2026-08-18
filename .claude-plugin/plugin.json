@@ -1,10 +1,10 @@
 {
-  "name": "systematic-dev-kit",
+  "name": "compass-labs",
   "description": "A systematic methodology for building full-stack applications - opinionated skills covering infrastructure, database, backend, and frontend development",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "author": {
     "name": "Daniel Koenawan"
   },
-  "repository": "https://github.com/dkoenawan/systematic-dev-kit",
+  "repository": "https://github.com/dkoenawan/compass-labs",
   "license": "MIT"
 }

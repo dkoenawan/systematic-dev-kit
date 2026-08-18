@@ -27,8 +27,8 @@ This skill creates a new full-stack project by cloning a pre-built template repo
 ## Usage
 
 ```bash
-/systematic-dev-kit:init                         # Greenfield: scaffold a new project
-/systematic-dev-kit:init brownfield-migrate      # Brownfield: seed registry from existing codebase
+/compass:init                         # Greenfield: scaffold a new project
+/compass:init brownfield-migrate      # Brownfield: seed registry from existing codebase
 ```
 
 ## Project Structure Created
@@ -138,12 +138,12 @@ After collecting all answers, execute the following steps:
 #### Step 1: Clone Template Repository
 
 ```bash
-git clone --depth 1 git@github.com:dkoenawan/dev-kit-scaffolding.git {target-directory}
+git clone --depth 1 git@github.com:dkoenawan/compass-scaffolding.git {target-directory}
 ```
 
 If clone fails (e.g., SSH not configured), try HTTPS:
 ```bash
-git clone --depth 1 https://github.com/dkoenawan/dev-kit-scaffolding.git {target-directory}
+git clone --depth 1 https://github.com/dkoenawan/compass-scaffolding.git {target-directory}
 ```
 
 #### Step 2: Remove Template Git History
@@ -209,7 +209,7 @@ mv README.md.template README.md 2>/dev/null || true
 ```bash
 git init
 git add .
-git commit -m "feat: initialize project with systematic-dev-kit"
+git commit -m "feat: initialize project with compass-labs"
 ```
 
 #### Step 8: Install Dependencies (if requested)
@@ -348,7 +348,7 @@ affects: [all]
 
 ## Context
 
-New project {project-name} initialized via systematic-dev-kit init.
+New project {project-name} initialized via compass-labs init.
 Stack selected during initialization.
 
 ## Decision
@@ -422,7 +422,7 @@ Registry bootstrapped:
     001-initial-stack-choices.md  (stack decision captured)
   CLAUDE.md updated               (agent navigation protocol injected)
 
-Next: run /systematic-dev-kit:plan to design your first feature. The plan skill
+Next: run /compass:plan to design your first feature. The plan skill
 will read the registry before proposing anything new.
 ```
 
@@ -595,7 +595,7 @@ affects: [all]
 
 This project already existed when the architecture registry was introduced.
 The registry was seeded automatically from up to 5 source reads using
-`/systematic-dev-kit:init brownfield-migrate`.
+`/compass:init brownfield-migrate`.
 
 ## Decision
 
@@ -660,6 +660,6 @@ Summary:
 
 Next steps:
   1. Review each stub in docs/reference/constructs/ — fix inferred descriptions
-  2. Run /systematic-dev-kit:explore to fill Known Gaps one area at a time
-  3. Run /systematic-dev-kit:plan — it will now read the registry before designing
+  2. Run /compass:explore to fill Known Gaps one area at a time
+  3. Run /compass:plan — it will now read the registry before designing
 ```

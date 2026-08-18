@@ -12,7 +12,7 @@ This skill is always invoked after a task-executor commit that updated a constru
 ## Invocation
 
 ```
-/systematic-dev-kit:post-hook-validator [construct-name]
+/compass:post-hook-validator [construct-name]
 ```
 
 If `construct-name` is omitted, derive it from the most recent task-executor commit:
@@ -27,7 +27,7 @@ If no construct file was modified in the last commit → exit with: "No construc
 
 ## Phase 0 — Registry Preflight
 
-1. Verify `docs/registry/index.md` exists. If not: "No architecture registry found — post-hook validation requires a registry. Run `/systematic-dev-kit:init` to create one, or skip validation."
+1. Verify `docs/registry/index.md` exists. If not: "No architecture registry found — post-hook validation requires a registry. Run `/compass:init` to create one, or skip validation."
 
 2. Read the construct file at `docs/reference/constructs/<Name>.md`.
    - If `status: verified`: "Construct `<Name>` is already verified. No action needed."
@@ -155,7 +155,7 @@ Ask: "Confirm these results? (yes / adjust)"
    >
    > I'll now start the ADR conversation. Answer the questions and the lockfile will be cleared automatically when the ADR is written.
 
-   Invoke `/systematic-dev-kit:adr` — the ADR skill's "triggered by post-hook validator" path will:
+   Invoke `/compass:adr` — the ADR skill's "triggered by post-hook validator" path will:
    - Pre-fill the affected construct as `<Name>`
    - Ask the developer to state the decision that caused the divergence
    - On completion: write the ADR, cross-link the construct file, and change `status: diverged` → `verified` with a note linking to the ADR
@@ -171,7 +171,7 @@ Treat as **pass with follow-up**:
 - Set `status: built` (not yet verified — leave for the next validation run after follow-up tasks complete).
 - Append a note to `## Key Decisions`: `partial validation on <date>: FR <N> is partially satisfied — follow-up task needed`.
 - Do NOT block the next run.
-- Tell the developer: "Marked as partially validated. The next task-executor run will proceed. Re-run `/systematic-dev-kit:post-hook-validator <Name>` after the follow-up task completes."
+- Tell the developer: "Marked as partially validated. The next task-executor run will proceed. Re-run `/compass:post-hook-validator <Name>` after the follow-up task completes."
 
 ---
 
@@ -186,7 +186,7 @@ SESSION_DIR="$(dirname "<plan-file>")"
 
 If this file exists, the task-executor halts the run with:
 ```
-Validation blocked: construct <Name> diverged on <date>. Run /systematic-dev-kit:post-hook-validator and /systematic-dev-kit:adr to clear the block before resuming.
+Validation blocked: construct <Name> diverged on <date>. Run /compass:post-hook-validator and /compass:adr to clear the block before resuming.
 ```
 
 This check belongs in the task-executor's Phase 2 (Task Selection), immediately before `select-next-task.sh`.
@@ -213,5 +213,5 @@ The lockfile is cleared by the post-hook validator after the ADR is written (see
 - [ ] `docs/registry/index.md` Status column updated to match
 - [ ] Registry changes committed
 - [ ] If diverged: lockfile written at `docs/sessions/<date>-<feature-name>/.validation-blocked`
-- [ ] If diverged: `/systematic-dev-kit:adr` was invoked and the developer was walked through it
+- [ ] If diverged: `/compass:adr` was invoked and the developer was walked through it
 - [ ] If ADR written: lockfile cleared, construct status updated to `verified`

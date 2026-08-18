@@ -23,7 +23,7 @@ BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 TITLE="$(git log --format=%s -1)"
 
 BODY="$(cat <<EOF
-Automated by \`/systematic-dev-kit:task-executor\`.
+Automated by \`/compass:task-executor\`.
 
 Closes #$ISSUE
 EOF

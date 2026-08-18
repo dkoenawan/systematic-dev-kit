@@ -1,6 +1,6 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "systematic-dev-kit",
+  "name": "compass-labs",
   "description": "Systematic development skills for building full-stack applications",
   "owner": {
     "name": "Daniel Koenawan",
@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "systematic-dev-kit",
+      "name": "compass-labs",
       "description": "A systematic methodology for building full-stack applications - opinionated skills covering infrastructure, database, backend, and frontend development",
       "source": "./",
       "strict": true,

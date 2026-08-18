@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>systematic-dev-kit — Install & Update Flow</title>
+<title>compass-labs — Install & Update Flow</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap');
 
@@ -453,7 +453,7 @@
 <body>
 
 <header>
-  <div class="header-label">systematic-dev-kit · plugin lifecycle</div>
+  <div class="header-label">compass-labs · plugin lifecycle</div>
   <h1>Install <span>&amp;</span> Update Flow</h1>
   <div class="header-sub">How the plugin reaches a developer machine — and how it stays current</div>
 </header>
@@ -482,7 +482,7 @@
         </div>
         <div class="step-body">
           Pick a permanent home — this directory is the live source of truth.
-          <span class="cmd-block">git clone https://github.com/dkoenawan/systematic-dev-kit.git ~/dev/systematic-dev-kit</span>
+          <span class="cmd-block">git clone https://github.com/dkoenawan/compass-labs.git ~/dev/compass-labs</span>
         </div>
         <div class="step-note">The path you clone to is registered as the local marketplace. Move it later and you must re-run step 2.</div>
       </div>
@@ -499,8 +499,8 @@
           <span class="step-name">Register as a local marketplace</span>
         </div>
         <div class="step-body">
-          Tells Claude Code where to resolve <code>systematic-dev-kit</code> plugin names.
-          <span class="cmd-block">claude plugin marketplace add ~/dev/systematic-dev-kit</span>
+          Tells Claude Code where to resolve <code>compass-labs</code> plugin names.
+          <span class="cmd-block">claude plugin marketplace add ~/dev/compass-labs</span>
           Writes into <code>~/.claude/settings.json</code> → <code>extraKnownMarketplaces</code>.
         </div>
       </div>
@@ -518,9 +518,9 @@
         </div>
         <div class="step-body">
           Snapshots the current working tree into the plugin cache.
-          <span class="cmd-block">claude plugin install systematic-dev-kit@systematic-dev-kit</span>
+          <span class="cmd-block">claude plugin install compass-labs@compass-labs</span>
           Creates a versioned copy at:
-          <br><code>~/.claude/plugins/cache/systematic-dev-kit/systematic-dev-kit/&lt;version&gt;/</code>
+          <br><code>~/.claude/plugins/cache/compass-labs/compass-labs/&lt;version&gt;/</code>
         </div>
         <div class="step-note"><strong style="color:var(--amber)">Important:</strong> Claude loads from the cache, not the working directory. Changes to the repo do not take effect until you run <code>claude plugin update</code>.</div>
       </div>
@@ -538,9 +538,9 @@
         </div>
         <div class="step-body">
           <span class="cmd-block">claude plugin list
-<span class="c"># systematic-dev-kit@systematic-dev-kit  Status: ✔ enabled</span></span>
+<span class="c"># compass-labs@compass-labs  Status: ✔ enabled</span></span>
           Then open a new Claude session and test a skill:
-          <span class="cmd-block">/systematic-dev-kit:explore</span>
+          <span class="cmd-block">/compass:explore</span>
         </div>
       </div>
     </div>
@@ -560,8 +560,8 @@
           <span class="cmd-block"><span class="c"># scripts/install.sh  (to be built)</span>
 check if marketplace already registered → skip if yes
 claude plugin marketplace add "$(pwd)"
-claude plugin install systematic-dev-kit@systematic-dev-kit
-claude plugin list | grep systematic-dev-kit</span>
+claude plugin install compass-labs@compass-labs
+claude plugin list | grep compass-labs</span>
         </div>
       </div>
     </div>
@@ -585,7 +585,7 @@ claude plugin list | grep systematic-dev-kit</span>
   </div>
 
   <div class="callout callout-info">
-    <strong>Session-only mode (no install):</strong> Run <code>claude --plugin-dir /path/to/systematic-dev-kit</code>. Nothing is written. Skills vanish when the session ends.
+    <strong>Session-only mode (no install):</strong> Run <code>claude --plugin-dir /path/to/compass-labs</code>. Nothing is written. Skills vanish when the session ends.
   </div>
 </div>
 
@@ -602,7 +602,7 @@ claude plugin list | grep systematic-dev-kit</span>
   <div class="state-row">
     <div class="state-box">
       <div class="state-title">Working directory</div>
-      <div class="state-val"><code>~/dev/systematic-dev-kit/</code><br>Your editable source. Git-tracked.</div>
+      <div class="state-val"><code>~/dev/compass-labs/</code><br>Your editable source. Git-tracked.</div>
     </div>
     <div class="state-box">
       <div class="state-title">Plugin cache (what Claude reads)</div>
@@ -668,7 +668,7 @@ claude plugin list | grep systematic-dev-kit</span>
 git commit -m "chore: bump to v0.6.0"
 claude plugin tag          <span class="c"># validates + creates git tag</span>
 git push origin main --tags</span>
-          <code>claude plugin tag</code> validates that <code>plugin.json</code> version and marketplace entry agree, then creates a <code>systematic-dev-kit--v0.6.0</code> tag.
+          <code>claude plugin tag</code> validates that <code>plugin.json</code> version and marketplace entry agree, then creates a <code>compass-labs--v0.6.0</code> tag.
         </div>
       </div>
     </div>
@@ -685,7 +685,7 @@ git push origin main --tags</span>
         </div>
         <div class="step-body">
           Re-snapshots from the working directory into a new versioned cache folder.
-          <span class="cmd-block">claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+          <span class="cmd-block">claude plugin update compass-labs@compass-labs</span>
         </div>
         <div class="step-note">For other developers: they <code>git pull</code> the repo then run the same <code>claude plugin update</code> command.</div>
       </div>
@@ -728,7 +728,7 @@ update plugin.json
 git add + commit "chore: bump to vX.Y.Z"
 claude plugin tag
 git push origin main --tags
-claude plugin update systematic-dev-kit@systematic-dev-kit
+claude plugin update compass-labs@compass-labs
 echo "Restart Claude to activate vX.Y.Z"</span>
         </div>
       </div>
@@ -837,11 +837,11 @@ echo "Restart Claude to activate vX.Y.Z"</span>
         <div class="step-body">
           <span class="cmd-block">---
 name: old-skill-name
-description: "[DEPRECATED — use /systematic-dev-kit:new-name] ..."
+description: "[DEPRECATED — use /compass:new-name] ..."
 ---
 
 > **Deprecated.** Removed in next major version.
-> Use `/systematic-dev-kit:new-name` instead.</span>
+> Use `/compass:new-name` instead.</span>
         </div>
       </div>
     </div>
@@ -906,16 +906,16 @@ description: "[DEPRECATED — use /systematic-dev-kit:new-name] ..."
     <div class="vlock-card">
       <div class="vlock-title">Git tag checkout</div>
       <div class="vlock-body">Check out a release tag. The snapshot taken by <code>plugin install</code> corresponds to that exact release.</div>
-      <span class="cmd-block">cd ~/dev/systematic-dev-kit
+      <span class="cmd-block">cd ~/dev/compass-labs
 git fetch --tags
-git checkout systematic-dev-kit--v0.5.0
-claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+git checkout compass-labs--v0.5.0
+claude plugin update compass-labs@compass-labs</span>
     </div>
     <div class="vlock-card">
       <div class="vlock-title">Git commit SHA pin</div>
       <div class="vlock-body">Exact reproducibility. Pin to a specific commit rather than a tag. Useful in CI or shared team environments.</div>
       <span class="cmd-block">git checkout 5b61555
-claude plugin update systematic-dev-kit@systematic-dev-kit</span>
+claude plugin update compass-labs@compass-labs</span>
     </div>
     <div class="vlock-card">
       <div class="vlock-title">Separate clone per version</div>
@@ -1006,7 +1006,7 @@ cat ~/.claude/plugins/installed_plugins.json | python3 -m json.tool
     <strong>Future: <code>.plugin-lock</code> file.</strong> A project-level lockfile (like <code>package-lock.json</code>) could record the exact commit SHA, so any developer can reproduce the cached state with one command. Not yet supported by the CLI — would require a custom <code>scripts/install.sh</code> that reads it.
     <span class="cmd-block"><span class="c"># .plugin-lock  (proposed format)</span>
 {
-  "systematic-dev-kit": {
+  "compass-labs": {
     "version": "0.5.0",
     "sha": "5b61555ea40eb4642c433dd6669090b935e171b"
   }

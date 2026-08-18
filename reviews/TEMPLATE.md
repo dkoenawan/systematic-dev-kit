@@ -8,7 +8,7 @@
 
 ## Invocation
 
-**Skill invoked**: `/systematic-dev-kit:{skill-name}`
+**Skill invoked**: `/compass:{skill-name}`
 
 **Exact input**:
 ```

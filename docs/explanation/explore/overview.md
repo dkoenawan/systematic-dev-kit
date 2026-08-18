@@ -14,7 +14,7 @@ Explore is a token-efficient codebase investigation capability whose primary obj
 
 ## How It Works
 
-An InvestigationReport is produced through a three-tier traversal with sufficiency gates between each tier. The investigation begins when the skill receives a focus question — either from a developer invoking `/systematic-dev-kit:explore` directly, or passed automatically by the `plan` or `doc-maintainer` skills.
+An InvestigationReport is produced through a three-tier traversal with sufficiency gates between each tier. The investigation begins when the skill receives a focus question — either from a developer invoking `/compass:explore` directly, or passed automatically by the `plan` or `doc-maintainer` skills.
 
 **Tier 1 (Docs First)**: Read `README.md`, check for a `docs/` directory, and read `CLAUDE.md` if present. After each read, a sufficiency gate evaluates whether the tech stack, project structure, and focus-relevant context are now understood. If yes, investigation stops immediately. If gaps remain, advance to Tier 2.
 
@@ -36,7 +36,7 @@ The completed InvestigationReport is returned with fixed sections: Tech Stack, D
 ## Code Map — Which Code Touches This
 
 - **Business Logic**: `skills/explore/SKILL.md` — the full three-tier traversal algorithm, sufficiency gate logic, file-read ordering rules (README first, schema before source, docs before code), hard limits (max 5 files in Tier 3, max 50 lines for large files), monorepo and large-schema handling rules, and fixed Report section structure
-- **Interface**: Invoked as `/systematic-dev-kit:explore` (standalone, user provides focus); or called automatically with a focus parameter by `systematic-dev-kit:plan` and `systematic-dev-kit:doc-maintainer`
+- **Interface**: Invoked as `/compass:explore` (standalone, user provides focus); or called automatically with a focus parameter by `compass-labs:plan` and `compass-labs:doc-maintainer`
 - **Persistence**: None — the skill produces a report returned in-context; no files are written or modified
 - **External callers**: `skills/plan/SKILL.md` — invokes explore when user selects "Extends existing" to investigate related code before feature planning; `skills/doc-maintainer/SKILL.md` — spawns explore subagents for whole-system archaeology and per-domain deep dives
 
@@ -52,7 +52,7 @@ The completed InvestigationReport is returned with fixed sections: Tech Stack, D
 
 ## Dependencies
 
-- **Internal**: Called by `systematic-dev-kit:plan` and `systematic-dev-kit:doc-maintainer` as a subskill; no outbound calls to other skills
+- **Internal**: Called by `compass-labs:plan` and `compass-labs:doc-maintainer` as a subskill; no outbound calls to other skills
 - **External**: Read, Glob, Grep, and Bash (`ls` only) tools — standard Claude Code tooling; no external packages or APIs required
 
 ## Gotchas

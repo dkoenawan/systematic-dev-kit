@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  PLUGIN_NAME: systematic-dev-kit
+  PLUGIN_NAME: compass-labs
   PLUGIN_REF: "{{.PLUGIN_NAME}}@{{.PLUGIN_NAME}}"
   PLUGIN_JSON: .claude-plugin/plugin.json
   LOCK_FILE: .plugin-lock
@@ -18,7 +18,7 @@ tasks:
       - task: _install-hook
       - cmd: |
           echo ""
-          echo "✔  systematic-dev-kit installed"
+          echo "✔  compass-labs installed"
           echo ""
           claude plugin list | grep {{.PLUGIN_NAME}}
 
@@ -179,7 +179,7 @@ tasks:
             # Write lock file
             cat > {{.LOCK_FILE}} <<EOF
           {
-            "systematic-dev-kit": {
+            "compass-labs": {
               "ref": "$REF",
               "version": "$VERSION",
               "sha": "$(git rev-parse HEAD)"

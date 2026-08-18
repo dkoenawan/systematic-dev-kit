@@ -14,9 +14,9 @@ Init is a project scaffolding capability that bootstraps new full-stack applicat
 
 ## How It Works
 
-A Project is created in five sequential phases. The developer invokes `/systematic-dev-kit:init` and answers five questions via interactive prompts: (1) project name, (2) target directory (new subdirectory, current dir, or custom path), (3) which components to *exclude* (Frontend, Backend, and/or Database — everything is included by default), (4) whether to initialize git, and (5) whether to install npm dependencies immediately.
+A Project is created in five sequential phases. The developer invokes `/compass:init` and answers five questions via interactive prompts: (1) project name, (2) target directory (new subdirectory, current dir, or custom path), (3) which components to *exclude* (Frontend, Backend, and/or Database — everything is included by default), (4) whether to initialize git, and (5) whether to install npm dependencies immediately.
 
-Once answers are collected, the skill clones the `dkoenawan/dev-kit-scaffolding` template repository using `git clone --depth 1` (shallow, for speed). SSH is tried first; if it fails, HTTPS is retried silently. The cloned git history is immediately stripped to give the new project a clean slate.
+Once answers are collected, the skill clones the `dkoenawan/compass-scaffolding` template repository using `git clone --depth 1` (shallow, for speed). SSH is tried first; if it fails, HTTPS is retried silently. The cloned git history is immediately stripped to give the new project a clean slate.
 
 Based on the user's exclusions, the skill surgically customizes the project: deletes unwanted component directories, updates `docker-compose.yml` to remove the corresponding services (and any `depends_on` references), removes excluded packages from the root `package.json` workspaces array, and runs a bulk find-and-sed pass to replace all `{{PROJECT_NAME}}` placeholders with the chosen project name across all configuration files.
 
@@ -27,16 +27,16 @@ If git initialization was selected, `git init`, `git add .`, and an initial comm
 | Object | Description |
 | ------ | ----------- |
 | `Project` | A full-stack monorepo scaffold: named, located, component-selected, optionally git-initialized and npm-installed. The primary deliverable. |
-| `TemplateRepository` | `dkoenawan/dev-kit-scaffolding` on GitHub — the pre-built reference implementation cloned as the foundation for every Project. |
+| `TemplateRepository` | `dkoenawan/compass-scaffolding` on GitHub — the pre-built reference implementation cloned as the foundation for every Project. |
 | `Component` | A removable stack element: Frontend (React + Vite + TypeScript), Backend (Node.js + Prisma + TypeScript), or Database (PostgreSQL). Included by default; removed on explicit exclusion. |
 | `Configuration` | `docker-compose.yml` and root `package.json` — updated during customization to reflect the selected component set, removed services, and project name. |
 
 ## Code Map — Which Code Touches This
 
 - **Business Logic**: `skills/init/SKILL.md` — complete five-phase workflow: Gather Basics → Component Selection → Setup Options → Execute Setup (8 steps) → Summary; includes SSH-to-HTTPS clone fallback, placeholder replacement logic, and post-scaffold instructions
-- **Interface**: Invoked as `/systematic-dev-kit:init`; five interactive `AskUserQuestion` prompts drive the configuration conversation
-- **Persistence**: `git clone --depth 1 git@github.com:dkoenawan/dev-kit-scaffolding.git` (SSH, with HTTPS fallback); filesystem ops to delete excluded directories and replace placeholders; optional `git init` + `git commit`; optional `npm install`
-- **External callers**: Invoked standalone; no other systematic-dev-kit skills call into init programmatically
+- **Interface**: Invoked as `/compass:init`; five interactive `AskUserQuestion` prompts drive the configuration conversation
+- **Persistence**: `git clone --depth 1 git@github.com:dkoenawan/compass-scaffolding.git` (SSH, with HTTPS fallback); filesystem ops to delete excluded directories and replace placeholders; optional `git init` + `git commit`; optional `npm install`
+- **External callers**: Invoked standalone; no other compass-labs skills call into init programmatically
 
 ## Internal Architecture
 
@@ -52,8 +52,8 @@ If git initialization was selected, `git init`, `git add .`, and an initial comm
 
 ## Dependencies
 
-- **Internal**: None — init is a standalone skill with no calls to other systematic-dev-kit skills
-- **External**: `git` (clone with `--depth 1`, init, add, commit); `npm`/npm workspaces (optional dependency installation); `docker-compose` (referenced in generated config, not executed by this skill); `sed` / `find` utilities (placeholder replacement); `dkoenawan/dev-kit-scaffolding` GitHub repo (must be publicly accessible)
+- **Internal**: None — init is a standalone skill with no calls to other compass-labs skills
+- **External**: `git` (clone with `--depth 1`, init, add, commit); `npm`/npm workspaces (optional dependency installation); `docker-compose` (referenced in generated config, not executed by this skill); `sed` / `find` utilities (placeholder replacement); `dkoenawan/compass-scaffolding` GitHub repo (must be publicly accessible)
 
 ## Gotchas
 

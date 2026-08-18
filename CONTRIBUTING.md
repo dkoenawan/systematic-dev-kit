@@ -17,7 +17,7 @@ This is a Claude Code plugin that follows the structure documented at https://co
 ### Directory Structure
 
 ```
-systematic-dev-kit/
+compass-labs/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest (metadata only)
 ├── skills/                  # Agent-based skills
@@ -94,10 +94,10 @@ Provide concrete examples of how this skill should be used.
 
 ```bash
 # Test the plugin locally
-claude --plugin-dir /path/to/systematic-dev-kit
+claude --plugin-dir /path/to/compass-labs
 
 # Invoke your skill
-/systematic-dev-kit:skill-name
+/compass:skill-name
 ```
 
 ## Adding Commands

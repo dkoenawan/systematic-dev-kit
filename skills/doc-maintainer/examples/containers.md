@@ -1,6 +1,6 @@
 ---
 last_updated: 2026-04-26
-generated_by: /systematic-dev-kit:doc-maintainer
+generated_by: /compass:doc-maintainer
 ---
 
 # taskflow — Container Architecture (L2)

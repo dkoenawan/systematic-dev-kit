@@ -12,7 +12,7 @@ CONTENT_CHANGED=$(git diff HEAD~1 HEAD --name-only 2>/dev/null | grep -E '^(skil
 if [[ -n "$CONTENT_CHANGED" && "$CURRENT_VERSION" == "$PREV_VERSION" ]]; then
   echo ""
   echo "┌─────────────────────────────────────────────────────┐"
-  echo "│  systematic-dev-kit: version not bumped             │"
+  echo "│  compass-labs: version not bumped             │"
   echo "│                                                     │"
   echo "│  Skill/hook files changed but plugin.json is still  │"
   echo "│  at v$CURRENT_VERSION. Claude will keep running the cached   │"

@@ -1,6 +1,6 @@
 ---
 last_updated: <YYYY-MM-DD>
-generated_by: /systematic-dev-kit:doc-maintainer
+generated_by: /compass:doc-maintainer
 ---
 
 # <Project Name> — Container Architecture (L2)

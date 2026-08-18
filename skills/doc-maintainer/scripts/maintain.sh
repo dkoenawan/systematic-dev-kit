@@ -113,7 +113,7 @@ cd "$TARGET_REPO"
 # cron job to spam the system mail spool.
 claude \
   --plugin-dir "$PLUGIN_DIR" \
-  -p "/systematic-dev-kit:doc-maintainer maintain" \
+  -p "/compass:doc-maintainer maintain" \
   --dangerously-skip-permissions \
   >> "$LOG_FILE" 2>&1 \
   && EXIT_CODE=0 || EXIT_CODE=$?

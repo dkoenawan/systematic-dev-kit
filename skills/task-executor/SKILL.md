@@ -11,12 +11,12 @@ Parse the invocation arguments and route:
 
 | Invocation | Mode |
 |---|---|
-| `/systematic-dev-kit:task-executor` | Auto: if active plan exists → `status`; else → `plan` (ask for issue number) |
-| `/systematic-dev-kit:task-executor plan <issue-number>` | Planning conversation |
-| `/systematic-dev-kit:task-executor execute` | Daily run sequence (cron only) |
-| `/systematic-dev-kit:task-executor status` | Show active plan summary |
-| `/systematic-dev-kit:task-executor stop` | Uninstall cron, pause plan |
-| `/systematic-dev-kit:task-executor resume` | Re-install cron for paused plan |
+| `/compass:task-executor` | Auto: if active plan exists → `status`; else → `plan` (ask for issue number) |
+| `/compass:task-executor plan <issue-number>` | Planning conversation |
+| `/compass:task-executor execute` | Daily run sequence (cron only) |
+| `/compass:task-executor status` | Show active plan summary |
+| `/compass:task-executor stop` | Uninstall cron, pause plan |
+| `/compass:task-executor resume` | Re-install cron for paused plan |
 
 Scripts live in `skills/task-executor/scripts/` relative to the plugin root. Always resolve the absolute path before invoking.
 
@@ -32,7 +32,7 @@ Run these 9 phases in order. Be conversational — show what you found, confirm 
 gh auth status
 ```
 
-Verify: repo is a git repo (`git rev-parse --git-dir`), issue number is provided. Run `find-active-plan.sh <repo>` — if another plan is `in-progress`, halt with: "Another plan is already in progress at `<path>`. Run `/systematic-dev-kit:task-executor status` to see it, or `stop` to pause it first."
+Verify: repo is a git repo (`git rev-parse --git-dir`), issue number is provided. Run `find-active-plan.sh <repo>` — if another plan is `in-progress`, halt with: "Another plan is already in progress at `<path>`. Run `/compass:task-executor status` to see it, or `stop` to pause it first."
 
 Check crontab for clashing `execute-daily.sh` entries at the same time:
 ```bash
@@ -67,7 +67,7 @@ ls -d docs/sessions/*-<feature-name>/ 2>/dev/null
 ```
 
 - **Exactly one match** → that is `SESSION_DIR`. Read `$SESSION_DIR/overview.md` and summarise the Implementation Order section to the user.
-- **No match** → mint a new one: `SESSION_DIR=docs/sessions/<today>-<feature-name>/`, then invoke `/systematic-dev-kit:plan` to produce it. The plan skill writes to `$SESSION_DIR/overview.md`.
+- **No match** → mint a new one: `SESSION_DIR=docs/sessions/<today>-<feature-name>/`, then invoke `/compass:plan` to produce it. The plan skill writes to `$SESSION_DIR/overview.md`.
 - **Multiple matches** → ask the user which session directory to use, then set `SESSION_DIR` to their choice.
 
 Every later phase in Plan Mode refers to `$SESSION_DIR` (or "the session dir") rather than re-deriving `docs/sessions/<date>-<feature-name>/`.
@@ -131,7 +131,7 @@ On `adjust`: re-enter the relevant phase. On `rethink`: start over from Phase 2.
 6. Comment on issue:
 
 ```bash
-scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/systematic-dev-kit:task-executor\`. Plan: \`$SESSION_DIR/tasks.md\`."
+scripts/comment-on-issue.sh <N> "🤖 Task automation started — runs every 6h via \`/compass:task-executor\`. Plan: \`$SESSION_DIR/tasks.md\`."
 ```
 
 ---
@@ -179,7 +179,7 @@ SESSION_DIR="$(dirname "<plan-file>")"
 
 If the lockfile exists: halt the run with:
 ```
-Validation blocked: construct <Name> diverged on <date>. Run /systematic-dev-kit:post-hook-validator and /systematic-dev-kit:adr to clear the block before resuming.
+Validation blocked: construct <Name> diverged on <date>. Run /compass:post-hook-validator and /compass:adr to clear the block before resuming.
 ```
 Do not select or execute any tasks. Do NOT uninstall cron — the block is temporary and will be cleared by the developer.
 
@@ -420,7 +420,7 @@ scripts/restore-branch.sh <repo>
 PLAN="$(scripts/find-active-plan.sh <repo>)"
 ```
 
-If `none`: "No active plan. Run `/systematic-dev-kit:task-executor plan <issue-number>` to start one."
+If `none`: "No active plan. Run `/compass:task-executor plan <issue-number>` to start one."
 
 Otherwise read the plan file and display:
 
@@ -447,7 +447,7 @@ PLAN="$(scripts/find-active-plan.sh <repo>)"
 
 1. Update plan `status: paused`
 2. `scripts/uninstall-schedule.sh <repo>`
-3. `scripts/comment-on-issue.sh <N> "⏸️ Task automation paused. Branch and plan preserved. Resume with \`/systematic-dev-kit:task-executor resume\`."`
+3. `scripts/comment-on-issue.sh <N> "⏸️ Task automation paused. Branch and plan preserved. Resume with \`/compass:task-executor resume\`."`
 
 Tell user: "Automation paused. Your branch `feat/<name>` and plan file are untouched."
 

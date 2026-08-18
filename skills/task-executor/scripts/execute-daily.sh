@@ -29,7 +29,7 @@ trap 'rmdir "$LOCK_FILE" 2>/dev/null || true' EXIT
 
   "$CLAUDE_BIN" \
     --dangerously-skip-permissions \
-    -p "You are running /systematic-dev-kit:task-executor in execute mode for the repository at $REPO_ABS. Follow the SKILL.md execute mode instructions exactly. Do not ask for clarification — proceed with the daily run sequence."
+    -p "You are running /compass:task-executor in execute mode for the repository at $REPO_ABS. Follow the SKILL.md execute mode instructions exactly. Do not ask for clarification — proceed with the daily run sequence."
 
   EXIT_CODE=$?
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] task-executor exited with code $EXIT_CODE"

@@ -112,7 +112,7 @@ If the user selects "Extends existing" or "Not sure", ask a follow-up text promp
 
 Then invoke the explore skill to investigate the codebase:
 
-> Use the `/systematic-dev-kit:explore` skill with the feature area as the investigation focus. The explore skill will traverse docs first, then project structure, then source code — stopping as soon as sufficient context is gathered. It runs on Haiku to preserve tokens.
+> Use the `/compass:explore` skill with the feature area as the investigation focus. The explore skill will traverse docs first, then project structure, then source code — stopping as soon as sufficient context is gathered. It runs on Haiku to preserve tokens.
 
 Once explore returns its investigation report, you are at a **MANDATORY CONTINUATION POINT**. Do not stop. Do not wait for the user to prompt you again. The return of the explore skill is NOT a conversation end — it is an internal workflow step.
 
